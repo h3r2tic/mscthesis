@@ -4,9 +4,17 @@
 \label{Chapter3}
 \lhead{Chapter 3. \emph{ Previous work }}
 
-\section{Über-shaders}
+\section{Über- and micro-shaders}
 
-A rather tedious and limited way of tackling the problem. Huge hack.
+A popular approach at tackling the shader permutation problem is known as the \emph{ Über-shader }. In this technique, the programmer creates a huge monolithic shader containing all the features a rendered object might need. Subsets of the functionality are then selected either at compile-time via preprocessor-based conditional compilation or at run-time via dynamic branching.
+
+TODO: example
+
+While conceptually simple and easy to implement, the über-shader approach is hard to debug and maintain. A more advanced take at the problem is to keep shader fragments separate and merge them conditionally using run-time logic or conservatively, yet statically generate permutations in the content pipeilne. In [ref: Generating Shaders from HLSL Fragments, Shawn Hargreaves, ShaderX3], Hargreaves shows an approach based on runtime shader fragment combining. His implementation relies on a simple extension of the HLSL language in order to define the \emph{imports} and \emph{exports} of a shader fragment. Along with a special \emph{interface block}, a preprocessor is able to combine shader fragments together, linking their inputs and outputs. This effectively hides the complexity from the shader author, making maintainance and debugging easier. Hargreaves praises the robustness of this solution and mentions that it allows the usage of the same shader fragments in various rendering algorithms.
+
+This work builds on shader fragment merging and extends it with automatic parameter type coercion and functional composition. I show how to implement such a scheme in a way that's easy to work with even for non-programmers.
+
+% http://books.google.com/books?id=DgMSb_10l7IC&pg=PA555&lpg=PA555&dq=%22uber+shaders%22&source=bl&ots=-mu34jRtzO&sig=C3KIgqPIb6F8MDsOU0tSevVuN8M&hl=en&ei=zPZpTNGHNoGA4Aam1aHJCQ&sa=X&oi=book_result&ct=result&resnum=4&ved=0CCIQ6AEwAzgK#v=onepage&q=%22uber%20shaders%22&f=false
 
 \section{Renderman}
 
