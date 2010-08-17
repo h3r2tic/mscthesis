@@ -1,0 +1,19 @@
+% Chapter 2
+
+\chapter{ Problem statement }
+\label{Chapter2}
+\lhead{Chapter 2. \emph{ Problem statement }}
+
+\section{Mental and hardware programming model mismatch}
+
+We'd ideally want to work with geometry displacement, surface properties and light emission, not vertices and pixels.
+
+Would like to work just on pixels, but vertex shaders must feed data to them and computations may be moved to the vertex stage for performance reasons.
+
+Some stuff nicely done in vertex shaders, such as skinning.
+
+Would like to work with materials, surfaces, lights
+
+\section{Shader permutation management}
+
+ We can map the mental model into the GPU model, but that requires some automation. Few systems make it workable.

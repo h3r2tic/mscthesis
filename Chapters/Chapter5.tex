@@ -1,0 +1,28 @@
+% Chapter 5
+
+\chapter{ Nucled }
+\label{Chapter5}
+\lhead{Chapter 5. \emph{ Nucled }}
+
+The entire machinery of Nucleus may be operated from source code and configuration files. While the \emph{ domain specific language } created for this purpose makes it possible and relatively easy, real-world usage scenarios demand a more intuitive solution. The obvious one for Nucleus was to use a graph-based visual design tool, similar to the ones used by [TODO: refs].
+
+I have created such a tool, dubbed "Nucled". While it's not yet feature-complete, its capabilities include:
+
+\begin{itemize}
+\item kernel graph creation and manipulation
+\item editing of the Cg source code of kernels,
+\item real-time preview of graphical effects,
+\item manipulation of 3D scenes,
+\item application and creation of new materials,
+\item manipulation of post-processing pipelines.
+\end{itemize}
+
+The interface of Nucled is based on a custom Graphical User Interface (GUI) toolkit [TODO: ref Hybrid], which is able to use the low-level layer of Nucleus as the display backend. This approach guarantees smooth integration of the rendering framework within Nucled and serves as a test of the system. While the editor looks like a regular desktop application, it's in fact rendered entirely by Nucleus, down from each button, text label, up to 3D scene viewports and material previews.
+
+The machinery of material previews.
+
+Some info about how post-processing previews are displayed.
+
+Info about the issues mentioned by Whitted (mentioned in McGuire's paper) about type mismatches and how they're mostly non-existent in Nucled thanks to the semantic type system.
+
+Mini-conclusion as how Nucled is a sketch but may become a complete solution for authoring effects.

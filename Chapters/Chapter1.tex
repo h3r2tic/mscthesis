@@ -1,0 +1,25 @@
+% Chapter 1
+
+\chapter{ Introduction }
+\label{Chapter1}
+\lhead{Chapter 1. \emph{ Introduction }}
+
+\section{Rendering}
+
+Say what Rendering is, show the rendering equation, give examples of how it can be approached directly (path tracing) and indirectly via the discretization of lights. Use the Siggraph reflectance course for showing how BRDFs interact with the rendering equation.
+
+\section{Rasterization}
+
+One of many rendering algorithms. Get primitives, transform them, convert to pixels. Used to be scanline, now something fancier. Ref http://www.icare3d.org/GPU/CN08
+
+Say something about textures, meshes and how rasterizers fit into the rendering equation.
+
+\section{Programmable shading}
+
+Introduce vertex, geometry and fragment shaders, rendering APIs.
+
+\section{Mental and hardware programming model mismatch}
+
+We'd ideally want to work with geometry displacement, surface properties and light emission, not vertices and pixels, however hardware doesn't allow us to do so directly.
+
+May use code generation to target the HW model, however shader permutation management issues pop up.

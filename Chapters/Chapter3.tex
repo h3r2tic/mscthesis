@@ -1,0 +1,38 @@
+% Chapter 3
+
+\chapter{ Previous work }
+\label{Chapter3}
+\lhead{Chapter 3. \emph{ Previous work }}
+
+\section{Über-shaders}
+
+A rather tedious and limited way of tackling the problem. Huge hack.
+
+\section{Renderman}
+
+The Renderman model has proven successful and been the industry standard for the past 20 years or so. It provides an intuitive programming model which we'd like to use in real-time. However, direct application of Renderman's model is still far away.
+
+Use Siggraph 2010 notes to note how poorly current GPUs handle micro-polygons.
+
+\section{Deferred rendering}
+
+Decouples light / reflectance shaders from material shaders. Neat, but limited BRDFs, problems with transparency.
+
+\section{Graph-based systems}
+\subsection{Frostbite}
+
+Uses surface shaders, not much info about the other kinds which Renderman provides.
+
+\subsection{Mental Mill}
+
+Seems nice on paper, however custom access to lights from MetaSL looks problematic from the point of view of automatically adapting its shaders to various algorithms.
+
+\subsection{McGuire's Abstract shade trees}
+
+An approach for hiding the complexity of creating shaders in graph-based systems. Hides all manual connections though, not obvious what to do when the automatic approach fails.
+
+\section{Permutation management}
+
+Unity3D - Statically generate lots of shaders.
+
+Tri-Ace - Storing of shader permutations generated via play-testing instead of static generation of many combinations.

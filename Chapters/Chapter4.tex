@@ -1,0 +1,41 @@
+% Chapter 4
+
+\chapter{ Nucleus }
+\label{Chapter4}
+\lhead{Chapter 4. \emph{ Nucleus }}
+
+\section{Overall structure}
+
+Nucleus is like an ogre. It has layers. The lowest layer hides the complexity of the underlying API and makes the higher layers API-agostic via complete isolation.
+
+On top of it lies the high level rendering interface where the client programmer manages objects, materials, surfaces, etc.
+
+Aside from that, there's a post-processing framework and a spatial subdivision package for quick scene visibility queries.
+
+\section{Low-level abstraction layer}
+
+The OpenGL API is messy, Cg messy, must have a convenience wrapper. Implemented one that lies on a similar layer as XNA. Possible to use it directly without the rest of the system.
+
+\section{Kernels}
+
+Nucleus operates on \emph{kernels} which are shader functions or graphs. Arbitrary composition with complexity hiding.
+
+\section{Semantic type system}
+
+As in McGuire's work, Nucleus uses a rich semantic type system in order to hide tedious work.
+
+\section{Renderers}
+
+Renderers use Renderables and kernels associated with them to render meshes using arbitrary algorithms.
+
+\section{Post-processing}
+
+Nucleus covers one more aspect of Renderman - the \emph{Imager} shaders in the form of kernel graphs which are automatically decomposed into post-processing operations.
+
+\section{Functional composition}
+
+Linear data flow in the kernel DAG too restricting. Nucleus supports functional composition with currying instead.
+
+\section{Code generation}
+
+Generates Cg code which is then introspected by the mid-level layer.
