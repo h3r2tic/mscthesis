@@ -1,0 +1,11 @@
+syntax: glob
+Thesis.bbl
+Thesis.blg
+Thesis.aux
+Thesis.pdf
+Thesis.out
+Thesis.toc
+Thesis.log
+Thesis.lof
+Thesis.lot
+*.swp
