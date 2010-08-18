@@ -6,7 +6,7 @@
 
 \section{Über- and micro-shaders}
 
-A popular approach at tackling the shader permutation problem is known as the \emph{ über-shader }. In this technique, the programmer creates a huge monolithic shader containing all the features a rendered object might need. Subsets of the functionality are then selected either at compile-time via preprocessor-based conditional compilation or at run-time via dynamic branching.
+A popular approach at tackling the shader permutation problem is the \emph{ über-shader }. In this technique, the programmer creates a huge monolithic shader containing all the features a rendered object might need. Subsets of the functionality are then selected either at compile-time via preprocessor-based conditional compilation or at run-time via dynamic branching.
 
 TODO: example
 
@@ -18,9 +18,7 @@ This work builds on shader fragment merging and extends it with automatic parame
 
 \section{RenderMan}
 
-When designing a graphics rendering system, it's impossible not to bump into what's currently the industry standard for film rendering - PhotoRealistic RenderMan. Despite being over 20 years old, it continues to thrive as the benchmark for all rendering technology. It has been used in several dozen successful feature film productions and among its awards is the first Oscar even awarded to the developers of a software package [TODO: ref]. An interesting aspect concerning RenderMan is that the overall structure of its Interface Specification (\emph{RISpec} in short) has survived mostly unchanged since its first publication in 1988.
-
-% [ref: http://renderman.pixar.com/products/whats_renderman/movies.html]
+When designing a graphics rendering system, it's impossible not to bump into what's currently the industry standard for film rendering - PhotoRealistic RenderMan. Despite being over 20 years old, it continues to thrive as the benchmark for all rendering technology. It has been used in several dozen successful feature film productions and among its awards is the first Oscar even awarded to the developers of a software package \cite{RenderManAwards}. An interesting aspect concerning RenderMan is that the overall structure of its Interface Specification (\emph{RISpec} in short) has survived mostly unchanged since its first publication in 1988.
 
 The rendering algorithm mainly utilized by Pixar's flagship implementation of RenderMan is called \textbf{Reyes} (acronym for \emph{Renders Everything You Ever Saw}).
 
@@ -36,27 +34,22 @@ The standard \emph{Forward} rasterization algorithm requires that material and l
 \begin{enumerate}
 \item The lower bound on the number of GPU programs that need to be compiled is $O(m * l)$ (where $m$ stands for the number of materials and $l$ for the number of light shader \emph{combinations}), or \emph{multi-pass} rendering must be used.
 
-As explained in chapter 2 [TODO: ref], the number of shaders created this way would be prohibitively large. A workaround is to restrict the possible light shader combinations. This may be achieved via über-lights [TODO: ref] or just constraining the renderer to a handful of light types. Additionally, a common approach may be to fit a shader for more lights than an object is affected by by zeroing-out the non-existent light intensities. For instance, when the renderer must render an object influenced by two point-lights, it may use a shader for rendering it with three point-lights, assuming zero intensity for one of the shader parameters. Naturally, this approach, just like the über-light one, carries a runtime cost which may be prohibitive for a complex setup.
-
-% http://www.renderman.org/RMR/rmBlockers/uber/index.html
-% http://http.developer.nvidia.com/GPUGems/gpugems_ch10.html
+As explained in chapter 2 [TODO: ref], the number of shaders created this way would be prohibitively large. A workaround is to restrict the possible light shader combinations. This may be achieved via über-lights \cite{UberLights, UberLightsCg} or just constraining the renderer to a handful of light types. Additionally, a common approach may be to fit a shader for more lights than an object is affected by by zeroing-out the non-existent light intensities. For instance, when the renderer must render an object influenced by two point-lights, it may use a shader for rendering it with three point-lights, assuming zero intensity for one of the shader parameters. Naturally, this approach, just like the über-light one, carries a runtime cost which may be prohibitive for a complex setup.
 
 An alternative approach to this issue is \emph{multi-pass} rendering, where the object is rendered once for an affecting light, and the resulting illumination is summed via additive blending. The downside to this solution is that in scenes with complex geometry, rendering objects multiple times will quickly drain the computational budget.
 
 \item Lights can only influence the scene at the granularity of individual objects, not their vertices or rasterized pixels. Even when a light would affect a small part of an object, it must be evaluated for all elements thereof, because a single \emph{batch} may only use a single shader per domain.
 
-Splitting objects into smaller pieces might be an option, however GPU batch submission carries a nontrivial cost [ref Batch Batch Batch], hence the tendency is to do the exact opposite.
+Splitting objects into smaller pieces might be an option, however GPU batch submission carries a nontrivial cost \cite{BatchBatchBatch}, hence the tendency is to do the exact opposite.
 % TODO: explain shader domains
 \end{enumerate}
 
-Recently a technique known as \emph{deferred shading} has been gaining popularity, as it offers an elegant solution to both of these problems. Originally proposed by Deering et al. in [TODO: ref], the algorithm separates the rendering pipeline into two stages:
+Recently a technique known as \emph{deferred shading} has been gaining popularity, as it offers an elegant solution to both of these problems. Originally proposed in \citet{DeeringDeferred}, the algorithm separates the rendering pipeline into two stages:
 
 \begin{enumerate}
 \item Render surface attributes of the visible scene into a set of framebuffers.
 \item For each light, evaluate its contribution on the surfaces encoded within a subset of the buffers.
 \end{enumerate}
-
-% Deering, Michael; Stephanie Winner, Bic Schediwy, Chris Duffy, Neil Hunt. "The triangle processor and normal vector shader: a VLSI system for high performance graphics". ACM SIGGRAPH Computer Graphics (ACM Press) 22 (4): 21–30.
 
 TODO
 
