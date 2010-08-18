@@ -18,7 +18,53 @@ The OpenGL API is messy, Cg messy, must have a convenience wrapper. Implemented 
 
 \section{Kernels}
 
-Nucleus operates on \emph{kernels} which are shader functions or graphs. Arbitrary composition with complexity hiding.
+The basic building block of the high level rendering interface of Nucleus is called a \emph{kernel}. Conceptually, it is just a function. The implementation of a kernel may be specified using a code snippet (the current implementation allows the Cg language for this purpose). The more interesting option is to define it using a graph. Specifically, a directed acyclic graph whose nodes are either kernels or special-purpose entities. The special-purpose nodes can be used to denote what constitutes the input and output parameters of a graph-based kernel, as well as to request external data for it.
+
+While first-class support of graphs does not result in more expressive power than what regular function-based composition would, it provides a comfortable mental and programmatic framework for such composition. It enables the use of classical graph algorithms and makes development of authoring tools easier.
+
+\subsection{Standard kernel types}
+
+Similarly to how GPU-based shading requires the specification of shader programs for each of the processing domains, Nucleus demands that a kernel be provided for each of its domains. Where it differs drastically, is what the domains are. Each object to be rendered must have 3 kernels specified for it (TODO):
+
+\begin{description}
+
+\item[Structure] --- Defines the macro-structure and mostly contains what a vertex or geometry shader might. It's responsible for providing the primitives to be rendered, including data such as positions, normals, partial derivatives of position with respect to texture coordinates, etc.
+
+\item[Reflectance] --- Enables the object to interact with lights by implementing a BRDF. Examples include the Lambertian model, Phong, Cook-Torrance and Ashikhmin-Shirley.
+
+\item[Material] --- This is the level on which most artists will work, specifying the albedo of the rendered object, its bumpiness, specular tint, emissive lighting, roughness, etc. Kernels of this type will be created for types of objects in a scene, as well as for particular instances thereof.
+
+\end{description}
+
+Specifying these kernels for a renderable object boils down to designating a \emph{concrete} kernel with an identical signature for each of the above \emph{abstract} kernels.
+
+A scene will usually also contain lights, each of which must be associated with a kernel. In this case, an implementation of the abstract Light. At program runtime, Light kernels are connected to the per-object kernel types. This mechanism allows specification of custom attenuation, sampling and shadowing algorithms, which automatically are applicable to any Reflectance kernel.
+
+% TODO: link to info about the signatures of these kernels in some other chapter
+
+Such a break-down of kernels may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{renderer} is free to use these kernels in any rendering algorithm, as detailed in section "Renderers". TODO: proper link.
+
+Another core kernel type is used in \emph{post-processing} operations and described in section "Post-Processing". TODO: proper link.
+
+This particular break-down of processing domains is comparable to the \emph{RenderMan} model:
+
+\begin{center}
+\begin{tabular}{ | c | c | c | }
+\hline
+RenderMan shader & Nucleus kernel \\
+\hline
+surface & Material + Reflectance \\
+light & Light \\
+imager & PostProcess \\
+displacement & Structure \\
+volume & --- \\
+\hline
+\end{tabular}
+\end{center}
+
+Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent compoments and apply algorithms which utilize this split for performance gains in complex scene configurations. ( TODO: more info / link / ref to the Renderers section or to the Examples section. ). While it restricts the freedom an artist might have when using \emph{RenderMan}, other real-time rendering systems have often been restricted to just \emph{a single} reflectance model ( TODO: refs to stalker, killzone2, crysis? ).
+
+TODO: note about volume shaders being future work
 
 \section{Semantic type system}
 
