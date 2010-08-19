@@ -22,11 +22,9 @@ When designing a graphics rendering system, it's impossible not to bump into wha
 
 The rendering algorithm mainly utilized by Pixar's flagship implementation of RenderMan is called \textbf{Reyes} (acronym for \emph{Renders Everything You Ever Saw}).
 
-TODO
+TODO: It provides an intuitive programming model which we'd like to use in real-time. However, direct application of Renderman's model is still far away.
 
-It provides an intuitive programming model which we'd like to use in real-time. However, direct application of Renderman's model is still far away.
-
-Use Siggraph 2010 notes to note how poorly current GPUs handle micro-polygons.
+TODO: Use Siggraph 2010 notes to note how poorly current GPUs handle micro-polygons.
 
 \section{Deferred rendering}
 
@@ -51,9 +49,7 @@ Recently a technique known as \emph{deferred shading} has been gaining popularit
 \item For each light, evaluate its contribution on the surfaces encoded within a subset of the buffers.
 \end{enumerate}
 
-TODO
-
-Decouples light / reflectance shaders from material shaders. Neat, but limited BRDFs, problems with transparency.
+TODO: Decouples light / reflectance shaders from material shaders. Neat, but limited BRDFs, problems with transparency.
 
 % http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter09.html
 
@@ -63,11 +59,11 @@ TODO: Graph-based nice for artists, short turn-around time. Need to communicate 
 
 \subsection{Frostbite}
 
-Uses surface shaders, not much info about the other kinds which Renderman provides. Not going away for Frostbite2, a few titles shipped, so probably works out just fine.
+TODO: Uses surface shaders, not much info about the other kinds which Renderman provides. Not going away for Frostbite2, a few titles shipped, so probably works out just fine.
 
 \subsection{Mental Mill}
 
-Seems nice on paper, however custom access to lights from MetaSL looks problematic from the point of view of automatically adapting its shaders to various algorithms.
+TODO: Seems nice on paper, however custom access to lights from MetaSL looks problematic from the point of view of automatically adapting its shaders to various algorithms.
 
 \subsection{Abstract Shade Trees}
 
@@ -97,6 +93,6 @@ The rendering system presented in this work utilizes a \emph{semantic type syste
 
 \section{Permutation management}
 
-Unity3D and Frostbite - Statically generate lots of shaders.
+TODO: Unity3D and Frostbite - Statically generate lots of shaders.
 
-Tri-Ace - Storing of shader permutations generated via play-testing instead of static generation of many combinations.
+TODO: Tri-Ace - Storing of shader permutations generated via play-testing instead of static generation of many combinations.

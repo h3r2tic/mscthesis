@@ -6,25 +6,25 @@
 
 \section{Overall structure}
 
-Nucleus is like an ogre. It has layers. The lowest layer hides the complexity of the underlying API and makes the higher layers API-agnostic via complete isolation.
+TODO: Nucleus is like an ogre. It has layers. The lowest layer hides the complexity of the underlying API and makes the higher layers API-agnostic via complete isolation.
 
-On top of it lies the high level rendering interface where the client programmer manages objects, materials, surfaces, etc.
+TODO: On top of it lies the high level rendering interface where the client programmer manages objects, materials, surfaces, etc.
 
-Aside from that, there's a post-processing framework and a spatial subdivision package for quick scene visibility queries.
+TODO: Aside from that, there's a post-processing framework and a spatial subdivision package for quick scene visibility queries.
 
 \section{Low-level abstraction layer}
 
-The OpenGL API is messy, Cg messy, must have a convenience wrapper. Implemented one that lies on a similar layer as XNA. Possible to use it directly without the rest of the system.
+TODO: The OpenGL API is messy, Cg messy, must have a convenience wrapper. Implemented one that lies on a similar layer as XNA. Possible to use it directly without the rest of the system.
 
 \section{Kernels}
 
 The basic building block of the high level rendering interface of Nucleus is called a \emph{kernel}. Conceptually, it is just a function. The implementation of a kernel may be specified using a code snippet (the current implementation allows the Cg language for this purpose). The more interesting option is to define it using a graph. Specifically, a directed acyclic graph whose nodes are either kernels or special-purpose entities. The special-purpose nodes can be used to denote what constitutes the input and output parameters of a graph-based kernel, as well as to request external data for it.
 
-While first-class support of graphs does not result in more expressive power than what regular function-based composition would, it provides a comfortable mental and programmatic framework for such composition. It enables the use of classical graph algorithms and makes development of authoring tools easier.
+While first-class support of graphs does not result in more expressive power than of regular function-based composition, it provides a comfortable mental and programmatic framework for such composition. It enables the use of classical graph algorithms and makes development of authoring tools easier.
 
 \subsection{Standard kernel types}
 
-Similarly to how GPU-based shading requires the specification of shader programs for each of the processing domains, Nucleus demands that a kernel be provided for each of its domains. Where it differs drastically, is what the domains are. Each object to be rendered must have 3 kernels specified for it (TODO):
+Similarly to how GPU-based shading requires the specification of shader programs for each of the processing domains, Nucleus demands that a kernel be provided for each of its domains. Where it differs drastically, is what the domains are. Each object to be rendered must have 3 kernels specified for it:
 
 \begin{description}
 
@@ -70,20 +70,41 @@ TODO: note about volume shaders being future work
 
 \section{Semantic type system}
 
-As in McGuire's work, Nucleus uses a rich semantic type system in order to hide tedious work.
+% TODO: ref the related work section? maybe put semantic types into an index?
+Nucleus uses \emph{semantic types} in order to describe the signatures of computational kernels. Each type is a set of \emph{trait} values and each \emph{trait} is an enumerated type in the classical meaning used in programming languages. Possible traits and their values include (TODO):
+\begin{description}
+\item[basis] --- world, view, clip, tangent,
+\item[colorSpace] --- RGB, sRGB, logLUV,
+\item[length] --- unit, any,
+\item[linearity] --- linear, logarithmic, exponential,
+\item[use] --- position, normal, color, uv,
+\item[type] --- float, float2, float3, float4, float4x4, ... (Cg type)
+\end{description}
+
+Trait values of the same name are considered distinct if they belong to different traits. For example, value \emph{A} of trait \emph{X} is distinct from value \emph{A} of trait \emph{Y}.
+
+A type is then any combination of trait values, e.g. \emph{"type float3 + use position + basis world"} and \emph{"type float2 + use uv"}, where the "+" sign denotes a delimiter. An empty set of trait values is a valid type as well.
+
+TODO:
+	
+\subsection{Type coercion}
+
+\subsection{Automatic connection determination}
+
+\subsection{Semantic expressions}
 
 \section{Renderers}
 
-Renderers use Renderables and kernels associated with them to render meshes using arbitrary algorithms.
+TODO: Renderers use Renderables and kernels associated with them to render meshes using arbitrary algorithms.
 
 \section{Post-processing}
 
-Nucleus covers one more aspect of Renderman - the \emph{Imager} shaders in the form of kernel graphs which are automatically decomposed into post-processing operations.
+TODO: Nucleus covers one more aspect of Renderman - the \emph{Imager} shaders in the form of kernel graphs which are automatically decomposed into post-processing operations.
 
 \section{Functional composition}
 
-Linear data flow in the kernel DAG too restricting. Nucleus supports functional composition with currying instead.
+TODO: Linear data flow in the kernel DAG too restricting. Nucleus supports functional composition with currying instead.
 
 \section{Code generation}
 
-Generates Cg code which is then introspected by the mid-level layer.
+TODO: Generates Cg code which is then introspected by the mid-level layer.
