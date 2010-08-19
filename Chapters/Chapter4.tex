@@ -6,7 +6,7 @@
 
 \section{Overall structure}
 
-Nucleus is like an ogre. It has layers. The lowest layer hides the complexity of the underlying API and makes the higher layers API-agostic via complete isolation.
+Nucleus is like an ogre. It has layers. The lowest layer hides the complexity of the underlying API and makes the higher layers API-agnostic via complete isolation.
 
 On top of it lies the high level rendering interface where the client programmer manages objects, materials, surfaces, etc.
 
@@ -53,16 +53,18 @@ This particular break-down of processing domains is comparable to the \emph{Rend
 \hline
 RenderMan shader & Nucleus kernel \\
 \hline
-surface & Material + Reflectance \\
-light & Light \\
-imager & PostProcess \\
-displacement & Structure \\
-volume & --- \\
+Surface & Material + Reflectance \\
+Light & Light \\
+Imager & PostProcess \\
+Displacement & Structure \\
+Volume & --- \\
 \hline
 \end{tabular}
 \end{center}
 
-Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent compoments and apply algorithms which utilize this split for performance gains in complex scene configurations. ( TODO: more info / link / ref to the Renderers section or to the Examples section. ). While it restricts the freedom an artist might have when using \emph{RenderMan}, other real-time rendering systems have often been restricted to just \emph{a single} reflectance model ( TODO: refs to stalker, killzone2, crysis? ).
+% TODO: ref http://www.vga.hr/resources/tutorials/3d/rsl/html/chapter_01.htm
+
+Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this split for performance gains in complex scene configurations. ( TODO: more info / link / ref to the Renderers section or to the Examples section. ). While it restricts the freedom an artist might have when using \emph{RenderMan}, other real-time rendering systems have often been restricted to just \emph{a single} reflectance model ( TODO: refs to stalker, killzone2, crysis? ).
 
 TODO: note about volume shaders being future work
 

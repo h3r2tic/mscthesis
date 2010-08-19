@@ -1,8 +1,8 @@
 % Chapter 3
 
-\chapter{ Previous work }
+\chapter{ Related work }
 \label{Chapter3}
-\lhead{Chapter 3. \emph{ Previous work }}
+\lhead{Chapter 3. \emph{ Related work }}
 
 \section{Über- and micro-shaders}
 
@@ -10,7 +10,7 @@ A popular approach at tackling the shader permutation problem is the \emph{ übe
 
 TODO: example
 
-While conceptually simple and easy to implement, the über-shader approach is hard to debug and maintain. A more advanced take at the problem is to keep shader fragments separate and merge them conditionally using run-time logic or conservatively, yet statically generate permutations in the content pipeilne. \citet{Hargreaves04} shows an approach based on runtime shader fragment combining. His implementation relies on a simple extension of the HLSL language in order to define the \emph{imports} and \emph{exports} of a shader fragment. Along with a special \emph{interface block}, a preprocessor is able to combine shader fragments together, linking their inputs and outputs. This effectively hides the complexity from the shader author, making maintainance and debugging easier. Hargreaves praises the robustness of this solution and mentions that it allows the usage of the same shader fragments in various rendering algorithms.
+While conceptually simple and easy to implement, the über-shader approach is hard to debug and maintain. A more advanced take at the problem is to keep shader fragments separate and merge them conditionally using run-time logic or conservatively, yet statically generate permutations in the content pipeline. \citet{Hargreaves04} shows an approach based on runtime shader fragment combining. His implementation relies on a simple extension of the HLSL language in order to define the \emph{imports} and \emph{exports} of a shader fragment. Along with a special \emph{interface block}, a preprocessor is able to combine shader fragments together, linking their inputs and outputs. This effectively hides the complexity from the shader author, making maintenance and debugging easier. Hargreaves praises the robustness of this solution and mentions that it allows the usage of the same shader fragments in various rendering algorithms.
 
 This work builds on shader fragment merging and extends it with automatic parameter type coercion and functional composition. I show how to implement such a scheme in a way that's easy to work with even for non-programmers.
 
@@ -59,7 +59,7 @@ Decouples light / reflectance shaders from material shaders. Neat, but limited B
 
 \section{Graph-based systems}
 
-TODO: Graph-based nice for artists, short turn-around time. Need to communicate well and not have artists go too wild [ref Christer]. Projects succesfully shipped with this approach, more being created, but must still have a way to go down into code and do stuff intuitively, otherwise it's just moving the programming into retarded graphs.
+TODO: Graph-based nice for artists, short turn-around time. Need to communicate well and not have artists go too wild [ref Christer]. Projects successfully shipped with this approach, more being created, but must still have a way to go down into code and do stuff intuitively, otherwise it's just moving the programming into retarded graphs.
 
 \subsection{Frostbite}
 
@@ -69,11 +69,31 @@ Uses surface shaders, not much info about the other kinds which Renderman provid
 
 Seems nice on paper, however custom access to lights from MetaSL looks problematic from the point of view of automatically adapting its shaders to various algorithms.
 
-\subsection{McGuire's Abstract shade trees}
+\subsection{Abstract Shade Trees}
 
-An approach for hiding the complexity of creating shaders in graph-based systems. Hides all manual connections though, not obvious what to do when the automatic approach fails.
+\citet{mcguire2006shadetrees} introduce \emph{Abstract Shade Trees} which offer an interesting solution to the type mismatch problem mentioned byAbram and Whitted. The key concept in their approach is embedding \emph{semantic} information in types used to define the interfaces of computational atoms. This enables a \emph{weaver} algorithm to automatically connect the atoms and perform type coercions.
 
-Mention the stuff it was meant to solve: Whitted's concern for type mismatches.
+They note that regular types used by a shading language such as GLSL are "merely C-style storage specifiers with little value as abstractions. For example, a color, a 3D location, and a row of a 3×3 matrix have the same type, which is also indistinguishable from an array of three floating-point numbers." Their \emph{semantic types} are able to carry more meaningful information, such as:
+\begin{itemize}
+\item The \textbf{Basis} in which instances of this type are defined (tangent, object, world, screen).
+\item \textbf{Length} of a vector (unit, any).
+\item The very interpretation, e.g. whether it’s a color, a texture coordinate or a normal vector.
+\end{itemize}
+
+Such a type system allows stronger checking, but it also enables automating tedious tasks such as coordinate-space conversions. For example, when one atom outputs a position vector in \emph{object} space, and another requires the position in \emph{world} space, it's possible to generate code to perform the required math.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Chapters/AbstractShadeTree.jpg}
+    \caption[Abstract Shade Tree]{A conventional Shade Tree (left) and the equivalent Abstract Shade Tree (right). Image courtesy of McGuire et al.}
+  \label{fig:AbstractShadeTree}
+\end{figure}
+
+An \emph{Abstract Shade Tree} is normally much more compact than an equivalent \emph{conventional Shade Tree}, as demonstrated by Figure \ref{fig:AbstractShadeTree}. Thanks to the complexity hiding, shader authoring becomes less error prone and especially easier for users who do not have knowledge of programming concepts such as types, variables or the vector math used to implement algorithms inside the atoms.
+ 
+% TODO: cite Abram and Whitted's work in the beginning of the section
+
+The rendering system presented in this work utilizes a \emph{semantic type system}, however it's not central to its function. Manual connections of inputs and outputs are allowed in addition to setting coarse-grained dependencies between atoms. Both the former and the latter are then subject to automatic type coercions, hence type safety is retained. I also extend the work of McGuire et al. with the introduction of \emph{semantic expressions}, which provide parametric polymorphism and basic type algebra for atom parameters.
 
 \section{Permutation management}
 
