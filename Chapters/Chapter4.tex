@@ -22,6 +22,10 @@ The basic building block of the high level rendering interface of Nucleus is cal
 
 While first-class support of graphs does not result in more expressive power than of regular function-based composition, it provides a comfortable mental and programmatic framework for such composition. It enables the use of classical graph algorithms and makes development of authoring tools easier.
 
+As a convention, the return values of kernels are called \emph{output parameters} and denoted by the \textbf{out} keyword in the kernel signature. Conversely, regular kernel parameters are called \emph{input parameters} and optionally denoted by the \textbf{in} keyword. This is modeled after the Cg shading language.
+
+Within a kernel graph, connections may exist between particular nodes, as well as between particular parameters of the nodes.
+
 \subsection{Standard kernel types}
 
 Similarly to how GPU-based shading requires the specification of shader programs for each of the processing domains, Nucleus demands that a kernel be provided for each of its domains. Where it differs drastically, is what the domains are. Each object to be rendered must have 3 kernels specified for it:
@@ -81,17 +85,55 @@ Nucleus uses \emph{semantic types} in order to describe the signatures of comput
 \item[type] --- float, float2, float3, float4, float4x4, ... (Cg type)
 \end{description}
 
-Trait values of the same name are considered distinct if they belong to different traits. For example, value \emph{A} of trait \emph{X} is distinct from value \emph{A} of trait \emph{Y}.
+Trait values of the same name are considered distinct if they belong to different traits. For example, value \emph{A} of trait \emph{X} is distinct from value \emph{A} of trait \emph{Y}. In order to make the definition mathematically sound, a trait value may be considered a $(trait, value)$ tuple.
 
 A type is then any combination of trait values, e.g. \emph{"type float3 + use position + basis world"} and \emph{"type float2 + use uv"}, where the "+" sign denotes a delimiter. An empty set of trait values is a valid type as well.
 
-TODO:
-	
 \subsection{Type coercion}
 
+A kernel graph specified by the user or constructed by an algorithm must be type-checked within Nucleus before it is used in any rendering operation. I first discuss how the process works on individual connections, then extend the result to complete kernel graphs.
+
+Given a connection from an output parameter of type $X$ to a input parameter of type $Y$, the connection is determined to be valid if $Y \subseteq X$. Otherwise such a connection is a type mismatch. For example, connecting an output parameter of type \emph{"type float3 + use position"} to an input parameter of type \emph{"type float3"} is valid, however connecting \emph{"type float4"} to \emph{"type float3"} or to \emph{"type float4 + use color"} is a mismatch.
+
+In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by inserting additional computational kernels between the source and the destination. The kernels which it considers come from a specially designated set of \emph{semantic converters}. Each semantic converter is a kernel of a single input and a single output parameter. Additionally an integral \emph{cost} value is associated with each converter, which is an estimate of the computational complexity of the code within its definition.
+
+It's possible to define a directed weighted graph $G=(V, E)$ such that its vertices, $V$ are all possible semantic types. The graph contains an edge $e$ from $a$ to $b$ if and only if there exists a converter, which turns type $a$ into a type which may be connected to type $b$ without a mismatch. The weight associated with $e$ is the cost value of the corresponding converter.
+
+Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
+
+% TODO: some pictures
+	
 \subsection{Automatic connection determination}
 
+The kernel graph may contain connections not only between particular parameters, but also between kernels. The type-checking process converts these coarse-grained dependencies into individual parameter connections using an extension of the type coercion algorithm.
+
+To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error.
+
+% TODO: some pictures
+
 \subsection{Semantic expressions}
+
+TODO:
+
+Nucleus also extends the technique proposed in Abstract Shade Trees by allowing the use of simple expressions which operate on semantic traits in the specification of output parameter semantics.
+
+When working with a prototype of Nucleus which utilized a simpler version of the type system, it became apparent it's useful not only to compute values using kernels, but also let the output semantics of kernel functions depend on the input semantics of these functions and the kernels they're connected to. For instance, One could have a kernel which samples a texture. Textures may be tagged with traits, specifying what sort of data they contain. If such a texture is connected to the sampling kernel, it's crucial to be able to express that the type of the sample should retain the traits of the texture. This is enabled by semantic expressions.
+
+The sampling kernel could have the following signature:
+
+\begin{lstlisting}[frame=single]
+Tex2D = kernel (
+    in texture <type sampler2D>,
+    in uv <type float2 + use uv>,
+    out sample <in.texture.actual + type float4>
+);
+\end{lstlisting}
+
+% TODO: change other quotes to the `` ... '' style
+
+In this case, the traits of the output parameter ``sample'' depend on the actual parameter which is connected to the input ``texture'' parameter in a kernel graph. Hence, the result of connecting an input with a semantic <type sampler2D + use color> will be a sample with the semantic <type float4 + use color>.
+
+TODO: subtractive expressions
 
 \section{Renderers}
 
@@ -99,12 +141,51 @@ TODO: Renderers use Renderables and kernels associated with them to render meshe
 
 \section{Post-processing}
 
-TODO: Nucleus covers one more aspect of Renderman - the \emph{Imager} shaders in the form of kernel graphs which are automatically decomposed into post-processing operations.
+%Nucleus covers one more aspect of Renderman - the \emph{Imager} shaders in the form of kernel graphs which are automatically decomposed into post-processing operations.
+
+TODO:
+
+In addition to regular scene rendering, Nucleus contains special support for post-processing. It is performed by specifying a kernel and feeding it data. In this case, the data is just a texture (multiple inputs into the post-processing pipeline are planned for a later stage).
+
+A simple post-processing pipeline might look like this:
+
+TODO: img
+
+Nodes using the special Blit kernel are used to break the graph to be rendered in multiple passes. This enables the implementation of algorithms such as the separable Gaussian blur. Blit nodes may also rescale the input as well as change its internal format.
+
+In this case, the graph would be broken down into two passes:
+	
+TODO: img
+
+TODO: In more complex cases, Nucleus will also find which passes may be performed at the same time and automatically use Multiple Render Targets.
 
 \section{Functional composition}
 
-TODO: Linear data flow in the kernel DAG too restricting. Nucleus supports functional composition with currying instead.
+TODO: 
 
+% TODO: Linear data flow in the kernel DAG too restricting. Nucleus supports functional composition with currying instead.
+
+Implementing post-processing using the framework of a regular graph-based editor is a tricky business. Consider the following graph:
+
+TODO: img
+
+The \textbf{Blur} kernel expects to get an image which it may sample multiple times, with various offsets. Connecting the \emph{Input} directly to \emph{Blur} would have done the trick, however the user has decided to filter the input through a power function first. The function operates not on Images, but on individual samples. Normally, the system would give up completely, however Nucleus has one more trick up its sleeve.
+
+In this case, the \textbf{Image} type is nothing but a kernel. Particularly, one with the following signature:
+	
+\begin{lstlisting}[frame=single]
+Image = kernel(
+    in uv <type float2 + use uv>,
+    out sample <type float4>
+);
+\end{lstlisting}
+
+Hence, the Blur kernel above expects \emph{another kernel} as its input, but the parameter connected to this input is not a kernel. Its type, however, is the type of the kernel's output parameter. This special case causes the type system to consider the whole incoming graph for \emph{functional composition}. As a result, the graph might be turned into:
+
+TODO: img
+
+Naturally this very mechanism is not restricted to just the post-processing component of Nucleus and may be used e.g. in order to implement procedural texturing.
+	
 \section{Code generation}
 
 TODO: Generates Cg code which is then introspected by the mid-level layer.
