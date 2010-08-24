@@ -4,8 +4,6 @@
 \label{Chapter6}
 \lhead{Chapter 6. \emph{ Examples }}
 
-TODO: 
-
 \section{Forward rendering}
 
 Forward rendering is the classical algorithm utilized since the very beginning of rasterization and definitely the most commonly used one thus far. Since the introduction of GeForce 256 in late 1999, it has had special hardware and API support in consumer graphics devices. The special support is only being phased out recently due to programmable shading's ability of supporting the whole forward rendering algorithm efficiently. While modern rendering APIs such as \emph{Direct3D 10} and \emph{OpenGL 3.1's Core profile} no longer have dedicated support for transformation and lighting, the algorithm is still widely used and implemented via shaders. Despite other rendering algorithms being available, the performance characteristics of the forward approach make it favorable in many circumstances, hence it's imperative that Nucleus provides out of the box support for it.
@@ -66,7 +64,7 @@ Where ``$\Rightarrow$'' denotes the operation of graph fusion and \textbf{foldl}
 	"Material" -> "*";
 	"*" -> "output";
     }
-    \caption[Abstract Shade Tree]{A conventional Shade Tree (left) and the equivalent Abstract Shade Tree (right). Image courtesy of McGuire et al.}
+    \caption[Forward rendering graph]{The composition of kernels for the \emph{Forward} rendering algorithm}
   \label{fig:ForwardRenderingGraphSample}
 \end{figure}
 
@@ -79,6 +77,97 @@ TODO: some timings for compiling kernel graphs, discussion about caching compile
 TODO: mention of the block-based memory management and the resulting lack of fragmentation.
 
 \section{Deferred lighting}
+
+I have implemented a \emph{light pre-pass} renderer, which may be seamlessly used in place of the \emph{forward} algorithm. As described in section [TODO: ref intro], the algorithm is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
+
+\subsection{Geometry stage}
+
+Most of the attributes required for the \emph{G-buffer} are computed by the \emph{Structure} kernel. Still, a \emph{Material} kernel may want to alter the normals in order to simulate a bumpy surface. These altered normals must be written into the \emph{G-buffer}. Hence, the first stage composes the two kernels and selectively writes their outputs to the \emph{G-buffer} as shown in Figure \ref{fig:DeferredLightingStage1}. The \emph{Material} kernel possibly writes more outputs than this stage uses, however, graph reduction is performed, so only the relevant parts are actually used at runtime. The \emph{Cg} compiler effectively removes any other extra computations.
+
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.5\linewidth]{DeferredLightingStage1}{
+	"Structure" -> "Material";
+	"Material" -> "G-buffer";
+    }
+    \caption[Light Pre-Pass Stage 1]{The composition of kernels for the \emph{Geometry} stage of the  \emph{light pre-pass} rendering algorithm}
+  \label{fig:DeferredLightingStage1}
+\end{figure}
+
+The \emph{G-buffer} has the following layout:
+
+\begin{center}
+\begin{tabular}{ | c | c | c | c | }
+\hline
+\multicolumn{4}{|c|}{ depth : f32 } \\
+\hline
+normal\_a:f16 & normal\_b:f16 & surface\_id:f16 & roughness:f16 \\
+\hline
+\end{tabular}
+\end{center}
+
+The normalized view-space normal is encoded in the \emph{G-buffer} using the \emph{Lambert Azimuthal Equal-Area projection} [TODO: ref Aras].
+
+\subsection{Light stage}
+
+Deferred renderers are notorious for being quite rigid with respect to illumination models achievable with them. This is because once the G-buffer is rendered, the light stage doesn't have access to per-object shaders, which might perform custom shading. Light volumes must then be rendered with the same shader for each pixel, regardless of which scene object a fragment in the G-buffer comes from.
+
+A common approach is to use just one reflectance model ( usually the half-angle version of Phong's ) for all pixels and only control roughness. This may work just fine for games which don't require drastically varying surface styles.
+
+Another solution is to render the majority of the scene using deferred rendering, but fall-back to forward rendering for surfaces requiring a different reflection model. Such an approach means that objects using the second-class reflectance models have to be used sparingly, and thus form a constraint imposed on artists.
+
+The approach which Nucleus takes instead is not a novel one, but hasn't been widely adopted due to being costly on past generations of graphics hardware.
+
+The G-buffer stores the \emph{surface ID} to be used at a given pixel and a fragment shader of the light stage branches on it, choosing the appropriate \emph{Reflectance} kernel implementation. The kernel index and parameters for it are stored in a texture, into which the \emph{G-buffer} contains a coordinate. The current approach allows up to 256 different surfaces, each of which might potentially use a different \emph{Reflectance} kernel. Obviously, this is not free either, however with the advent of real branching in recent GPU generations means that in practice the cost is not very high [TODO: numbers].
+
+The code template used to compose multiple BRDFs together has the following structure:
+
+\begin{lstlisting}[frame=single]
+float surfaceId = tex2D(attribTex, uv);
+float reflectanceId = tex2D(surfaceId, float2(surfaceId, 0));
+ 
+if (reflectanceId < A) {
+    result = BRDF1(
+        tex2D(surfaceId, float2(surfaceId, ...)),
+        tex2D(surfaceId, float2(surfaceId, ...)),
+        tex2D(surfaceId, float2(surfaceId, ...))
+    )
+} else if (reflectanceId < B) {
+    result = BRDF2(...);
+} else if (reflectanceId < C) {
+    ...
+} else {
+    ...
+}
+\end{lstlisting}
+
+TODO: The code template includes dependent texture fetches and rather heavy branching. This is an obvious source of execution and memory latency, however modern GPU architectures are able to hide that latency [TODO: ref the latest Siggraph paper about GPU pipelines].
+
+As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in Figure \ref{fig:DeferredLightingStage2}), the only distinction is that it's compiled for the purpose of rendering the bounding volumes of lights.
+
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.9\linewidth]{DeferredLightingStage2}{
+	"G-buffer" -> "Reflectance1";
+	"G-buffer" -> "Reflectance2";
+	"G-buffer" -> "Reflectance3";
+	"G-buffer" -> "Light";
+	"Reflectance1" -> "switch";
+	"Reflectance2" -> "switch";
+	"Reflectance3" -> "switch";
+	"switch" -> "Reflectance";
+	"Light" -> "Reflectance";
+	"Reflectance" -> "Illumination buffer";
+    }
+    \caption[Light Pre-Pass Stage 2]{The composition of kernels for the \emph{Light} stage of the  \emph{light pre-pass} rendering algorithm}
+  \label{fig:DeferredLightingStage2}
+\end{figure}
+
+TODO: The current implementation uses a geometry shader to instantiate a cube for each light, taking a single point for the input. It also performs approximate culling of light volumes with the help of the EXT\_depth\_bounds\_test OpenGL extension where it's available.
+
+\subsection{Material stage}
+
+TODO
 
 \section{Shadows}
 
