@@ -78,6 +78,8 @@
 \if@twocolumn\hbox{}\newpage\fi\fi\fi}
 \usepackage{amsmath,amsfonts,amssymb,amscd,amsthm,xspace,fontspec,xunicode,xltxtra}
 
+\usepackage{algorithmic}
+
 \setmainfont[Mapping=tex-text]{Palatino Linotype}
 
 \theoremstyle{plain}
@@ -115,7 +117,11 @@
 \usepackage{booktabs}
 \usepackage{rotating}
 \usepackage{listings}
-\usepackage{lstpatch}
+
+%\usepackage[dvips]{graphicx}
+\input{graphviz}
+
+%\usepackage{lstpatch}
 \lstset{captionpos=b,
         frame=tb,
         basicstyle=\scriptsize\ttfamily,

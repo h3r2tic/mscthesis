@@ -7,6 +7,7 @@ del Thesis.toc
 del Thesis.log
 xelatex Thesis.tex
 bibtex Thesis
+bash -login genGraphs.sh
 xelatex Thesis.tex
 xelatex Thesis.tex
 

@@ -1,0 +1,21 @@
+Digraph G {
+
+graph [concentrate=false, remincross=true, labeljust=l, rankdir=LR, ratio=compress, nodesep=0.5, fontname=Verdana, fontsize=12, fontcolor="#000000", bgcolor="#ffffff", pad=0.2];
+style = "filled,rounded"
+
+node [
+	shape = "Mrecord"
+	fontname = "Verdana"
+	fontsize = 12
+	style = "filled"
+	fontcolor = "#000000"
+	color = "#808080"
+	fillcolor = "#f0f0f0"
+];
+
+edge [
+	fontname = "Verdana"
+	fontsize = 10
+	color = "#000000"
+];
+

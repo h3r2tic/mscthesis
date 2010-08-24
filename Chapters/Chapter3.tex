@@ -48,11 +48,22 @@ Splitting objects into smaller pieces might be an option, however GPU batch subm
 Recently a technique known as \emph{deferred shading} has been gaining popularity, as it offers an elegant solution to both of these problems. Originally proposed in \citet{DeeringDeferred}, the algorithm separates the rendering pipeline into two stages:
 
 \begin{enumerate}
-\item Render surface attributes of the visible scene into a set of framebuffers.
+\item Render surface attributes of the visible scene into a set of framebuffers \emph{(collectively called the \textbf{G-buffer})}.
 \item For each light, evaluate its contribution on the surfaces encoded within a subset of the buffers.
 \end{enumerate}
 
 TODO: Decouples light / reflectance shaders from material shaders. Neat, but limited BRDFs, problems with transparency.
+
+\subsection{Deferred lighting}
+
+% TODO: ref the olde nvidia paper
+The regular deferred rendering algorithm requires a large G-buffer [TODO: ref Killzone2], which in some cases may be prohibitive due to memory capacity or bandwidth constraints. \citet{Engel08PrePass} proposes an alternative approach, currently known \emph{light pre-pass}, \emph{deferred lighting} or \emph{pre-lighting}. Unlike classical deferred rendering, which consists of two phases, this algorithm is composed of three stages:
+
+\begin{enumerate}
+\item Render a minimal G-buffer, containing the surface depth and normal.
+\item For each light, evaluate its contribution on the surfaces encoded within a subset of the buffers using only the reflectance model.
+\item Render scene objects again, this time fully evaluating their materials and combining them with the illumination computed in the previous step.
+\end{enumerate}
 
 % http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter09.html
 

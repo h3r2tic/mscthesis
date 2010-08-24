@@ -7,7 +7,79 @@
 TODO: 
 
 \section{Forward rendering}
-\section{Deferred rendering}
+
+Forward rendering is the classical algorithm utilized since the very beginning of rasterization and definitely the most commonly used one thus far. Since the introduction of GeForce 256 in late 1999, it has had special hardware and API support in consumer graphics devices. The special support is only being phased out recently due to programmable shading's ability of supporting the whole forward rendering algorithm efficiently. While modern rendering APIs such as \emph{Direct3D 10} and \emph{OpenGL 3.1's Core profile} no longer have dedicated support for transformation and lighting, the algorithm is still widely used and implemented via shaders. Despite other rendering algorithms being available, the performance characteristics of the forward approach make it favorable in many circumstances, hence it's imperative that Nucleus provides out of the box support for it.
+
+The basic outline of the forward rendering algorithm is as follows:
+	
+\begin{algorithmic}
+\FOR{each $object$ \textbf{in} $scene$}
+	\STATE $lights$ $\Leftarrow$ determine-lights-influencing($object$)
+	\STATE $radiance \Leftarrow 0$
+	\FOR{each $light$ \textbf{in} $lights$}
+		\STATE $radiance \Leftarrow radiance$ + \textbf{illuminate}($object$, $light$)
+	\ENDFOR
+	\STATE $output(radiance)$
+\ENDFOR
+\end{algorithmic}
+
+The inner loop iterating all lights influencing an object can either can be approached in severals ways, for instance via multi-pass rendering, accumulating light influences into a \emph{Spherical Harmonics}-based approximation, approximating multiple lights into a single ``best-fit'' source, etc. The implementation in Nucleus uses a relatively simple approach of summing the contributions per-pixel on the GPU.
+
+Iteration over a dynamically-sized array of lights in the fragment shader is an option, however it may be observed that for each light set influencing an object, all pixels will take the same branches. Hence it's desirable to unroll the loops and conditionals. This is done by generating a specialized shader for each set of influencing lights and statically evaluating all contributions.
+
+\subsection{Kernel graph generation}
+
+Each object has a \emph{Structure}, a \emph{Material} and a \emph{Reflectance} kernel associated with it. Each influencing light, a \emph{Light} kernel. The goal is simple then: given the set of kernels, create a single kernel graph describing the complete rendering operation. Such a graph may then be passed to the code generation subsystem in order to obtain GPU shaders.
+
+As it turns out, this task is straightforward within the framework of Nucleus:
+	
+\begin{algorithmic}
+\STATE $Structure \Rightarrow Material$
+\STATE $radiance\_nodes \Leftarrow \emptyset$
+\FOR{each $light$}
+	\STATE $radiance\_nodes \Leftarrow radiance\_nodes \cup (light.kernel \Rightarrow Illumination)$
+\ENDFOR
+\STATE $Material \Rightarrow *$
+\STATE $\textbf{foldl}(+, 0,radiance\_nodes) \Rightarrow *$
+\STATE $* \Rightarrow \textbf{output}$
+\end{algorithmic}
+
+Where ``$\Rightarrow$'' denotes the operation of graph fusion and \textbf{foldl} is a functional reduction operator similar to the one used by the \emph{Haskell} programming language [TODO: ref], defined in terms of kernel graph composition.
+
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.9\linewidth]{ForwardRenderingGraphSample}{
+	"Reflectance1" [
+		label = "Reflectance"
+	];
+	"Reflectance2" [
+		label = "Reflectance"
+	];
+	"Structure" -> "Material";
+	"Material" -> "Reflectance1";
+	"Material" -> "Reflectance2";
+	"Light1" -> "Reflectance1";
+	"Light2" -> "Reflectance2";
+	"Reflectance1" -> "+";
+	"Reflectance2" -> "+";
+	"+" -> "*";
+	"Material" -> "*";
+	"*" -> "output";
+    }
+    \caption[Abstract Shade Tree]{A conventional Shade Tree (left) and the equivalent Abstract Shade Tree (right). Image courtesy of McGuire et al.}
+  \label{fig:ForwardRenderingGraphSample}
+\end{figure}
+
+Figure \ref{fig:ForwardRenderingGraphSample} shows an example of the kernel graph composition algorithm for the forward renderer.
+
+After code generation, an \emph{Effect} is compiled (as described in section [TODO: ref the mid-level section]) and memoized using the input kernel set as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of lights, materials and reflectances appears.
+
+TODO: some timings for compiling kernel graphs, discussion about caching compiled shaders.
+
+TODO: mention of the block-based memory management and the resulting lack of fragmentation.
+
+\section{Deferred lighting}
+
 \section{Shadows}
 
 Intro to shadow mapping.
