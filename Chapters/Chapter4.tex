@@ -6,20 +6,24 @@
 
 \section{Overall structure}
 
-TODO: Nucleus is like an ogre. It has layers. The lowest layer hides the complexity of the underlying API and makes the higher layers API-agnostic via complete isolation.
+At the highest level, the architecture of Nucleus is split in two layers. The first layer completely wraps an underlying rendering API, providing primitives which are easier to use and less error-prone, while retaining the efficiency in the usage patterns Nucleus is designed for.
 
-TODO: On top of it lies the high level rendering interface where the client programmer manages objects, materials, surfaces, etc.
+The second layer is the high-level rendering interface which is the main topic of this thesis, described in further detail in this chapter.
 
-TODO: Aside from that, there's a post-processing framework and a spatial subdivision package for quick scene visibility queries.
+Aside from that, Nucleus offers a post-processing framework, which in turn may use both of these layers.
 
 \section{Low-level abstraction layer}
 
-TODO: The OpenGL API is messy, Cg messy, must have a convenience wrapper. Implemented one that lies on a similar layer as XNA. Possible to use it directly without the rest of the system.
+The high-level machinery of Nucleus may be built directly on top of a rendering API such as OpenGL or Direct3D, however a wrapper over these is desirable for numerous reasons:
 
-TODO:
-	
-This layer completely isolates the underlying rendering API \emph{(currently OpenGL 3.3 + CgFX)} and gives an easy to use interface on top of it. The main building blocks are:
-	
+\begin{enumerate}
+\item The OpenGL API is portable and supported by multiple operating systems, however its implementation in drivers is less stable than that of Direct3D. It's hence vital to be able to support both APIs.
+\item Hardware may support rendering APIs to varying degrees via feature sets and extensions, yet workarounds may be created and exposed as a common set of features. Additionally, features required by the standards are sometimes implemented in varying, sometimes incorrect bugs. The wrapper allows these exceptional details to be caught in a single point.
+\item Directly working with the graphics API is error-prone and may be difficult to debug. The wrapper can enforce particular usage patterns, allow easy resource management and reduce code duplication, all of which lead to faster and more straight-forward development.
+\end{enumerate}
+
+The low-level abstraction layer has been built on a level similar to Microsoft's XNA library and currently has a backend utilizing \emph{OpenGL 3.3} and NVidia's \emph{Cg Toolkit}. The main building blocks of the framework are:
+
 \begin{description}
 
 \item[Effect] --- wraps vertex, geometry and fragment shaders together, allows shader specialization (e.g. setting the implementations of Cg interfaces, providing sizes for unsized Cg arrays). Once compiled, allows the programmer to provide values for uniform parameters shared by all instances of the effect. Finally, it allows instantiation into EffectInstances.
