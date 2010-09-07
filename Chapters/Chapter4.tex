@@ -16,6 +16,51 @@ TODO: Aside from that, there's a post-processing framework and a spatial subdivi
 
 TODO: The OpenGL API is messy, Cg messy, must have a convenience wrapper. Implemented one that lies on a similar layer as XNA. Possible to use it directly without the rest of the system.
 
+TODO:
+	
+This layer completely isolates the underlying rendering API \emph{(currently OpenGL 3.3 + CgFX)} and gives an easy to use interface on top of it. The main building blocks are:
+	
+\begin{description}
+
+\item[Effect] --- wraps vertex, geometry and fragment shaders together, allows shader specialization (e.g. setting the implementations of Cg interfaces, providing sizes for unsized Cg arrays). Once compiled, allows the programmer to provide values for uniform parameters shared by all instances of the effect. Finally, it allows instantiation into EffectInstances.
+
+\item[EffectInstance] --- provides a name space and storage for uniform and varying parameters associated with a single instance of an Effect. Additionally, uses a VertexArray to cache current varying parameter bindings. Automatically performs reference counting of resources assigned as uniform (Textures) and varying parameters (VertexBuffers). The memory for EffectInstances is allocated from pools in contiguous slabs for both the structure data and the effect-dependent payload. By adding an indirection to parameter storage, multiple Effects and EffectInstances may source their parameters from the same variable in memory, possibly managed entirely by the client.
+
+\item[Buffer] ---allows the specification and modification of graphics API-allocated memory (VRAM, AGP, system).
+
+\begin{description}
+\item[VertexBuffer] --- used for generic untyped vertex attributes. The actual types are specified when binding varying parameters to EffectInstances and specifying the offset, stride and type of the underlying data.
+\item[IndexBuffer] --- specialized for 16 and 32-bit mesh indices.
+\item[UniformBuffer] --- bindable uniform / constant buffers for shader programs.
+\end{description}
+
+\item[VertexArray] --- a special kind of a driver-level object that caches varying parameter bindings, allowing for reduction of API calls.
+
+\item[Framebuffer] --- wrapper over all classes of framebuffers with automatic usage of Multiple Render Targets, rendering to textures, floating point support, etc.
+
+\item[Texture] --- 1D, 2D, 3D, rectangle, cube, \ldots
+
+\end{description}
+
+The aforementioned resources are accessed via opaque handles created and managed by a \textbf{Renderer}, eliminating the potential of fatal user mistakes such as manual disposal of a resource and its subsequent usage or memory corruption.
+
+Additionally, the \textbf{Renderer} provides functionality to create, dispose and render the contents of a \textbf{RenderList} according to the current \textbf{RenderState}.
+
+The \textbf{RenderList} is a collection of indices (ordinals) of EffectInstances and basic associated data required to render them, including:
+	
+\begin{itemize}
+\item Model $\rightarrow$ world and world $\rightarrow$ model transformation 4×3 matrices
+\item An IndexBuffer along with the count of indices to use, offset, min and max therein
+\item The number of instances of the object to be rendered via \emph{hardware instancing}
+\item Mesh topology
+\end{itemize}
+
+An important factor to note is that the RenderList does not plainly contain EffectInstances, but rather their \emph{rendering ordinals}. The ordinals are u32 numbers assigned to each effect instance and managed internally by the renderer. Their order is determined by a heuristic attempting to minimize the number of state changes required when rendering the instances (currently: sorting by texture handles). This means that once the render list is constructed, the algorithm to minimize the required state changes basically boils down to \emph{sorting the ordinals}, which is a very cheap operation. More ordering options will be made available in the future, so that the objects may be sorted by distance or using per-Effect routines built with knowledge of their performance characteristics.
+
+As mentioned before, the \textbf{Renderer} also gives access to the \textbf{RenderState}, a set of common rendering settings, such as the mode of Z-testing, blending, back-face culling, etc.
+
+The Graphics base layer can therefore be used instead of the underlying graphics API, completely hiding its complexity and error-prone setup. It also makes it possible to change the backend without introducing client code. Implementation of a \textbf{Direct3D}-based \textbf{Renderer} is one possible area of future research.
+	
 \section{Kernels}
 
 The basic building block of the high level rendering interface of Nucleus is called a \emph{kernel}. Conceptually, it is just a function. The implementation of a kernel may be specified using a code snippet (the current implementation allows the Cg language for this purpose). The more interesting option is to define it using a graph. Specifically, a directed acyclic graph whose nodes are either kernels or special-purpose entities. The special-purpose nodes can be used to denote what constitutes the input and output parameters of a graph-based kernel, as well as to request external data for it.
