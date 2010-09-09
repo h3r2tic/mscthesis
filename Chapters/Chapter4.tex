@@ -258,6 +258,8 @@ $g(h(w_0 v(p_0) + w_1 v(p_1) + w_2 v(p_2))) = g(w_0 h(v(p_0)) + w_1 h(v(p_1)) + 
 
 Subsequently, we can define a vertex shader function $v\prime = h \circ v$ and a fragment shader function $f\prime = g$. This result shows that it is legal to move a kernel from the fragment stage to the vertex stage as long as all of its inputs come from the vertex stage and the kernel implements a linear function. By utilizing this rule repeatedly in topological order, the process can be done in a single pass for the entire kernel graph. Nucleus currently allows a kernel to be tagged as linear, however in a future implementation this may be inferred automatically through semantic analysis of the code.
 
-TODO: some numbers showing gain from doing this
+Figure (TODO: linearOptScr.png) shows a test scene which renders at 93 FPS without this optimization step and at 96 FPS with it enabled. 131/133 in the sponza scr. Not much gain, but the optimization is trivial.
+
+\subsection{Code generation for functional composition}
 
 TODO: Describe what functional composition turns into

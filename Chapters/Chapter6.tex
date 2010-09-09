@@ -72,10 +72,11 @@ Figure \ref{fig:ForwardRenderingGraphSample} shows an example of the kernel grap
 
 After code generation, an \emph{Effect} is compiled (as described in section [TODO: ref the mid-level section]) and memoized using the input kernel set as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of lights, materials and reflectances appears.
 
-TODO: some timings for compiling kernel graphs, discussion about caching compiled shaders.
+% TODO: some timings for compiling kernel graphs, discussion about caching compiled shaders.
 
-TODO: mention of the block-based memory management and the resulting lack of fragmentation.
+% TODO: mention of the block-based memory management and the resulting lack of fragmentation.
 
+\clearpage
 \section{Deferred lighting}
 
 I have implemented a \emph{light pre-pass} renderer, which may be seamlessly used in place of the \emph{forward} algorithm. As described in section [TODO: ref intro], the algorithm is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
@@ -141,7 +142,9 @@ if (reflectanceId < A) {
 }
 \end{lstlisting}
 
-TODO: The code template includes dependent texture fetches and rather heavy branching. This is an obvious source of execution and memory latency, however modern GPU architectures are able to hide that latency [TODO: ref the latest Siggraph paper about GPU pipelines].
+The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it. [TODO: ref the latest Siggraph paper about GPU pipelines].
+% TODO: move this to the future work section?
+If this branching still turns out to be prohibitive, it's possible to reduce its cost using tile-based deferred rendering similar to [TODO: ref]. The framebuffer would be split into tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
 
 As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in Figure \ref{fig:DeferredLightingStage2}), the only distinction is that it's compiled for the purpose of rendering the bounding volumes of lights.
 
@@ -163,12 +166,40 @@ As any of the other passes, the \emph{Light stage} generates a kernel graph (an 
   \label{fig:DeferredLightingStage2}
 \end{figure}
 
-TODO: The current implementation uses a geometry shader to instantiate a cube for each light, taking a single point for the input. It also performs approximate culling of light volumes with the help of the EXT\_depth\_bounds\_test OpenGL extension where it's available.
+The current implementation uses a geometry shader to instantiate a cube for each light, taking a single point as the input. Only the quads facing away from the camera are drawn and reverse depth testing is performed in order to do approximate light culling. \\
+Such setup will enable rendering of thousands of lights in a single batch, however this is not implemented yet. The downside of doing this for every light type would be large overdraw, since some lights may span a large portion of the screen and would benefit from more exact culling instead. Because of this, lights are actually drawn in separate batches, and approximate culling of their volumes is performed via the EXT\_depth\_bounds\_test OpenGL extension. Whereas the aforementioned reverse depth test allows culling of light volumes which are entirely in front of scene geometry, it doesn't do anything about the volumes being behind geometry. Depth bounds testing allows a range of depth values to be specified, so that no fragment is rendered if the value \emph{already in the depth buffer} is outside of this range. By conservatively specifying the minimum and maximum depth values of light volumes for this test, this effectively allows coarse culling. TODO: some picture.
+
+The illumination is rendered to a framebuffer of the same resolution as the screen, with two floating-point RGB attachments --- one for the diffuse illumination component, another for the specular.
 
 \subsection{Material stage}
 
-TODO
+Once the illumination buffer has been rendered, the final step is to combine it with scene object materials. In the light pre-pass algorithm, this is done by rendering the scene geometry again, in a similar fashion to regular forward rendering. The difference is that instead of computing the lighting, it's sampled from the previously rendered buffer. The diffuse part is multiplied by the material's albedo and the specular component -- by the specular tint of the material. The final radiance at the point is obtained by summing the two values.
 
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.9\linewidth]{DeferredLightingStage3}{
+    	"mul1" [
+    		label = "*"
+    	];
+    	"mul2" [
+    		label = "*"
+    	];
+	"Structure" -> "Material";
+	"Diffuse illumination" -> "mul1";
+	"Specular illumination" -> "mul2";
+	"Material" -> "albedo";
+	"albedo" -> "mul1";
+	"Material" -> "specular tint";
+	"specular tint" -> "mul2";
+	"mul1" -> "+";
+	"mul2" -> "+";
+	"+" -> "output";
+    }
+    \caption[Light Pre-Pass Stage 3]{The composition of kernels for the \emph{Material} stage of the  \emph{light pre-pass} rendering algorithm}
+  \label{fig:DeferredLightingStage3}
+\end{figure}
+
+\clearpage
 \section{Shadows}
 
 Intro to shadow mapping.
@@ -177,4 +208,5 @@ Regular shadow mapping.
 
 Variance shadow mapping.
 
+\clearpage
 \section{Post-processing effects}
