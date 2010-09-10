@@ -91,25 +91,31 @@ The regular deferred rendering algorithm requires a large G-buffer [TODO: ref Ki
 
 \section{Graph-based systems}
 
-TODO: Graph-based nice for artists, short turn-around time. Need to communicate well and not have artists go too wild [ref Christer]. Projects successfully shipped with this approach, more being created, but must still have a way to go down into code and do stuff intuitively, otherwise it's just moving the programming into retarded graphs.
+Creating immersive environments requires many complex shaders. \citet{Tatarchuk06ToyShop} mentions that the ``Toy Shop'' tech demo contained about 500 custom shaders, so this number can only be expected to be higher in a complete game. It must therefore be easy to create custom shaders, and it must be straightforward for artists in particular.
 
-\subsection{Frostbite}
+% http://udn.epicgames.com/Three/MaterialsTutorial.html
+% Frostbite, Project Offset, Maya Hypershade, 
+An popular approach for enabling artists to easily create shaders is to use a graph-based editor, in which computations and data are represented by nodes. The list of implementations of such systems is getting consistently longer, since despite some shortcomings [TODO: ref Christer], it empowers artists to create rich content, instead of having them rely on programmers for all shaders.
 
-TODO: Uses surface shaders, not much info about the other kinds which Renderman provides. Not going away for Frostbite2, a few titles shipped, so probably works out just fine.
+Nevertheless, graph-based shader editors are no silver bullet, do not remove the need for efficient communication in a team and must still be designed with care. Simply moving all shader computations into a graph-based representation only turns regular text-based algorithm entry into visual programming. When they introduced of the first visual shader authoring tool, \citet{AbramWhitted90} expressed a concern about the possibility of type mis-matches in such a setup. Indeed, in order to avoid visual clutter, most such tools hide the type information of the inputs and outputs of graph nodes. Furthermore, \citet{mcguire2006shadetrees} points out that this mis-matching issue extends onto semantic meaning of the data:
+	
+\begin{quote}	
+In fact, this problem extends beyond storage types to interface mismatches between atoms, e.g., assumptions like “the light vector has unit length” or “RGB values are pre-multiplied by the alpha channel.” It is almost impossible for the user to ensure that the types are correct when the programming tool conceals those types. 
+\end{quote}
 
-\subsection{Mental Mill}
+In a summary, a graph-based shader authoring tool should not be implemented in a naïve manner. Doing so means that neither artists nor programmers are able to use it effectively. Another important thing to note is that if a graph-based shader authoring tool only allowed, for instance, direct pixel shader editing, the vertex shader would need to be kept in sync. Hence the second goal besides solving type mis-match issues is a paradigm shift, one which frees the artists from the subdivision imposed by the GPU architecture.
 
-TODO: Seems nice on paper, however custom access to lights from MetaSL looks problematic from the point of view of automatically adapting its shaders to various algorithms.
+One example of a renderer which decouples artists from thinking in terms of vertex and pixel shaders is \emph{Frostbite}. In \cite{AT07}, Andersson details that their approach uses graph-based \emph{surface} shaders. Similarly to the ones used by \emph{RenderMan}, they decouple material properties from lighting, environment and geometry. All shaders are treated as content instead of code, and as a part of the pipeline, are converted to an efficient representation for run-time processing. The \emph{Frostbite} engine has to date been used in a few large games, running on the PC, Xbox and PS3 platforms, being a testament to the practicality of the solution.
 
 \subsection{Abstract Shade Trees}
 
-\citet{mcguire2006shadetrees} introduce \emph{Abstract Shade Trees} which offer an interesting solution to the type mismatch problem mentioned byAbram and Whitted. The key concept in their approach is embedding \emph{semantic} information in types used to define the interfaces of computational atoms. This enables a \emph{weaver} algorithm to automatically connect the atoms and perform type coercions.
+\citet{mcguire2006shadetrees} introduce \emph{Abstract Shade Trees} which offer an interesting solution to the type mismatch problem mentioned by \citet{AbramWhitted90}. The key concept in their approach is embedding \emph{semantic} information in types used to define the interfaces of computational atoms. This enables a \emph{weaver} algorithm to automatically connect the atoms and perform type coercions.
 
 They note that regular types used by a shading language such as GLSL are "merely C-style storage specifiers with little value as abstractions. For example, a color, a 3D location, and a row of a 3×3 matrix have the same type, which is also indistinguishable from an array of three floating-point numbers." Their \emph{semantic types} are able to carry more meaningful information, such as:
 \begin{itemize}
 \item The \textbf{Basis} in which instances of this type are defined (tangent, object, world, screen).
 \item \textbf{Length} of a vector (unit, any).
-\item The very interpretation, e.g. whether it’s a color, a texture coordinate or a normal vector.
+\item The very interpretation, e.g. whether it's a color, a texture coordinate or a normal vector.
 \end{itemize}
 
 Such a type system allows stronger checking, but it also enables automating tedious tasks such as coordinate-space conversions. For example, when one atom outputs a position vector in \emph{object} space, and another requires the position in \emph{world} space, it's possible to generate code to perform the required math.
@@ -123,8 +129,6 @@ Such a type system allows stronger checking, but it also enables automating tedi
 
 An \emph{Abstract Shade Tree} is normally much more compact than an equivalent \emph{conventional Shade Tree}, as demonstrated by Figure \ref{fig:AbstractShadeTree}. Thanks to the complexity hiding, shader authoring becomes less error prone and especially easier for users who do not have knowledge of programming concepts such as types, variables or the vector math used to implement algorithms inside the atoms.
  
-% TODO: cite Abram and Whitted's work in the beginning of the section
-
 The rendering system presented in this work utilizes a \emph{semantic type system}, however it's not central to its function. Manual connections of inputs and outputs are allowed in addition to setting coarse-grained dependencies between atoms. Both the former and the latter are then subject to automatic type coercions, hence type safety is retained. I also extend the work of McGuire et al. with the introduction of \emph{semantic expressions}, which provide parametric polymorphism and basic type algebra for atom parameters.
 
 \section{Permutation management}
