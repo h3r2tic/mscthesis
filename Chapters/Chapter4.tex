@@ -13,6 +13,7 @@ The second layer is the high-level rendering interface which is the main topic o
 Aside from that, Nucleus offers a post-processing framework, which in turn may use both of these layers.
 
 \section{Low-level abstraction layer}
+\label{sec:lowLevelInfo}
 
 The high-level machinery of Nucleus may be built directly on top of a rendering API such as OpenGL or Direct3D, however a wrapper over these is desirable for numerous reasons:
 
@@ -119,7 +120,7 @@ Volume & --- \\
 
 Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this split for performance gains in complex scene configurations. ( TODO: more info / link / ref to the Renderers section or to the Examples section. ). While it restricts the freedom an artist might have when using \emph{RenderMan}, other real-time rendering systems have often been restricted to just \emph{a single} reflectance model ( TODO: refs to stalker, killzone2, crysis? ).
 
-TODO: note about volume shaders being future work
+There is currently no support whatsoever for volume shaders in Nucleus. A proper solution would require ray marching in fog volumes and is beyond the scope of this thesis.
 
 \section{Semantic type system}
 
@@ -164,7 +165,7 @@ To automatically determine the parameter which should be connected to an input o
 
 TODO:
 
-Nucleus also extends the technique proposed in Abstract Shade Trees by allowing the use of simple expressions which operate on semantic traits in the specification of output parameter semantics.
+Nucleus also extends the technique proposed in \cite{mcguire2006shadetrees} by allowing usage of simple expressions which operate on semantic traits in the specification of output parameter semantics.
 
 When working with a prototype of Nucleus which utilized a simpler version of the type system, it became apparent that it is useful not only to compute values using kernels, but also let the output semantics of kernel functions depend on the input semantics of these functions and the kernels they're connected to. For instance, One could have a kernel which samples a texture. Textures may be tagged with traits, specifying what sort of data they contain. If such a texture is connected to the sampling kernel, it is crucial to be able to express that the type of the sample should retain the traits of the texture. This is enabled by semantic expressions.
 
@@ -186,25 +187,88 @@ TODO: subtractive expressions
 
 \section{Renderers}
 
-TODO: Renderers use Renderables and kernels associated with them to render meshes using arbitrary algorithms.
+Due to the particular split of shader domains which Nucleus utilizes, it's possible to perform scene rendering using various rendering algorithms. Using an internal toolbox of kernel graph and type system operations, high-level client code may combine kernels into shader programs to fit in multiple rendering pipelines.
+
+Since rendering algorithms will usually have similar requirements in terms of content they operate on, it's viable to extract a common interface. Therefore, Nucleus contains an abstract base \emph{Renderer} class, which allows the details of concrete implementations to be hidden. In end-user code the choice of a rendering algorithm only boils down to choosing an appropriate concrete sub-class.
+
+Conceptually, a \emph{Renderer} is a straightforward entity. Besides being able to draw the scene for a particular viewpoint using a set of visible objects, it must support miscelaneous operations, like:
+
+\begin{itemize}
+\item Registration of materials, surfaces, renderables and lights
+\item Invalidation of the above, as to support hot-swapping of configuration data
+\item Custom implementation-dependent configuration
+\end{itemize}
+
+Within this thin framework, implementations may choose to perform arbitrary caching of shader and geometric data. The API can remain this small because many render state settings are already exposed by the low-level rendering API described in section \ref{sec:lowLevelInfo}. For example, in order to render into a specific framebuffer, it's sufficient to configure it in the low-level backend.
+
+Ultimately, the work a \emph{Renderer} does is relatively straightforward -- it only needs to generate a complete kernel graph for each render stage (e.g. one in the \emph{forward} algorithm, three for \emph{light pre-pass}), then submit it to the separate \emph{code generation} pass, as described in section \ref{sec:codegen}. After doing this, its job is relatively simple due to the \emph{Effect}-based interface which the low-level backend provides.
+
+Chapter \ref{Chapter6} describes \emph{Renderer} implementations for \emph{forward} and \emph{light pre-pass} algorithms, as well as a specialized shadow map renderer. The latter is a particularly interesting case, since it only uses the \emph{Structrue} kernel of each renderable, skipping any other unnecessary calculations as to only compute per-pixel depth information.
+
+Despite the \emph{Renderer} framework being the default for scene rendering operations, it's not the only way to utilize renderables and kernels associated with them. The same set of tools may be used with little effort for other rendering purposes. Both the \emph{post processing} pipeline described in the next section and material previews in the \emph{Nucled} editor are internally very similar to regular renderers.
 
 \section{Post-processing}
 
-%Nucleus covers one more aspect of Renderman - the \emph{Imager} shaders in the form of kernel graphs which are automatically decomposed into post-processing operations.
+In addition to regular scene rendering, Nucleus contains special support for image manipulation. Be that a video game or a film production, the results of 3D rendering are usually touched up by several filters put together by artists and technical directors. There's a multitude of motivations behind doing so:
 
-TODO:
+\begin{itemize}
+\item The output device usually has a limited display range with respect to brightness. For optimal results, the rendered values must be translated into this range via \textbf{tone mapping}.
+\item \textbf{Psychophysical effects} may be simultated, such as glare, spatial acuity loss and scotopic vision.
+\item Color grading, contrast enhancement and other stylistic effects may be applied in order to increase \textbf{immersion} and steer the \textbf{mood} of a particular scene.
+\item Visual \textbf{gameplay cues} may be provided seamlessly to the player without resorting to artificial bars or number displays. For example, it's common practice to indicate low health of the player in a first person game by blurring the screen, as well as adding bloody detail to the edges of the screen.
+\item \textbf{Attention focusing} via depth-of-field and selective coloring if often used in cutscenes and gameplay.
+\end{itemize}
 
-In addition to regular scene rendering, Nucleus contains special support for post-processing. It is performed by specifying a kernel and feeding it data. In this case, the data is just a texture (multiple inputs into the post-processing pipeline are planned for a later stage).
+Similarly to regular rendering operations, post-processing in Nucleus is done within the framework of kernel graphs and operations thereon. A special \emph{PostProcessor} class is provided, which gives an easy interface for using kernel graphs in image filtering operations. It only requires that an input \emph{Texture} and an \emph{output} Framebuffer be specified along with a kernel matching the \textbf{PostProcess} signature:
 
-A simple post-processing pipeline might look like this:
+\begin{lstlisting}[frame=single]
+PostProcess = kernel(
+    in  input  <type Image>,
+    in  size   <type float2>,
+    out output <type Image>
+);
+\end{lstlisting}
 
-TODO: img
+Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. The crucial item to notice in this graph is the \textbf{Blit} node. It's not a concrete kernel with an implementation in code, but a special entity which only the \emph{PostProcessor} understands. Such nodes are used to break the graph to be rendered in multiple passes. Since certain classes of image convolution operators are \emph{linearly separable}, they may be applied to a two-dimensional image as two single-dimensional operations. This is just what happens in this graph. Had the \emph{Blit} node been removed, the pipeline would implement a regular two-dimensional blur. With the \emph{Blit} in place, an equivalent operation \emph{(for all practical purposes)} is done an order of magnitude more efficiently. Figure \ref{fig:SimplePostProcBreakdown} demonstrates the rendering steps which the graph from figure \ref{fig:SimplePostProc} is broken down into.
 
-Nodes using the special Blit kernel are used to break the graph to be rendered in multiple passes. This enables the implementation of algorithms such as the separable Gaussian blur. Blit nodes may also rescale the input as well as change its internal format.
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.9\linewidth]{SimplePostProc}{
+		"Blit" [
+			fillcolor = "\#d0ffd0"
+		];
+		"Input" -> "Horizontal Blur";
+		"Horizontal Blur" -> "Blit";
+		"Blit" -> "Vertical Blur";
+		"Vertical Blur" -> "Combine";
+		"Input" -> "Combine";
+	}
+    \caption[Simple post-processing]{A simple post-processing pipeline}
+  \label{fig:SimplePostProc}
+\end{figure}
 
-In this case, the graph would be broken down into two passes:
-	
-TODO: img
+In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to rescale the images and change their internal format. A simple extension of the post-processing kernel shown in figure \ref{fig:SimplePostProc} could decide to output an image shrunk by 50\% on each side. With a sufficiently wide blur kernel, high-frequency details are lost anyway, so the signal may be represented by a smaller image within reasonable accuracy. Furthermore, combining the operator with itself a few times will approximate a blur with a very wide kernel in a much faster manner than a constant-resolution filter might.
+
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.9\linewidth]{SimplePostProcBreakdown}{
+		subgraph "cluster_Pass1" {
+			label = "Pass 1"
+			"Horizontal Blur";
+		}
+		subgraph "cluster_Pass2" {
+			label = "Pass 2"
+			"Vertical Blur";
+			"Combine";
+		}
+		"Input" -> "Horizontal Blur";
+		"Horizontal Blur" -> "Vertical Blur";
+		"Vertical Blur" -> "Combine";
+		"Input" -> "Combine";
+	}
+    \caption[Simple post-processing breakdown]{A break-down of the post-processing kernel from figure \ref{fig:SimplePostProc} into individual render passes}
+  \label{fig:SimplePostProcBreakdown}
+\end{figure}
 
 TODO: In more complex cases, Nucleus will also find which passes may be performed at the same time and automatically use Multiple Render Targets.
 
@@ -236,6 +300,7 @@ TODO: img
 Naturally this very mechanism is not restricted to just the post-processing component of Nucleus and may be used e.g. in order to implement procedural texturing.
 	
 \section{Code generation}
+\label{sec:codegen}
 
 Before anything can be rendered via kernels, they need to be translated to a form which a low-level rendering API (and hence the GPU) understands. This is done by generating shader code. The input to this final pass (henceforth called \emph{codegen}) is a complete kernel graph, with all conversions resolved and automatic flow deduced. Given this graph, the first step is determining which of its parts should run in which stages of the rasterization process.
 

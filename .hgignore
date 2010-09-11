@@ -9,3 +9,6 @@ Thesis.log
 Thesis.lof
 Thesis.lot
 *.swp
+./*.dot
+./*.ps
+tmpGraph.txt
