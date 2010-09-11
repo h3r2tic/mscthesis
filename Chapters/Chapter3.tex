@@ -18,7 +18,6 @@ This work builds on shader fragment merging and extends it with automatic parame
 
 \section{RenderMan}
 
-% TODO: Keyframe: NB PRMan is now called only Renderman, not PRMan (PhotoRealistic Renderman) anymore
 % TODO: the name is also a pun on Point Reyes
 
 When designing a graphics rendering system, it's impossible not to bump into what's currently the industry standard for film rendering - RenderMan. Despite being over 20 years old, it continues to thrive as the benchmark for all rendering technology. It has been used in several dozen successful feature film productions and among its awards is the first Oscar even awarded to the developers of a software package \cite{RenderManAwards}. An interesting aspect concerning RenderMan is that the overall structure of its Interface Specification (\emph{RISpec} in short) has survived mostly unchanged since its first publication in 1988.
@@ -51,13 +50,14 @@ Unfortunately, micropolygon-based real-time rendering is still not viable for cu
 
 Still, even without using micropolygon-based rendering, an architecture can be developed which retains some of the advantages RenderMan possesses. In particular, this thesis presents a shading framework decoupled from the domains imposed by current GPUs, instead being closer to the model employed by RenderMan. Additionally, the limitation of \emph{Imager} shaders is lifted, hence enabling more sophisticated post-processing effects to be created.
 
+
 \section{Deferred rendering}
 
 The standard \emph{Forward} rasterization algorithm requires that material and light shaders for an objects be merged into a single GPU program. The implications are two-fold:
 \begin{enumerate}
 \item The lower bound on the number of GPU programs that need to be compiled is $O(m * l)$ (where $m$ stands for the number of materials and $l$ for the number of light shader \emph{combinations}), or \emph{multi-pass} rendering must be used.
 
-As explained in chapter 2 [TODO: ref], the number of shaders created this way would be prohibitively large. A workaround is to restrict the possible light shader combinations. This may be achieved via über-lights \cite{UberLights, UberLightsCg} or just constraining the renderer to a handful of light types. Additionally, a common approach may be to fit a shader for more lights than an object is affected by by zeroing-out the non-existent light intensities. For instance, when the renderer must render an object influenced by two point-lights, it may use a shader for rendering it with three point-lights, assuming zero intensity for one of the shader parameters. Naturally, this approach, just like the über-light one, carries a runtime cost which may be prohibitive for a complex setup.
+The number of shaders created this way may be prohibitively large. One workaround is to restrict the possible light shader combinations. This may be achieved via über-lights \cite{UberLights, UberLightsCg} or just constraining the renderer to a handful of light types. Additionally, a common approach may be to fit a shader for more lights than an object is affected by by zeroing-out the non-existent light intensities. For instance, when the renderer must render an object influenced by two point-lights, it may use a shader for rendering it with three point-lights, assuming zero intensity for one of the shader parameters. Naturally, this approach, just like the über-light one, carries a runtime cost which may be prohibitive for a complex setup.
 
 An alternative approach to this issue is \emph{multi-pass} rendering, where the object is rendered once for an affecting light, and the resulting illumination is summed via additive blending. The downside to this solution is that in scenes with complex geometry, rendering objects multiple times will quickly drain the computational budget.
 
@@ -74,7 +74,13 @@ Recently a technique known as \emph{deferred shading} has been gaining popularit
 \item For each light, evaluate its contribution on the surfaces encoded within a subset of the buffers.
 \end{enumerate}
 
-TODO: Decouples light / reflectance shaders from material shaders. Neat, but limited BRDFs, problems with transparency.
+Of the two passes, only the first one requires the actual geometry of the scene to be rendered and material shaders evaluated. Similarly, the second pass only runs light shaders. Importantly, each light can be treated separately from others and from material shaders, eliminating the need for merging light and material shaders -- the main source of the combinatorial explosion of the number of vertex and pixel shaders.
+
+The main strength of deferred shading is at the same time the root of a problem it possesses. Since the second pass only runs light shaders and has no knowledge of the source objects which contributed to the \emph{G-buffer}, it may no longer run per-object shader code. When all objects are just samples in the \emph{G-buffer}, there is no clear way of supporting per-object reflectance models.
+
+Another tricky issue is that of translucency. Because the \emph{G-buffer} may only store the properties of a single surface at a single fragment location, it doesn't handle translucency in a natural fashion. \citet{HumusDeepDeferred} demonstrates an approach using depth peeling. He uses texture arrays to encode attributes of multiple depth layers. The second pass then computes light influence on each of these layers, stopping on opaque surfaces. This results in good performance for typical scene configurations, since most scenes will have far more opaque elements than translucent ones. The main downside of his approach is the fact that the technique requires $n$ G-buffers in order to support $n$ depth layers.
+
+A more common approach for handling translucency is to render non-opaque surfaces in a separate pass using a traditional forward rendering algorithm. Using a read-only depth testing against a depth buffer of the opaque parts of the scene, translucent surfaces can be blended into the result of deferred shading. A major inconvenience this approach entails is having to maintain both a deferred and a forward renderer, along with material and light shaders which might be used in both of them. The rendering system presented in this work makes it relatively easy by allowing the same \emph{material}, \emph{light}, \emph{reflectance} and \emph{structure} shaders (or \emph{kernels} in its nomenclature) to be used in both forward and deferred rendering algorithms.
 
 \subsection{Deferred lighting}
 
@@ -130,9 +136,3 @@ Such a type system allows stronger checking, but it also enables automating tedi
 An \emph{Abstract Shade Tree} is normally much more compact than an equivalent \emph{conventional Shade Tree}, as demonstrated by Figure \ref{fig:AbstractShadeTree}. Thanks to the complexity hiding, shader authoring becomes less error prone and especially easier for users who do not have knowledge of programming concepts such as types, variables or the vector math used to implement algorithms inside the atoms.
  
 The rendering system presented in this work utilizes a \emph{semantic type system}, however it's not central to its function. Manual connections of inputs and outputs are allowed in addition to setting coarse-grained dependencies between atoms. Both the former and the latter are then subject to automatic type coercions, hence type safety is retained. I also extend the work of McGuire et al. with the introduction of \emph{semantic expressions}, which provide parametric polymorphism and basic type algebra for atom parameters.
-
-\section{Permutation management}
-
-TODO: Unity3D and Frostbite - Statically generate lots of shaders.
-
-TODO: Tri-Ace - Storing of shader permutations generated via play-testing instead of static generation of many combinations.
