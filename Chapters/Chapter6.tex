@@ -171,6 +171,38 @@ Such setup will enable rendering of thousands of lights in a single batch, howev
 
 The illumination is rendered to a framebuffer of the same resolution as the screen, with two floating-point RGB attachments --- one for the diffuse illumination component, another for the specular.
 
+\subsection{Light bounding}
+
+It's not physically correct to constrain light falloff to a volume, since real lights don't have a limited range. Still, at a certain distance, the influence becomes negligible and of little use as an artistic tool, while still having the same computational overhead as at meaningful intensities. Therefore, the size of the bounding volume is calculated such that it cuts off at a certain distance, which depends on the intensity of the source. It's impractical to set the fade-out distance as far as to avoid a perceptual difference, therefore the size is calculated aggressively (the current implementation cuts off at 1\% the normalized intensity) and light falloff is modified to smoothly disappear into zero.
+
+In physics, the intensity of light is inversely proportional to the squared distance from the source:
+	
+\[
+	I = \frac{L}{r^2}
+\]
+
+where $L$ is a constant representing the luminous intensity of the light.
+
+Whereas this law may be used in its exact form (and many implementations do), it is important to notice that it is valid only for idealized \emph{point} light sources. The intensity at distance close to zero quickly approaches infinity, resulting in rendering artifacts. Real world lights have a non-zero area which makes the falloff look different, especially close to the source. For this reason, the model
+\[
+	I = \frac{L}{1 + r^2}
+\]
+is sometimes used in computer graphics. It has the property of approaching $L$ near the source, making it easier to achieve a consistent appearance of objects under varying conditions. The default light falloff in Nucleus is therefore based on this model. It is then modified to fade out smoothly to $0$ in a limited range:
+\[
+	I = \frac{L * (1 - s(r^2 / r_m^2))}{1 + r^2}
+\]
+Where $r_m$ is the radius bounding the influence of the light and $s : float \rightarrow float$ is the Hermite interpolation function: \emph{smoothstep(0, 1, \_)} (an intrinsic in\emph{Cg} and \emph{HLSL}):
+\[
+	s(t) =
+	\begin{cases}
+	0 & t <= 0 \\
+	1 & t >= 1 \\
+	t^2 * (3 - 2t) & otherwise \\
+	\end{cases}
+\]
+
+TODO: a picture comparing the regular $1/r^2$ layout and the modified one
+
 \subsection{Material stage}
 
 Once the illumination buffer has been rendered, the final step is to combine it with scene object materials. In the light pre-pass algorithm, this is done by rendering the scene geometry again, in a similar fashion to regular forward rendering. The difference is that instead of computing the lighting, it's sampled from the previously rendered buffer. The diffuse part is multiplied by the material's albedo and the specular component -- by the specular tint of the material. The final radiance at the point is obtained by summing the two values.
@@ -202,11 +234,51 @@ Once the illumination buffer has been rendered, the final step is to combine it 
 \clearpage
 \section{Shadows}
 
-Intro to shadow mapping.
+Shadows are an important part of 3-dimensional scene rendering. They provide visual cues relative object placement, help distinguish the shapes of objects and serve as a tool for mood shaping. Due to the direct integration of light sources which rasterization algorithms employ, shadows do not appear automatically, contrary to what might be expected from the rendering equation.
 
-Regular shadow mapping. Problems. PCF notes. VSM bettur :P
+There are numerous ways of rendering shadows, however since in the context of this thesis they are only examples of using the rendering framework, I will not attempt to provide a survey of available methods. I will instead focus on \emph{shadow mapping}, a popular family of image-based algorithms offering a fine set of compromises for current hardware.
 
-Variance shadow mapping.
+\subsection{A gentle introduction to standard shadow mapping}
+
+Shadow mapping was first introduced by \citet{Williams78castingcurved} in 1978 and has since evolved into many similar algorithms. The following section contains a description of this standard algorithm, which is still in wide use due to its simplicity.
+
+The core idea of shadow mapping is that of discretizing geometric information about a scene from the point of view of  light so that it may be quickly looked up when computing illumination during rendering. Assuming a point light, the task of determining whether a fragment is in shadow is equivalent to answering whether there is anything blocking a ray from this point to the position of the light (TODO: figure). Standard shadow mapping allows this question to be answered quickly by querying an image containing distances to the nearest objects from the point of view of the light.
+
+Assuming that the light is a \emph{spot} with less than a 180$^\circ$ field of view, we can render an image containing distances to objects in the scene using regular rasterization and the \emph{depth-buffering} algorithm, which is very efficiently supported by graphics cards. The image contains distances to objects along rays starting at the light's position and traveling into the scene through positions of pixels in the virtual projection screen situated at the near clipping plane. The exact details to forming these rays are irrelevant here, the important detail is that they are effectively generated by the same perspective projection algorithm regular scene rendering uses. The resulting image is called a \textbf{depth map}.
+
+During regular rendering, when a light's contribution to a fragment needs to be evaluated, this \emph{depth map} is used to approximately answer the visibility query. The fragment's world position is transformed via the same projection algorithm the depth map rendering used and as a result, a coordinate within the depth map is obtained. The pixel nearest to this coordinate contains the distance to the first object along the ray passing tho closest to the fragment out of all depth map samples. Comparing this stored value to the exact distance of the shaded fragment to the light (which is trivially calculable) answers the visibility test to within the precision of the depth map discretization. If the stored depth is smaller than the actual distance, the fragment is in shadow; otherwise, it is lit. In practice this comparison requires a slight bias due to the non-exact nature of the algorithm, but the core idea is just that.
+
+TODO: more nice images
+
+\subsection{Implementation of standard shadow mapping}
+
+Most shadow mapping algorithms consist of two passes and the standard one is no exception. The first consists of rendering the shadow map, whereas the second pass ties into the evaluation of illumination when shading surfaces. The latter is a natural fit for implementing a custom \emph{light kernel}. The signature is:
+	
+\begin{lstlisting}[frame=single]
+Light = kernel(
+    in position <type float3 + use position + basis world>,
+    out intensity <type float4 + use color>,
+    out toLight <type float3 + basis world + use toLight>
+);
+\end{lstlisting}
+
+The only output which will need to be calculated differently from regular, unshadowed rendering is \emph{intensity}. In order to compute it, the kernel will need information about the light instance in the first place. The \emph{position} parameter in the above kernel is only the position of the point being shaded, so all data for a light instance has to be defined within the implementation of the kernel.
+
+In section \ref{sec:Kernels}, it was mentioned that kernels can receive external data for their calculations. This is accomplished through \textbf{Data} graph nodes. These nodes provide \emph{uniform} parameters into the pipeline and their values need to be explicitly handled by an appropriate CPU-side entity associated with the particular kernel type. In case of \emph{light} kernels, these are \emph{Light} classes and instances of their sub-types. Besides preparing and binding attributes to kernels, these CPU-side entities allow easy manipulation of lights from the logical side of the application.
+
+As for shadow map generation, the solution was mentioned in section \ref{sec:Renderers} and boils down to creating a custom \textbf{Renderer}. The implementation is much simpler than that of the \emph{forward} and \emph{light pre-pass} algorithms, because it only uses \emph{structure} kernels associated with \emph{renderables}. Since \emph{structure} kernels must output final positions of the geometry, they need only be connected to a simple kernel which calculates distances from the light.
+
+Finally, this specialized \textbf{DepthRenderer} is used in a custom \textbf{SpotLight\_SM} class on the CPU side, which in turn is a façade for a GPU kernel of the same name. Figure (TODO) demonstrates this relationship.
+
+Upon rendering a scene, the set of visible lights is determined and each \emph{Light} sub-class instance is given a chance to prepare data for the GPU phase of rendering. This is where instances of the custom class will perform depth map rendering.
+
+TODO: pictures with results
+
+\subsection{Variance Shadow Mapping}
+
+One major drawbacks of standard shadow mapping is that depth maps cannot be filtered in the same way as color textures. This typically leads to severe aliasing. Filtering methods based on sampling the depth map multiple times per a shaded fragment, computing the visibility query and averaging the result provide acceptable results, but at a heavy price (TODO: ref Advanced Soft Shadow Mapping Techniques - NVIDIA).
+
+\citet{Donnelly06varianceshadow} present an interesting algorithm, which is simple to implement and solves the aliasing problem with minimal additional storage and computation. blah blah blah duh *SLAM* TODO
 
 \clearpage
 \section{Post-processing effects}
