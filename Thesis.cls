@@ -81,6 +81,8 @@
 \usepackage{algorithmic}
 
 \setmainfont[Mapping=tex-text]{Palatino Linotype}
+\setsansfont[Mapping=tex-text]{Verdana}
+\setmonofont[Mapping=tex-text]{Consolas}
 
 \theoremstyle{plain}
 \newtheorem{example}{Example}[chapter]
