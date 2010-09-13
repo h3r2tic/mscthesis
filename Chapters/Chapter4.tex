@@ -85,7 +85,7 @@ Similarly to how GPU-based shading requires the specification of shader programs
 
 \item[Structure] --- Defines the macro-structure and mostly contains what a vertex or geometry shader might. It is responsible for providing the primitives to be rendered, including data such as positions, normals, partial derivatives of position with respect to texture coordinates, etc.
 
-\item[Reflectance] --- Enables the object to interact with lights by implementing a BRDF. Examples include the Lambertian model, Phong, Cook-Torrance and Ashikhmin-Shirley.
+\item[Reflectance] --- Enables the object to interact with lights by implementing a reflection model. Examples include the Lambertian model, Phong-Blinn, Cook-Torrance and Ashikhmin-Shirley, all of which have been implemented in Nucleus.
 
 \item[Material] --- This is the level on which most artists will work, specifying the albedo of the rendered object, its bumpiness, specular tint, emissive lighting, roughness, etc. Kernels of this type will be created for types of objects in a scene, as well as for particular instances thereof.
 
@@ -191,7 +191,7 @@ Due to the particular split of shader domains which Nucleus utilizes, it's possi
 
 Since rendering algorithms will usually have similar requirements in terms of content they operate on, it's viable to extract a common interface. Therefore, Nucleus contains an abstract base \emph{Renderer} class, which allows the details of concrete implementations to be hidden. In end-user code the choice of a rendering algorithm only boils down to choosing an appropriate concrete sub-class.
 
-Conceptually, a \emph{Renderer} is a straightforward entity. Besides being able to draw the scene for a particular viewpoint using a set of visible objects, it must support miscelaneous operations, like:
+Conceptually, a \emph{Renderer} is a straightforward entity. Besides being able to draw the scene for a particular viewpoint using a set of visible objects, it must support miscellaneous operations, like:
 
 \begin{itemize}
 \item Registration of materials, surfaces, renderables and lights
@@ -355,6 +355,8 @@ A vertex shader processes each vertex in isolation and has a single mandatory ou
 \end{enumerate}
 
 The \textbf{Rasterize} node is normally a part of a \emph{Structure} kernel graph specified for a renderable, but any node which accepts a position parameter may be used instead if a custom \emph{Renderer} deems it necessary. Due to the semantic type system, any data convertible to a clip space position may be supplied as the input.
+
+TODO: note handling of overloading and therefore generic functions
 
 \subsection{Optimization due to linear functions}
 
