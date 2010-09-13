@@ -274,7 +274,7 @@ Upon rendering a scene, the set of visible lights is determined and each \emph{L
 
 TODO: pictures with results
 
-\subsection{Variance Shadow Mapping}
+\subsection{Variance shadow mapping}
 
 One major drawbacks of standard shadow mapping is that depth maps cannot be filtered in the same way as color textures. This typically leads to severe aliasing. Filtering methods based on sampling the depth map multiple times per a shaded fragment, computing the visibility query and averaging the result provide acceptable results, but at a heavy price (TODO: ref Advanced Soft Shadow Mapping Techniques - NVIDIA).
 
@@ -282,3 +282,16 @@ One major drawbacks of standard shadow mapping is that depth maps cannot be filt
 
 \clearpage
 \section{Post-processing effects}
+
+Several post-processing effects were implemented in order to test the pipeline.
+
+TODO: \emph{really} short descriptions and screenshots for:
+	
+\begin{enumerate}
+\item negative - done, trivial
+\item desaturation - done, trivial
+\item blur - done
+\item glare - done
+\item noise - done
+\item distortion - 10 minutes
+\end{enumerate}

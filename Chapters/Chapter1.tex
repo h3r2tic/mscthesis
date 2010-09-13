@@ -4,9 +4,50 @@
 \label{Chapter1}
 \lhead{Chapter 1. \emph{ Introduction }}
 
-\section{Rendering}
+\section{Real-time rendering}
 
-TODO: Say what Rendering is, show the rendering equation, give examples of how it can be approached directly (path tracing) and indirectly via the discretization of lights. Use the Siggraph reflectance course for showing how BRDFs interact with the rendering equation. Mention e.g. Phong and Cook-Torrance.
+Real-time rendering is an area of interactive computer graphics. The term is normally used to describe the process of creating two-dimensional projections of a three-dimensional scene in rapid succession in order to create the illusion of continuous motion.
+
+Most realistic rendering techniques attempt to solve an integral equation describing the flow of light between all surfaces in a scene. This formula is called \emph{the rendering equation} and was introduced simultaneously at the Siggraph conference in 1986 by \citet{Kajiya86RenderingEq} and \citet{Immel86}. It provides an approximation to light transfer based on geometric optics and may be written down in the following form:
+\[
+L_o(\mathbf x, \overrightarrow{\omega}, \lambda) = L_e(\mathbf x, \overrightarrow{\omega}, \lambda) + \int_\Omega f_r(\mathbf x, \overrightarrow{\omega}', \overrightarrow{\omega}, \lambda) L_i(\mathbf x, \overrightarrow{\omega}', \lambda) (-\overrightarrow{\omega}' \cdot \overrightarrow{\mathbf n}) d \overrightarrow{\omega}'
+\]
+where:
+\begin{itemize}
+\item $\lambda$ is a wavelength of light.
+\item $L_o(\mathbf x, \overrightarrow{\omega}, \lambda)$ is light of wavelength $\lambda$ a particular position $\mathbf x$ directed outward in direction $\overrightarrow{\omega}$.
+\item $L_e(\mathbf x, \overrightarrow{\omega}, \lambda)$ is light emitted from the same position at the same direction at wavelength $\lambda$.
+\item $\int_\Omega \ldots d \overrightarrow{\omega}'$ is an integral over a hemisphere of inward direction centered at point $\mathbf x$ and directed at the normal vector $\mathbf n$.
+\item $f_r(\mathbf x, \overrightarrow{\omega}', \overrightarrow{\omega}, \lambda)$ is the proportion of light reflected from $\overrightarrow{\omega}'$ to $\overrightarrow{\omega}$ at position $\mathbf x$ and wavelength $\lambda$.
+\item $-\overrightarrow{\omega}' \cdot \overrightarrow{\mathbf n}$ is the attenuation of inward light due to incident angle.
+\end{itemize}
+
+This equation may be approached directly through Monte Carlo methods such as \emph{path tracing} or \emph{Metropolis light transport} or through finite element methods such as \emph{radiosity}. These algorithms are able to produce excellent results often indistinguishable from real images. Unfortunately they have only recently been approaching interactive rendering performance, making them still unsuitable for real-time purposes. Relatively simple scenes can still take minutes or hours to converge into acceptable solutions, whereas rendering times of under \emph{30 milliseconds} are desirable in order to create the impression of flicker-free animation.
+
+When the scene and lights therein are static, radiance or irradiance at surface points can be pre-computed and \emph{baked} into a representation which is then efficient to query at real-time. Most commonly, total irradiance is stored in special images called \emph{lightmaps} which are then mapped onto surface geometry. While some implementations \cite{Chen08Halo3} allow directional effects to be captured by storing the irradiance in an angle-dependent way, dynamic lights and dynamic scene elements must be handled differently. It is common practice to store static parts of the radiance transfer in such a pre-computed representation and add simpler, dynamically computed elements at run-time. Further discussion of static methods is beyond the scope of this thesis, so from now on, it will only be concerned with the dynamic component and assume that any static components are a part of the emissive term.
+
+For the purposes of real-time rendering in games and other interactive three-dimensional applications, the rendering equation is often approximated by replacing the hemispherical integral $\int_\Omega \ldots d \overrightarrow{\omega}'$ with a sum over a finite set of point lights \cite{Naty06Reflectance}:
+\[
+L_o(\mathbf x, \overrightarrow{\omega}, \lambda) = L_e(\mathbf x, \overrightarrow{\omega}, \lambda) + \sum_l f_r(\mathbf x, \overrightarrow{\omega}', \overrightarrow{\omega}, \lambda) \frac{I_l}{d_l^2} (-\overrightarrow{\omega}' \cdot \mathbf n)
+\]
+where $I_l$ is light intensity and $d_l$ is distance to light $l$ from point $\mathbf x$.
+
+A key element in the formulae described above is the $f_r$ function. It is called the \emph{bidirectional reflectance distribution function (\textbf{BRDF})}. It defines how a surface reflects light at a particular position and therefore is the most important factor describing the appearance of surfaces in a scene.
+
+TODO: pictures from the siggraph course showing light interaction
+
+A spatially-varying \emph{BRDF} can describe the complete appearance of a surface including its texture, reflectivity, glossiness, etc. While it is possible to encode this data within a scene representation, it is not practical for most applications. For this reason, physically and empirically-inspired mathematical models have been proposed, which aim to approximate idealized surfaces of various properties or just provide intuitive parameters to control the appearance of objects. Examples include:
+\begin{itemize}
+\item Lambertian model, describing the idealized diffuser. It is a constant \emph{BRDF}.
+\item Phong's model, the first to introduce specular highlights.
+\item Cook-Torrance model, a general model based on \emph{microfacet theory} aimed at rough surfaces, in particular plastics and metals
+\item Oren-Nayar model, designed to simulate very rough surfaces, such as the surface of the moon.
+\end{itemize}
+TODO: pictures
+
+In order to introduce details into surfaces, the parameters to light reflection models can be made spatially-varying. For example, the Cook-Torrance model has a \emph{roughness} parameter which defines the width of specular highlights.  Finally, most BRDF models are parametrized with values by which components of the reflection should be scaled -- commonly one parameter for diffuse and one for specular reflectance.
+
+The parameters influencing particular components of the reflection are intuitively called ``colors''. Even though the rendering equation is defined in terms of wavelengths and should be integrated for the entire visible spectrum, real-time computer graphics usually only concerns itself with light transport for three discrete bands. Due to practical considerations, the bands are the red, green and blue components of the \emph{sRGB} color space. Therefore any radiance calculations may be thought to operate on \emph{RGB} triplets and call them ``colors''.
 
 \section{Rasterization}
 
