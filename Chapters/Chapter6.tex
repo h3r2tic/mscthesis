@@ -70,7 +70,7 @@ Where ``$\Rightarrow$'' denotes the operation of graph fusion and \textbf{foldl}
 
 Figure \ref{fig:ForwardRenderingGraphSample} shows an example of the kernel graph composition algorithm for the forward renderer.
 
-After code generation, an \emph{Effect} is compiled (as described in section [TODO: ref the mid-level section]) and memoized using the input kernel set as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of lights, materials and reflectances appears.
+After code generation, an \emph{Effect} is compiled (as described in section \ref{sec:lowLevelInfo}) and memoized using the input kernel set as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of lights, materials and reflectances appears.
 
 % TODO: some timings for compiling kernel graphs, discussion about caching compiled shaders.
 
@@ -79,7 +79,7 @@ After code generation, an \emph{Effect} is compiled (as described in section [TO
 \clearpage
 \section{Deferred lighting}
 
-I have implemented a \emph{light pre-pass} renderer, which may be seamlessly used in place of the \emph{forward} algorithm. As described in section [TODO: ref intro], the algorithm is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
+I have implemented a \emph{light pre-pass} renderer, which may be seamlessly used in place of the \emph{forward} algorithm. As described in section \ref{sec:DeferredLighting}, the algorithm is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
 
 \subsection{Geometry stage}
 
@@ -107,7 +107,7 @@ normal\_a:f16 & normal\_b:f16 & surface\_id:f16 & roughness:f16 \\
 \end{tabular}
 \end{center}
 
-The normalized view-space normal is encoded in the \emph{G-buffer} using the \emph{Lambert Azimuthal Equal-Area projection} [TODO: ref Aras].
+The normalized view-space normal is encoded in the \emph{G-buffer} using the \emph{Lambert Azimuthal Equal-Area projection} \cite{ArasNormalStorage}.
 
 \subsection{Light stage}
 
@@ -201,7 +201,7 @@ Where $r_m$ is the radius bounding the influence of the light and $s : float \ri
 	\end{cases}
 \]
 
-TODO: a picture comparing the regular $1/r^2$ layout and the modified one
+TODO: a picture comparing the regular $1/r^2$ falloff and the modified one
 
 \subsection{Material stage}
 

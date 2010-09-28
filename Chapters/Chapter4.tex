@@ -97,9 +97,9 @@ A scene will usually also contain lights, each of which must be associated with 
 
 % TODO: link to info about the signatures of these kernels in some other chapter
 
-Such a break-down of kernels may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{renderer} is free to use these kernels in any rendering algorithm, as detailed in section "Renderers". TODO: proper link.
+Such a break-down of kernels may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{renderer} is free to use these kernels in any rendering algorithm, as detailed in section \ref{sec:Renderers}.
 
-Another core kernel type is used in \emph{post-processing} operations and described in section "Post-Processing". TODO: proper link.
+Another core kernel type is used in \emph{post-processing} operations and described in section \ref{sec:PostProcessing}.
 
 This particular break-down of processing domains is comparable to the \emph{RenderMan} model:
 
@@ -208,6 +208,7 @@ Chapter \ref{Chapter6} describes \emph{Renderer} implementations for \emph{forwa
 Despite the \emph{Renderer} framework being the default for scene rendering operations, it's not the only way to utilize renderables and kernels associated with them. The same set of tools may be used with little effort for other rendering purposes. Both the \emph{post processing} pipeline described in the next section and material previews in the \emph{Nucled} editor are internally very similar to regular renderers.
 
 \section{Post-processing}
+\label{sec:PostProcessing}
 
 In addition to regular scene rendering, Nucleus contains special support for image manipulation. Be that a video game or a film production, the results of 3D rendering are usually touched up by several filters put together by artists and technical directors. There's a multitude of motivations behind doing so:
 
@@ -368,7 +369,15 @@ $g(h(w_0 v(p_0) + w_1 v(p_1) + w_2 v(p_2))) = g(w_0 h(v(p_0)) + w_1 h(v(p_1)) + 
 
 Subsequently, we can define a vertex shader function $v\prime = h \circ v$ and a fragment shader function $f\prime = g$. This result shows that it is legal to move a kernel from the fragment stage to the vertex stage as long as all of its inputs come from the vertex stage and the kernel implements a linear function. By utilizing this rule repeatedly in topological order, the process can be done in a single pass for the entire kernel graph. Nucleus currently allows a kernel to be tagged as linear, however in a future implementation this may be inferred automatically through semantic analysis of the code.
 
-Figure (TODO: linearOptScr.png) shows a test scene which renders at 93 FPS without this optimization step and at 96 FPS with it enabled. 131/133 in the sponza scr. Not much gain, but the optimization is trivial.
+\begin{figure}[h!]
+  \centering
+  \subfigure{\label{fig:linFuncOpt1}\includegraphics[width=0.4\linewidth]{./Chapters/linearOptScr1.jpg}}
+  \subfigure{\label{fig:linFuncOpt2}\includegraphics[width=0.4\linewidth]{./Chapters/linearOptScr2.jpg}}
+  \caption{Scenes used to test the speedup from optimization due to linear functions}
+  \label{fig:linFuncOpt}
+\end{figure}
+
+Figure \ref{fig:linFuncOpt} shows two scenes, which render respectively at 93 and 131 FPS without the optimization step. With it enabled, the performance reaches 96 FPS and 133 FPS respectively.
 
 \subsection{Code generation for functional composition}
 

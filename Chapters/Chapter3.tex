@@ -82,6 +82,7 @@ Another tricky issue is that of translucency. Because the \emph{G-buffer} may on
 A more common approach for handling translucency is to render non-opaque surfaces in a separate pass using a traditional forward rendering algorithm. Using read-only depth testing against a depth buffer containing the opaque parts of the scene, translucent surfaces can be blended into the result of deferred shading. A major inconvenience this approach entails is having to maintain both a deferred and a forward renderer, along with material and light shaders which might be used in both of them. The rendering system presented in this work makes it relatively easy by allowing the same \emph{material}, \emph{light}, \emph{reflectance} and \emph{structure} shaders (or \emph{kernels} in its nomenclature) to be used in any of the implemented rendering algorithms.
 
 \subsection{Deferred lighting}
+\label{sec:DeferredLighting}
 
 % TODO: ref the olde nvidia paper
 The regular deferred rendering algorithm requires a large G-buffer [TODO: ref Killzone2], which in some cases may be prohibitive due to memory capacity or bandwidth constraints. \citet{Engel08PrePass} proposes an alternative approach, currently known \emph{light pre-pass}, \emph{deferred lighting} or \emph{pre-lighting}. Unlike classical deferred rendering, which consists of two phases, this algorithm is composed of three stages:
