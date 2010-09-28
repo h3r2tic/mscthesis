@@ -64,7 +64,6 @@ An alternative solution to this issue is \emph{multi-pass} rendering, where the 
 \item Lights can only influence the scene at the granularity of individual objects, not their vertices or rasterized pixels. Even when a light would affect a small part of an object, it must be evaluated for all elements thereof, because a single \emph{batch} may only use a single shader per domain.
 
 Splitting objects into smaller pieces might be an option, however GPU batch submission carries a nontrivial cost \cite{BatchBatchBatch}, hence the tendency is to do the exact opposite and pack multiple objects into shared batches.
-% TODO: explain shader domains
 \end{enumerate}
 
 Recently a technique known as \emph{deferred shading} has been gaining popularity, as it offers an elegant solution to both of these problems. Originally proposed in \citet{DeeringDeferred}, the algorithm separates the rendering pipeline into two stages:
@@ -93,17 +92,24 @@ The regular deferred rendering algorithm requires a large G-buffer [TODO: ref Ki
 \item Render scene objects again, this time fully evaluating their materials and combining them with the illumination computed in the previous step.
 \end{enumerate}
 
-Such a breakdown of rendering operations trades extra geometric cost for less G-buffer memory utilization. TODO: anything else?
+Such a breakdown of rendering operations trades extra geometric cost for less G-buffer memory utilization, which in particular scene configurations and platforms translates into faster execution.
 
 % http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter09.html
 
 \section{Graph-based systems}
 
-Creating immersive environments requires many complex shaders. \citet{Tatarchuk06ToyShop} mentions that the ``Toy Shop'' demo (TODO: screenshot) contained about 500 custom shaders, so this number can only be expected to be higher in a complete game. It must therefore be easy to create custom shaders, and it must be straightforward for artists in particular.
+Creating immersive environments requires many complex shaders. \citet{Tatarchuk06ToyShop} mentions that the ``Toy Shop'' demo (shown in figure \ref{fig:ATItoyshop}) contained about 500 custom shaders, so this number can only be expected to be higher in a complete game. It must therefore be easy to create custom shaders, and it must be straightforward for artists in particular.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Chapters/ati-demo-toyshop.jpg}
+    \caption[ToyShop demo]{AMD's real-time Toy Shop demo utilizes about 500 custom shaders. Image courtesy of AMD Graphics Product Group}
+  \label{fig:ATItoyshop}
+\end{figure}
 
 % http://udn.epicgames.com/Three/MaterialsTutorial.html
 % Frostbite, Project Offset, Maya Hypershade, 
-A popular approach for enabling artists to easily create shaders is to use a graph-based editor, in which computations and data are represented by nodes. The list of implementations of such systems is getting consistently longer, since despite some shortcomings [TODO: ref Christer], such tool empowers artists to create rich content swiftly, instead of having them rely on programmers for all shaders. TODO: some more praise
+A popular approach for enabling artists to easily create shaders is to use a graph-based editor, in which computations and data are represented by nodes. The list of implementations of such systems is getting consistently longer, since despite some shortcomings \cite{ChristerGraphShaderEditorsSuck}, such tool empowers artists to create rich content swiftly, instead of having them rely on programmers for all shaders. TODO: some more praise
 
 Nevertheless, graph-based shader editors are no silver bullet, do not remove the need for efficient communication in a team and must still be designed with care. Simply moving all shader computations into a graph-based representation only turns regular text-based code entry into visual programming. TODO: When they introduced of the first visual shader authoring tool, \citet{AbramWhitted90} expressed concern about the possibility of type mis-matches in such a setup. Indeed, in order to avoid visual clutter, most such tools hide type information of inputs and outputs in graph nodes. Furthermore, \citet{mcguire2006shadetrees} points out that this mis-matching issue extrapolates onto semantic meaning of the data:
 	
