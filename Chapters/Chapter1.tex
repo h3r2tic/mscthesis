@@ -38,21 +38,21 @@ TODO: pictures from the siggraph course showing light interaction
 
 A spatially-varying \emph{BRDF} can describe the complete appearance of a surface including its texture, reflectivity, glossiness, etc. While it is possible to encode this data within a scene representation, it is not practical for most applications due to storage space and memory bandwidth constraints. For this reason, physically and empirically-inspired mathematical models have been proposed, which aim to approximate idealized surfaces of various properties or just provide intuitive parameters to control the appearance of objects. Examples include:
 \begin{itemize}
-\item Lambertian model, describing the idealized diffuser. It is a constant \emph{BRDF}.
-\item Phong's model, the first to introduce specular highlights.
-\item Cook-Torrance model, a general model based on \emph{microfacet theory} aimed at rough surfaces, in particular plastics and metals.
-\item Ashikhmin-Shirley model, designed to be similar to Phong, but physically plausible, energy-conserving and with intuitive parameters.
+\item Lambertian, describing the idealized diffuser. It is a constant \emph{BRDF}.
+\item Phong, the first to introduce specular highlights.
+\item Cook-Torrance, a general model based on \emph{microfacet theory} aimed at rough surfaces, in particular plastics and metals.
+\item Ashikhmin-Shirley, designed to be similar to Phong, but physically plausible, energy-conserving and with intuitive parameters.
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[h!]
   \centering
-  \subfigure[Lambertian]{\label{fig:Buddha_Lambert}\includegraphics[width=0.3\linewidth]{./BRDFs/Lambert.jpg}}
-  \subfigure[Blinn-Phong]{\label{fig:Buddha_BlinnPhong}\includegraphics[width=0.3\linewidth]{./BRDFs/BlinnPhong_120.jpg}}
-  \subfigure[Ashikhmin-Shirley]{\label{fig:Buddha_AS}\includegraphics[width=0.3\linewidth]{./BRDFs/AS_f9_r1.jpg}}
-\subfigure[Cook-Torrance]{\label{fig:Buddha_CT}\includegraphics[width=0.3\linewidth]{./BRDFs/CookTorrance_f4_r9.jpg}}
-\subfigure[ABC]{\label{fig:Buddha_ABC_area}\includegraphics[width=0.3\linewidth]{./BRDFs/ABC_area_approx_b100_c99.jpg}}
-\subfigure[ABg]{\label{fig:Buddha_ABg}\includegraphics[width=0.3\linewidth]{./BRDFs/ABg_A06_B01_g19.jpg}}
-  \caption{The effects of various reflection models on surface appearance}
+  \subfigure[Lambert]{\label{fig:Buddha_Lambert}\includegraphics[width=0.32\linewidth]{./BRDFs/Lambert.jpg}}
+  \subfigure[Blinn-Phong]{\label{fig:Buddha_BlinnPhong}\includegraphics[width=0.32\linewidth]{./BRDFs/BlinnPhong_120.jpg}}
+  \subfigure[Ashikhmin-Shirley]{\label{fig:Buddha_AS}\includegraphics[width=0.32\linewidth]{./BRDFs/AS_f9_r1.jpg}}
+\subfigure[Cook-Torrance]{\label{fig:Buddha_CT}\includegraphics[width=0.32\linewidth]{./BRDFs/CookTorrance_f4_r9.jpg}}
+\subfigure[Area ABC]{\label{fig:Buddha_ABC_area}\includegraphics[width=0.32\linewidth]{./BRDFs/ABC_area_approx_b100_c99.jpg}}
+\subfigure[ABg]{\label{fig:Buddha_ABg}\includegraphics[width=0.32\linewidth]{./BRDFs/ABg_A06_B01_g19.jpg}}
+  \caption{Effects of various reflection models on surface appearance}
   \label{fig:Buddha_reflectionModels}
 \end{figure}
 
@@ -107,7 +107,4 @@ If we consider the elements that make up the rendering equation and the commonly
 
 Unsurprisingly, this separation of responsibility is used in many rendering systems which do not use the rasterization algorithm or simply do not run on commodity graphics hardware.
 
-TODO: May use code generation to target the HW model, however shader permutation management issues pop up.
-	TODO: Unity3D and Frostbite - Statically generate lots of shaders.
-	TODO: Tri-Ace - Storing of shader permutations generated via play-testing instead of static generation of many combinations.
-
+In order to use a similar approach, a real-time rendering system needs to transform such shaders into a form which the GPU is able to execute. This can be approached via relatively simple code-snippet composition \cite{Hargreaves04} or more complex approaches, such as programming language translation \cite{mentalMillMetaSL}.
