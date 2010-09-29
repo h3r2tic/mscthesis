@@ -5,6 +5,7 @@
 \lhead{Chapter 6. \emph{ Examples }}
 
 \section{Forward rendering}
+\label{sec:ForwardRenderingExample}
 
 Forward rendering is the classical algorithm utilized since the very beginning of rasterization and definitely the most commonly used one thus far. Since the introduction of GeForce 256 in late 1999, it has had special hardware and API support in consumer graphics devices. The special support is only being phased out recently due to programmable shading's ability of supporting the whole forward rendering algorithm efficiently. While modern rendering APIs such as \emph{Direct3D 10} and \emph{OpenGL 3.1's Core profile} no longer have dedicated support for transformation and lighting, the algorithm is still widely used and implemented via shaders. Despite other rendering algorithms being available, the performance characteristics of the forward approach make it favorable in many circumstances, hence it's imperative that Nucleus provides out of the box support for it.
 
@@ -78,6 +79,7 @@ After code generation, an \emph{Effect} is compiled (as described in section \re
 
 \clearpage
 \section{Deferred lighting}
+\label{sec:DeferredLightingExample}
 
 I have implemented a \emph{light pre-pass} renderer, which may be seamlessly used in place of the \emph{forward} algorithm. As described in section \ref{sec:DeferredLighting}, the algorithm is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
 

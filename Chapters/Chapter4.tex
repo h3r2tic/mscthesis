@@ -117,9 +117,7 @@ Volume & --- \\
 \end{tabular}
 \end{center}
 
-% TODO: ref http://www.vga.hr/resources/tutorials/3d/rsl/html/chapter_01.htm
-
-Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this split for performance gains in complex scene configurations. ( TODO: more info / link / ref to the Renderers section or to the Examples section. ). While it restricts the freedom an artist, other real-time rendering systems have often been restricted to just a \emph{single} reflectance model ( TODO: refs to stalker, killzone2, crysis? ).
+Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this split for performance gains in complex scene configurations (for example, sections \ref{sec:ForwardRenderingExample} and \ref{sec:DeferredLightingExample} demonstrate how it allows Nucleus to use the same kernels for \emph{Forward} and \emph{Deferred} rendering, respectably). While it restricts the freedom of an artist to some extent, real-time rendering systems used in AAA productions have often been restricted to just a \emph{single} reflectance model \cite{CryEngine3Deferred, Killzone2Deferred}.
 
 There is currently no support whatsoever for volume shaders in Nucleus. A proper solution would require ray marching in fog volumes and is beyond the scope of this thesis.
 
