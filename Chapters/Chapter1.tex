@@ -34,9 +34,15 @@ where $I_l$ is light intensity and $d_l$ is distance to light $l$ from point $\m
 
 A key factor in the formulae described above is the $f_r$ function. It is called the \emph{bidirectional reflectance distribution function (\textbf{BRDF})}. It defines how a surface reflects light at a particular position and therefore is the most important element describing the appearance of surfaces in a scene.
 
-TODO: pictures from the siggraph course showing light interaction
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.4\linewidth]{./Chapters/InhomogeneousDielectric.png}
+    \caption[Inhomogeneous dielectric]{Some of the possible light interaction paths within an inhomogeneous dielectric. Image courtesy of Nathaniel Hoffman}
+  \label{fig:InhomogeneousDielectric}
+\end{figure}
+% TODO: more pictures?
 
-A spatially-varying \emph{BRDF} can describe the complete appearance of a surface including its texture, reflectivity, glossiness, etc. While it is possible to encode this data within a scene representation, it is not practical for most applications due to storage space and memory bandwidth constraints. For this reason, physically and empirically-inspired mathematical models have been proposed, which aim to approximate idealized surfaces of various properties or just provide intuitive parameters to control the appearance of objects. Examples include:
+A spatially-varying \emph{BRDF} can describe the complete appearance of a surface including its texture, reflectivity, glossiness, etc. While it is possible to encode this data within a scene representation, it is not practical for most applications due to storage space and memory bandwidth constraints. Simulating light interaction in a precise manner, even under a geometric optics approximation, is very complicated -- for example, figure \ref{fig:InhomogeneousDielectric} shows some of the possible paths photons might take within an inhomogeneous dielectric. For these reasons, physically and empirically-inspired mathematical models have been proposed, which aim to approximate idealized surfaces of various properties or just provide intuitive parameters to control the appearance of objects. Example models include:
 \begin{itemize}
 \item Lambertian, describing the idealized diffuser. It is a constant \emph{BRDF}.
 \item Phong, the first to introduce specular highlights.
@@ -46,7 +52,7 @@ A spatially-varying \emph{BRDF} can describe the complete appearance of a surfac
 
 \begin{figure}[h!]
   \centering
-  \subfigure[Lambert]{\label{fig:Buddha_Lambert}\includegraphics[width=0.32\linewidth]{./BRDFs/Lambert.jpg}}
+  \subfigure[Lambertian]{\label{fig:Buddha_Lambert}\includegraphics[width=0.32\linewidth]{./BRDFs/Lambert.jpg}}
   \subfigure[Blinn-Phong]{\label{fig:Buddha_BlinnPhong}\includegraphics[width=0.32\linewidth]{./BRDFs/BlinnPhong_120.jpg}}
   \subfigure[Ashikhmin-Shirley]{\label{fig:Buddha_AS}\includegraphics[width=0.32\linewidth]{./BRDFs/AS_f9_r1.jpg}}
 \subfigure[Cook-Torrance]{\label{fig:Buddha_CT}\includegraphics[width=0.32\linewidth]{./BRDFs/CookTorrance_f4_r9.jpg}}
@@ -64,7 +70,13 @@ The parameters influencing particular components of the reflection are intuitive
 
 Real-time rendering requires scenes to be described in a manner which is efficient in terms of storage and interpretation at run-time. Most commonly, objects are discretized as polygonal meshes with extra detail added in by two-dimensional images (called \textbf{textures}) parametrized onto the meshes. The former provide the macro structure of an object, whereas the latter cheaply represent fine detail wrapped over the mesh.
 
-TODO: img
+\begin{figure}[h!]
+  \centering
+  \subfigure{\label{fig:PostApCarWireframe}\includegraphics[width=0.45\linewidth]{./Figures/postApocalypticCar/wireframe.jpg}}
+  \subfigure{\label{fig:PostApCarTextured}\includegraphics[width=0.45\linewidth]{./Figures/postApocalypticCar/textured.jpg}}
+  \caption{The macro- and micro-structure of an object encoded within a triangular mesh mapped with a texture. Images courtesy of Andrei Ichim}
+  \label{fig:PostApCar}
+\end{figure}
 
 Such a vector-based representation may be visualized on a two-dimensional screen via the \emph{rasterization} algorithm. It is a \emph{forward} rendering algorithm (compared to \emph{backward} methods such as \emph{ray-tracing}) which starts from the scene primitives and via successive transformations, generates colors for the image. The major steps of the algorithm are:
 \begin{enumerate}
