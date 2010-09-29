@@ -85,7 +85,7 @@ A more common approach for handling translucency is to render non-opaque surface
 \label{sec:DeferredLighting}
 
 % TODO: ref the olde nvidia paper
-The regular deferred rendering algorithm requires a large G-buffer [TODO: ref Killzone2], which in some cases may be prohibitive due to memory capacity or bandwidth constraints. \citet{Engel08PrePass} proposes an alternative approach, currently known \emph{light pre-pass}, \emph{deferred lighting} or \emph{pre-lighting}. Unlike classical deferred rendering, which consists of two phases, this algorithm is composed of three stages:
+The regular deferred rendering algorithm requires a large G-buffer, which in some cases may be prohibitive due to memory capacity or bandwidth constraints. \citet{Engel08PrePass} proposes an alternative approach, currently known \emph{light pre-pass}, \emph{deferred lighting} or \emph{pre-lighting}. Unlike classical deferred rendering, which consists of two phases, this algorithm is composed of three stages:
 
 \begin{enumerate}
 \item Render a minimal \emph{G-buffer}, containing the surface depth and normal.
@@ -110,11 +110,13 @@ Creating immersive environments requires many complex shaders. \citet{Tatarchuk0
 
 % http://udn.epicgames.com/Three/MaterialsTutorial.html
 % Frostbite, Project Offset, Maya Hypershade, 
-A popular approach for enabling artists to easily create shaders is to use a graph-based editor, in which computations and data are represented by nodes. The list of implementations of such systems is getting consistently longer, since despite some shortcomings \cite{ChristerGraphShaderEditorsSuck}, such tool empowers artists to create rich content swiftly, instead of having them rely on programmers for all shaders. TODO: some more praise
+A popular approach for enabling artists to easily create shaders is to use a graph-based editor, in which computations and data are represented by nodes. The list of implementations of such systems is getting consistently longer, since despite some shortcomings \cite{ChristerGraphShaderEditorsSuck}, they empower artists to create rich content swiftly, instead of having them rely on programmers for all shaders. This subsequently reduces the communication overhead and takes the load off programmers, resulting in faster product development.
 
-Nevertheless, graph-based shader editors are no silver bullet, do not remove the need for efficient communication in a team and must still be designed with care. Simply moving all shader computations into a graph-based representation only turns regular text-based code entry into visual programming. TODO: When they introduced of the first visual shader authoring tool, \citet{AbramWhitted90} expressed concern about the possibility of type mis-matches in such a setup. Indeed, in order to avoid visual clutter, most such tools hide type information of inputs and outputs in graph nodes. Furthermore, \citet{mcguire2006shadetrees} points out that this mis-matching issue extrapolates onto semantic meaning of the data:
+Nevertheless, graph-based shader editors are no silver bullet, do not completely remove the need for efficient communication in a team and must still be designed with care. Simply moving all shader computations into a graph-based representation only turns regular text-based code entry into visual programming, an area which hasn't been adequately explored for production environments.
+
+When \citet{AbramWhitted90} introduced the first visual shader authoring tool, they expressed concern about the possibility of type mis-matches within the data being manipulated by graph-based programs. Indeed, in order to avoid visual clutter, most graph-based tools hide type information of inputs and outputs within nodes. Furthermore, \citet{mcguire2006shadetrees} points out that this mis-matching issue extrapolates onto semantic meaning of data:
 	
-\begin{quote}	
+\begin{quote}
 In fact, this problem extends beyond storage types to interface mismatches between atoms, e.g., assumptions like “the light vector has unit length” or “RGB values are pre-multiplied by the alpha channel.” It is almost impossible for the user to ensure that the types are correct when the programming tool conceals those types. 
 \end{quote}
 
@@ -124,7 +126,7 @@ One example of a renderer which decouples artists from thinking in terms of vert
 
 \subsection{Abstract Shade Trees}
 
-\citet{mcguire2006shadetrees} introduce \emph{Abstract Shade Trees} which offer an interesting solution (TODO: synonym) to the type mismatch problem mentioned by \citet{AbramWhitted90}. The key concept their paper introduces is embedding \emph{semantic} information in types used to define the interfaces of computational atoms. They subsequently use a \emph{weaver} algorithm to automatically connect atoms and perform type coercions.
+\citet{mcguire2006shadetrees} introduce \emph{Abstract Shade Trees} which tackle the type mismatch problem \cite{AbramWhitted90} in an interesting manner. The key concept their paper introduces is embedding \emph{semantic} information in types used to define the interfaces of computational atoms. They subsequently use a \emph{weaver} algorithm to automatically connect atoms and perform type coercions.
 
 They note that regular types used by a shading language such as GLSL are "merely C-style storage specifiers with little value as abstractions. For example, a color, a 3D location, and a row of a 3×3 matrix have the same type, which is also indistinguishable from an array of three floating-point numbers." On the other hand, their \emph{semantic types} are able to carry more meaningful information, such as:
 \begin{itemize}
