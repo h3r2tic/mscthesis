@@ -83,6 +83,13 @@ After code generation, an \emph{Effect} is compiled (as described in section \re
 
 I have implemented a \emph{light pre-pass} renderer, which may be seamlessly used in place of the \emph{forward} algorithm. As described in section \ref{sec:DeferredLighting}, the algorithm is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
 
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Figures/lightPrePass/sponza.jpg}
+    \caption[Light pre-pass rendering of Sponza]{The ``Crytek Sponza'' scene under a complex lighting setup consisting of 100 spherical area lights using a custom convolution of the ABC reflectance model rendered via deferred lighting at 15 FPS at the 1680x1050 resolution.}
+  \label{fig:lightPrePassSponza}
+\end{figure}
+
 \subsection{Geometry stage}
 
 Most of the attributes required for the \emph{G-buffer} are computed by the \emph{Structure} kernel. Still, a \emph{Material} kernel may want to alter the normals in order to simulate a bumpy surface. These altered normals must be written into the \emph{G-buffer}. Hence, the first stage composes the two kernels and selectively writes their outputs to the \emph{G-buffer} as shown in Figure \ref{fig:DeferredLightingStage1}. The \emph{Material} kernel possibly writes more outputs than this stage uses, however, graph reduction is performed, so only the relevant parts are actually used at runtime. The \emph{Cg} compiler effectively removes any other extra computations.
@@ -287,6 +294,14 @@ TODO: pictures with results
 \subsection{Variance shadow mapping}
 
 One major drawbacks of standard shadow mapping is that depth maps cannot be filtered in the same way as color textures. This typically leads to severe aliasing. Filtering methods based on sampling the depth map multiple times per a shaded fragment, computing the visibility query and averaging the result provide acceptable results, but at a heavy price (TODO: ref Advanced Soft Shadow Mapping Techniques - NVIDIA).
+
+%TODO: a more fitting picture lolz
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Figures/shadowMapping/canHazDragon.jpg}
+    \caption[VSM in Nucleus]{Variance Shadow Mapping in Nucleus}
+  \label{fig:NucleusVSM}
+\end{figure}
 
 \citet{Donnelly06varianceshadow} present an interesting algorithm, which is simple to implement and solves the aliasing problem with minimal additional storage and computation. blah blah blah duh *SLAM* TODO
 
