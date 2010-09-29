@@ -201,7 +201,7 @@ Within this thin framework, implementations may choose to perform arbitrary cach
 
 Ultimately, the work a \emph{Renderer} does is relatively straightforward -- it only needs to generate a complete kernel graph for each render stage (e.g. one in the \emph{forward} algorithm, three for \emph{light pre-pass}), then submit it to the separate \emph{code generation} pass, as described in section \ref{sec:codegen}. After doing this, its job is relatively simple due to the \emph{Effect}-based interface which the low-level backend provides.
 
-Chapter \ref{Chapter6} describes \emph{Renderer} implementations for \emph{forward} and \emph{light pre-pass} algorithms, as well as a specialized shadow map renderer. The latter is a particularly interesting case, since it only uses the \emph{Structrue} kernel of each renderable, skipping any other unnecessary calculations as to only compute per-pixel depth information.
+Chapter \ref{Chapter6} describes \emph{Renderer} implementations for \emph{forward} and \emph{light pre-pass} algorithms, as well as a specialized shadow map renderer. The latter is a particularly interesting case, since it only uses the \emph{Structure} kernel of each renderable, skipping any other unnecessary calculations as to only compute per-pixel depth information.
 
 Despite the \emph{Renderer} framework being the default for scene rendering operations, it's not the only way to utilize renderables and kernels associated with them. The same set of tools may be used with little effort for other rendering purposes. Both the \emph{post processing} pipeline described in the next section and material previews in the \emph{Nucled} editor are internally very similar to regular renderers.
 
@@ -212,7 +212,7 @@ In addition to regular scene rendering, Nucleus contains special support for ima
 
 \begin{itemize}
 \item The output device usually has a limited display range with respect to brightness. For optimal results, the rendered values must be translated into this range via \textbf{tone mapping}.
-\item \textbf{Psychophysical effects} may be simultated, such as glare, spatial acuity loss and scotopic vision.
+\item \textbf{Psychophysical effects} may be simulated, such as glare, spatial acuity loss and scotopic vision.
 \item Color grading, contrast enhancement and other stylistic effects may be applied in order to increase \textbf{immersion} and steer the \textbf{mood} of a particular scene.
 \item Visual \textbf{gameplay cues} may be provided seamlessly to the player without resorting to artificial bars or number displays. For example, it's common practice to indicate low health of the player in a first person game by blurring the screen, as well as adding bloody detail to the edges of the screen.
 \item \textbf{Attention focusing} via depth-of-field and selective coloring is often used in cutscenes and gameplay.
