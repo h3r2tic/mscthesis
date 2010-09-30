@@ -308,15 +308,78 @@ One major drawbacks of standard shadow mapping is that depth maps cannot be filt
 \clearpage
 \section{Post-processing effects}
 
-Several post-processing effects were implemented in order to test the pipeline.
+Several post-processing effects were implemented in order to test the pipeline. Figure \ref{fig:postProcOff} shows a test scene. The high-dynamic range output of this rendering is supplied to a \emph{PostProcessor} before gamma-correction. The image is mapped onto a full-screen quadrilateral, which is rendered with shaders generated from a kernel graph. Post-processing effects of multi-scale glare simulation and color banding reduction are applied and yield the image shown in figure \ref{fig:postProcOn}.
 
-TODO: \emph{really} short descriptions and screenshots for:
-	
-\begin{enumerate}
-\item negative - done
-\item desaturation - done
-\item blur - done
-\item glare - done
-\item noise - done
-\item distortion - done
-\end{enumerate}
+\begin{figure}[h!]
+  \centering
+  \subfigure[Post-processing off]{\label{fig:postProcOff}\includegraphics[width=0.45\linewidth]{./Figures/postProc/off.jpg}}
+  \subfigure[Post-processing on]{\label{fig:postProcOn}\includegraphics[width=0.45\linewidth]{./Figures/postProc/glareNoise.jpg}}
+  \label{fig:postProcTestScene}
+\end{figure}
+
+\subsection{Uniform filters}
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[Negative]{\label{fig:postProcNegative}\includegraphics[width=0.45\linewidth]{./Figures/postProc/negative.jpg}}
+  \subfigure[Desaturation]{\label{fig:postProcDesaturate}\includegraphics[width=0.45\linewidth]{./Figures/postProc/desaturation.jpg}}
+  \caption{Simple uniform filters}
+  \label{fig:postProcSimple}
+\end{figure}
+
+The most basic post-processing filters are ones which operate uniformly on individual colors. Figure \ref{fig:postProcSimple} demonstrates two such filters.
+
+\subsection{Blur}
+
+As mentioned in section \ref{sec:PostProcessing}, the post-processing systems allows multi-pass rendering. One common application of this feature is computation of separable filters, such as the Gaussian blur, shown in figure \ref{fig:postProcBlur}. The first image shows the result of convolving the image with only a horizontal Gaussian blur. A \emph{Blit} node is inserted after the horizontal blur, followed by vertical blurring. This effectively approximates a complete two-dimensional Gaussian blur, however with an order of magnitude less samples taken from the image.
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[Horizontal Gaussian blur]{\label{fig:postProcBlurHoriz}\includegraphics[width=0.45\linewidth]{./Figures/postProc/blurMoreHoriz.jpg}}
+  \subfigure[Gaussian blur]{\label{fig:postProcBlur}\includegraphics[width=0.45\linewidth]{./Figures/postProc/blurMore.jpg}}
+  \label{fig:postProcBlur}
+\end{figure}
+
+\subsection{Glare}
+
+TODO: background
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Figures/postProc/glare.jpg}
+    \caption[Glare]{Multi-scale glare applied to the test scene}
+  \label{fig:postProcGlare}
+\end{figure}
+
+\subsection{Spatial acuity and color sensitivity reduction}
+
+TODO: background
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[Post-processing off]{\label{fig:postProcNoAcuity}\includegraphics[width=0.45\linewidth]{./Figures/postProc/noAcuity.jpg}}
+  \subfigure[Spatial acuity and color sensitivity reduction (exaggerated)]{\label{fig:postProcAcuity}\includegraphics[width=0.45\linewidth]{./Figures/postProc/acuity.jpg}}
+  \label{fig:postProcAcuityComparison}
+\end{figure}
+
+\subsection{Distortion}
+
+TODO: info
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Figures/postProc/distortion.jpg}
+    \caption[Distortion]{Noise-based distortion effect}
+  \label{fig:postProcDistortion}
+\end{figure}
+
+\subsection{Banding reduction}
+
+TODO: info
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[Banding artifact]{\label{fig:postProcBanding}\includegraphics[width=0.45\linewidth]{./Figures/postProc/banding.png}}
+  \subfigure[Banding hidden by noise]{\label{fig:postProcNoBanding}\includegraphics[width=0.45\linewidth]{./Figures/postProc/noBanding.png}}
+  \label{fig:postProcBandingNoBanding}
+\end{figure}
