@@ -73,10 +73,6 @@ Figure \ref{fig:ForwardRenderingGraphSample} shows an example of the kernel grap
 
 After code generation, an \emph{Effect} is compiled (as described in section \ref{sec:lowLevelInfo}) and memoized using the input kernel set as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of lights, materials and reflectances appears.
 
-% TODO: some timings for compiling kernel graphs, discussion about caching compiled shaders.
-
-% TODO: mention of the block-based memory management and the resulting lack of fragmentation.
-
 \clearpage
 \section{Deferred lighting}
 \label{sec:DeferredLightingExample}
@@ -176,7 +172,15 @@ As any of the other passes, the \emph{Light stage} generates a kernel graph (an 
 \end{figure}
 
 The current implementation uses a geometry shader to instantiate a cube for each light, taking a single point as the input. Only the quads facing away from the camera are drawn and reverse depth testing is performed in order to do approximate light culling. \\
-Such setup will enable rendering of thousands of lights in a single batch, however this is not implemented yet. The downside of doing this for every light type would be large overdraw, since some lights may span a large portion of the screen and would benefit from more exact culling instead. Because of this, lights are actually drawn in separate batches, and approximate culling of their volumes is performed via the EXT\_depth\_bounds\_test OpenGL extension. Whereas the aforementioned reverse depth test allows culling of light volumes which are entirely in front of scene geometry, it doesn't do anything about the volumes being behind geometry. Depth bounds testing allows a range of depth values to be specified, so that no fragment is rendered if the value \emph{already in the depth buffer} is outside of this range. By conservatively specifying the minimum and maximum depth values of light volumes for this test, this effectively allows coarse culling. TODO: some picture.
+Such setup will enable rendering of thousands of lights in a single batch, however this is not implemented yet. The downside of doing this for every light type would be large overdraw, since some lights may span a large portion of the screen and would benefit from more exact culling instead. Because of this, lights are actually drawn in separate batches, and approximate culling of their volumes is performed via the EXT\_depth\_bounds\_test OpenGL extension. Whereas the aforementioned reverse depth test allows culling of light volumes which are entirely in front of scene geometry, it doesn't do anything about the volumes being behind geometry. Depth bounds testing allows a range of depth values to be specified, so that no fragment is rendered if the value \emph{already in the depth buffer} is outside of this range. By conservatively specifying the minimum and maximum depth values of light volumes for this test, this effectively allows coarse culling. Figure \ref{fig:lightingComplexityComparison} demonstrates a case where the lighting complexity is reduced dramatically due to scene occlusion.
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[Reverse-Z]{\label{fig:lightingComplexity2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/lightingComplexity2.png}}
+  \subfigure[Reverse-Z and bounds test]{\label{fig:lightingComplexity1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/lightingComplexity1.png}}
+  \caption[Light volume culling comparison]{Comparison of lighting complexity with only reverse-Z culling and with bounds testing via EXT\_depth\_bounds\_test}
+  \label{fig:lightingComplexityComparison}
+\end{figure}
 
 The illumination is rendered to a framebuffer of the same resolution as the screen, with two floating-point RGB attachments --- one for the diffuse illumination component, another for the specular.
 
