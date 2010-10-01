@@ -374,7 +374,7 @@ Simulations of some form of glare are common in real-time rendering systems -- m
 
 \subsection{Distortion}
 
-TODO: info
+Unlike \emph{RenderMan}'s \emph{imager} shaders, the post-processing kernels in Nucleus may freely access any pixels in the image. Another use case of this flexibility, besides blur, is the ability to distort the rendered image, either to simulate lensing phenomena or simply for an artistic purpose. For the purposes of this demonstration, the implemented example is an animated noise-based distortion.
 
 \begin{figure}[h!]
   \centering
@@ -383,9 +383,24 @@ TODO: info
   \label{fig:postProcDistortion}
 \end{figure}
 
+An image containing Perlin noise is sampled for each pixel with a time-based offset, then passed through the cosine function and scaled to obtain an offset into the image being filtered. Additionally, smooth decay of the offsets is used near screen edges in order to avoid clamping or tiling artifacts. This is implemented by the following snippet of \emph{Cg} code:
+
+\begin{lstlisting}[frame=single]
+float2 baseOff = tex2D(distortSampler, uv * 3 + time.minute).xy * 27.123;
+float2 off = cos(baseOff + radians(time.second * 360)) * 0.005;
+float2 decay = smoothstep(1, 0.9, saturate(2 * abs(uv - float2(0.5))));
+output = baseColor.sample(saturate(uv + off * decay));
+\end{lstlisting}
+
+The ``magic'' numbers governing offsets have been chosen arbitrarily as to define the particular look of the effect shown in figure \ref{fig:postProcDistortion}.
+
 \subsection{Banding reduction}
 
-TODO: info
+Due to various limitations of display technology, it is not possible to exactly display the luminance values, even if they fall within the luminous intensity range of the target device. In particular, even if the computed values are of high precision, they need to be quantized to 8 bits per channel for final display. The situation is worsened by inexact implementation of the \textbf{sRGB} standard by monitor manufacturers. As a result, many consumer monitors cannot display even the expected 256 shades of gray. This quantization results in artifact known as ``banding'', and occurs particularly often in case of wide gradients. In three-dimensional rendering, the problem mostly occurs on flat unicolored surfaces lit from a large distance. Figure \ref{fig:postProcBanding} illustrates a part of the test scene where this happens (the lower right corner).
+
+Since the post-processing pipeline works on high-precision values of the images, it may apply a technique known as \emph{dithering}. Dithering utilizes the intrinsic ability of the human visual system of noise removal. By diffusing the limited palette in a random (or semi-random) spatially-varying pattern, it creates the illusion of higher color depth. Historically, it has been widely used with 8- and 16-bit graphics, however it can still be utilized with ``Truecolor'' images.
+
+The example filter adds animated signed uniform noise to the high-precision image before gamma-correction and quantization. This makes the noise most apparent in areas of low-luminosity, where banding is normally most perceivable. A single frame of the temporally-varying result can be seen in figure \ref{fig:postProcNoBanding}.
 
 \begin{figure}[h!]
   \centering
