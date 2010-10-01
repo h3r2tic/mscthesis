@@ -214,7 +214,30 @@ Where $r_m$ is the radius bounding the influence of the light and $s : float \ri
 	\end{cases}
 \]
 
-TODO: a picture comparing the regular $1/r^2$ falloff and the modified one
+\begin{figure}[h!]
+  \centering
+  \subfigure[$1 / (1 + r^2)$ falloff]{\label{fig:lppInvSqFalloff1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/invSq-1.png}}
+  \subfigure[Modified $1 / (1 + r^2)$ falloff ]{\label{fig:lppModFalloff1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/mod-1.png}}
+  \caption[Modified falloff, tricky case]{A tricky case for the modified light intensity falloff. ``UBot'' model courtesy of Eric Andrew.}
+\label{fig:lppFalloffTrickyCase}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[$1 / (1 + r^2)$ falloff]{\label{fig:lppInvSqFalloff2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/invSq-2.jpg}}
+  \subfigure[Modified $1 / (1 + r^2)$ falloff ]{\label{fig:lppModFalloff2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/mod-2.jpg}}
+  \caption[Modified falloff, better case]{The modified falloff converging with $1 / (1 + r^2)$. ``UBot'' model courtesy of Eric Andrew.}
+\label{fig:lppFalloffBetterCase}
+\end{figure}
+
+Figure \ref{fig:lppInvSqFalloff1} demonstrates the light clipping artifact when using inverse-square light falloff in the light pre-pass renderer -- the specular highlights are trimmed to the bounding cubes drawn around lights. Switching to the modified falloff model, we obtain figure \ref{fig:lppModFalloff1}. The clipping issue is gone, however the divergence between these models becomes very apparent. This is a particularly tricky case for the falloff, because the scene contains 200 very small, low-intensity lights. Increasing their yield and therefore the range used in the windowed model brings the two closer, as depicted in figure \ref{fig:lppFalloffBetterCase}. The divergence completely disappears under most normal lighting conditions. The scene configuration in figure \ref{fig:lppFalloffConverged} renders the same with either model, within the precision limits of the output image.
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/falloffSame.jpg}
+    \caption[Falloffs converged]{Both falloff models produce the same image. ``UBot'' model courtesy of Eric Andrew.}
+  \label{fig:lppFalloffConverged}
+\end{figure}
 
 \subsection{Material stage}
 
