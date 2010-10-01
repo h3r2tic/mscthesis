@@ -308,16 +308,19 @@ One major drawbacks of standard shadow mapping is that depth maps cannot be filt
 \clearpage
 \section{Post-processing effects}
 
-Several post-processing effects were implemented in order to test the pipeline. Figure \ref{fig:postProcOff} shows a test scene. The high-dynamic range output of this rendering is supplied to a \emph{PostProcessor} before gamma-correction. The image is mapped onto a full-screen quadrilateral, which is rendered with shaders generated from a kernel graph. Post-processing effects of multi-scale glare simulation and color banding reduction are applied and yield the image shown in figure \ref{fig:postProcOn}.
+Several post-processing effects were implemented in order to test the pipeline. Figure \ref{fig:postProcOff} shows a test scene. The high-dynamic range output of this rendering is supplied to a \emph{PostProcessor} before gamma-correction. The image is mapped onto a full-screen quadrilateral, which is rendered with shaders generated from a kernel graph. When post-processing effects of multi-scale glare simulation and color banding reduction are applied, they yield the image shown in figure \ref{fig:postProcOn}.
 
 \begin{figure}[h!]
   \centering
   \subfigure[Post-processing off]{\label{fig:postProcOff}\includegraphics[width=0.45\linewidth]{./Figures/postProc/off.jpg}}
-  \subfigure[Post-processing on]{\label{fig:postProcOn}\includegraphics[width=0.45\linewidth]{./Figures/postProc/glareNoise.jpg}}
+  \subfigure[Subtle glare and banding reduction]{\label{fig:postProcOn}\includegraphics[width=0.45\linewidth]{./Figures/postProc/glareNoise.jpg}}
+  \caption{The scene used to test post-processing filters}
   \label{fig:postProcTestScene}
 \end{figure}
 
 \subsection{Uniform filters}
+
+The most basic post-processing filters are ones which operate uniformly on individual samples without taking any other parts of the image into consideration. Figure \ref{fig:postProcSimple} demonstrates two such filters. They are implemented as simple \emph{Cg} functions operating on individual colors, then automatically lifted to work on whole images by the functional composition mechanism described in section \ref{sec:FunctionalComposition}.
 
 \begin{figure}[h!]
   \centering
@@ -327,38 +330,45 @@ Several post-processing effects were implemented in order to test the pipeline. 
   \label{fig:postProcSimple}
 \end{figure}
 
-The most basic post-processing filters are ones which operate uniformly on individual colors. Figure \ref{fig:postProcSimple} demonstrates two such filters.
-
 \subsection{Blur}
 
-As mentioned in section \ref{sec:PostProcessing}, the post-processing systems allows multi-pass rendering. One common application of this feature is computation of separable filters, such as the Gaussian blur, shown in figure \ref{fig:postProcBlur}. The first image shows the result of convolving the image with only a horizontal Gaussian blur. A \emph{Blit} node is inserted after the horizontal blur, followed by vertical blurring. This effectively approximates a complete two-dimensional Gaussian blur, however with an order of magnitude less samples taken from the image.
+As mentioned in section \ref{sec:PostProcessing}, the post-processing system allows multi-pass rendering. One common application of this feature is computation of separable filters, such as the Gaussian blur shown in figure \ref{fig:postProcBlur}. The first image shows the result of convolving the signal with only a horizontal Gaussian kernel. A \emph{Blit} node is inserted after this step and followed by vertical blurring. This effectively approximates a complete two-dimensional Gaussian blur, however with an order of magnitude less samples taken from the image.
 
 \begin{figure}[h!]
   \centering
-  \subfigure[Horizontal Gaussian blur]{\label{fig:postProcBlurHoriz}\includegraphics[width=0.45\linewidth]{./Figures/postProc/blurMoreHoriz.jpg}}
-  \subfigure[Gaussian blur]{\label{fig:postProcBlur}\includegraphics[width=0.45\linewidth]{./Figures/postProc/blurMore.jpg}}
+  \subfigure[Horizontal]{\label{fig:postProcBlurHoriz}\includegraphics[width=0.45\linewidth]{./Figures/postProc/blurMoreHoriz.jpg}}
+  \subfigure[Horizontal and vertical]{\label{fig:postProcBlurFull}\includegraphics[width=0.45\linewidth]{./Figures/postProc/blurMore.jpg}}
+  \caption{Gaussian blur}
   \label{fig:postProcBlur}
 \end{figure}
 
 \subsection{Glare}
 
-TODO: background
+A glare effect can improve the realism of a computer-generated image by simulating the effects which happen in the human visual systems at luminance values unattainable by current mainstream display technology \cite{Spencer95physicallybasedglare}. Consumer--level display devices are limited to 256--1024 luminance levels and max brightness levels of about 500 $cd/m^2$. For comparison, the clear daytime sky at horizon has about 10,000 $cd/m^2$ and fairly bright moonlight 0.01 $cd/m^2$ \cite{radiometryPhotometry}. There is simply no way to display such a varying range on a display device, therefore many effects responsible for realistic perception of the scene do not have a chance to form.
+
+One of the sources of glare is light scattering within the cornea and the lens of the eye. \citet{Spencer95physicallybasedglare} note that it can be approximated with a sum of Gaussian-filtered images. The particular shape of this scattering effect varies from individual to individual, and while it may be evaluated experimentally and averaged, it is also an important artistic tool.
+
+The example glare filter implemented within Nucleus uses a combination of four hierarchically blurred images, weighted by empirically obtained values and summed with the original image. Figure \ref{fig:postProcGlare} demonstrates an exaggerated version of this post-processing effect.
 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/postProc/glare.jpg}
-    \caption[Glare]{Multi-scale glare applied to the test scene}
+    \caption[Glare]{Multi-scale glare applied to the test scene (exaggerated)}
   \label{fig:postProcGlare}
 \end{figure}
 
 \subsection{Spatial acuity and color sensitivity reduction}
 
-TODO: background
+Simulations of some form of glare are common in real-time rendering systems -- most commonly known as ``bloom'', they actually aim to simulate camera lens. However, besides glare, which is mostly apparent in high contrast situations, the human visual system exhibits another phenomenon, which unfortunately is rarely tackled by computer graphics. Under low luminance conditions, \emph{cone cells} in the eye are mostly nonfunctional. Because cone cells are the component of the human visual system which allows us to perceive colors, lack of their activation means that in low luminance conditions, human vision is monochromatic, perceived with a slight blue tint. Additionally, experimental subjects often describe this ``scotopic vision'' as blurry and noisy \cite{Thompson_aspatial}.
+
+\citet{Thompson_aspatial} have proposed an empirically-based low-luminance post-processing filter. Since it uses images convolved by Gaussian kernels, it comes at a slight additional cost to glare simulation -- in fact, the two filters have been merged into one within Nucleus. The post-processing kernel first computes an acuity value (figure \ref{fig:postProcAcuityMap}) for each pixel of the processed image, then uses this value to interpolate between the regular color (photopic vision) and the result of the scotopic filter. The acuity value is calculated by passing samples of the blurred images through a step function, then blending them together using the ``screen'' method ($1 - (1-a)*(1-b)$).
 
 \begin{figure}[h!]
   \centering
   \subfigure[Post-processing off]{\label{fig:postProcNoAcuity}\includegraphics[width=0.45\linewidth]{./Figures/postProc/noAcuity.jpg}}
   \subfigure[Spatial acuity and color sensitivity reduction (exaggerated)]{\label{fig:postProcAcuity}\includegraphics[width=0.45\linewidth]{./Figures/postProc/acuity.jpg}}
+  \subfigure[Acuity map]{\label{fig:postProcAcuityMap}\includegraphics[width=0.45\linewidth]{./Figures/postProc/acuityMap.jpg}}
+  \caption[Scotopic vision]{Realism enhancement at low-luminance conditions}
   \label{fig:postProcAcuityComparison}
 \end{figure}
 
@@ -379,7 +389,8 @@ TODO: info
 
 \begin{figure}[h!]
   \centering
-  \subfigure[Banding artifact]{\label{fig:postProcBanding}\includegraphics[width=0.45\linewidth]{./Figures/postProc/banding.png}}
+  \subfigure[Post-processing off]{\label{fig:postProcBanding}\includegraphics[width=0.45\linewidth]{./Figures/postProc/banding.png}}
   \subfigure[Banding hidden by noise]{\label{fig:postProcNoBanding}\includegraphics[width=0.45\linewidth]{./Figures/postProc/noBanding.png}}
+  \caption[Color banding reduction]{Color banding reduction}
   \label{fig:postProcBandingNoBanding}
 \end{figure}
