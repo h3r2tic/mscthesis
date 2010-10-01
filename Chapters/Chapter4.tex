@@ -228,6 +228,14 @@ PostProcess = kernel(
 );
 \end{lstlisting}
 
+\begin{figure}[h!]
+  \centering
+  \subfigure[Post-processing off]{\label{fig:UBotPostOff}\includegraphics[width=0.45\linewidth]{./Figures/UBotPostOff.jpg}}
+  \subfigure[Post-processing on]{\label{fig:UBotPostOn}\includegraphics[width=0.45\linewidth]{./Figures/UBotPostOn.jpg}}
+  \caption[The impact of post-processing]{The impact of post-processing on a rendered scene. ``UBot'' model courtesy of Eric Andrew.}
+\label{fig:lppFalloffBetterCase}
+\end{figure}
+
 Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. The crucial item to notice in this graph is the \textbf{Blit} node. It's not a concrete kernel with an implementation in code, but a special entity which only the \emph{PostProcessor} understands. Such nodes are used to break the graph to be rendered in multiple passes. Since certain classes of image convolution operators are \emph{linearly separable}, they may be applied to a two-dimensional image as two single-dimensional operations. This is just what happens in this graph. Had the \emph{Blit} node been removed, the pipeline would implement a regular two-dimensional blur. With the \emph{Blit} in place, an equivalent operation \emph{(for all practical purposes)} is done an order of magnitude more efficiently. Figure \ref{fig:SimplePostProcBreakdown} demonstrates the rendering steps which the graph from figure \ref{fig:SimplePostProc} is broken down into.
 
 \begin{figure}[h!]
