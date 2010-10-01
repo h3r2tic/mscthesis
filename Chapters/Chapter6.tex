@@ -335,14 +335,13 @@ One major drawbacks of standard shadow mapping is that depth maps cannot be filt
 \clearpage
 \section{Post-processing effects}
 
-Several post-processing effects were implemented in order to test the pipeline. Figure \ref{fig:postProcOff} shows a test scene. The high-dynamic range output of this rendering is supplied to a \emph{PostProcessor} before gamma-correction. The image is mapped onto a full-screen quadrilateral, which is rendered with shaders generated from a kernel graph. When post-processing effects of multi-scale glare simulation and color banding reduction are applied, they yield the image shown in figure \ref{fig:postProcOn}.
+Several post-processing effects were implemented in order to test the pipeline. Figure \ref{fig:postProcOff} shows a test scene. The high-dynamic range output of this rendering is supplied to a \emph{PostProcessor} before gamma-correction. The image is mapped onto a full-screen quadrilateral, which is rendered with shaders generated from a kernel graph.
 
 \begin{figure}[h!]
   \centering
-  \subfigure[Post-processing off]{\label{fig:postProcOff}\includegraphics[width=0.45\linewidth]{./Figures/postProc/off.jpg}}
-  \subfigure[Subtle glare and banding reduction]{\label{fig:postProcOn}\includegraphics[width=0.45\linewidth]{./Figures/postProc/glareNoise.jpg}}
-  \caption{The scene used to test post-processing filters}
-  \label{fig:postProcTestScene}
+  \includegraphics[width=0.45\linewidth]{./Figures/postProc/off.jpg}
+  \caption[Post-processing test scene]{The scene used to test post-processing filters}
+  \label{fig:postProcOff}
 \end{figure}
 
 \subsection{Uniform filters}
