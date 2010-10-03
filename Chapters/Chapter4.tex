@@ -8,7 +8,7 @@
 
 \section{Overall structure}
 
-At the highest level, the architecture of Nucleus is split in two layers. The first layer completely wraps an underlying rendering API, providing primitives which are easier to use and less error-prone, while retaining the efficiency in the usage patterns Nucleus is designed for.
+At the highest level, the architecture of Nucleus is split in two layers. The first layer completely wraps an underlying rendering API, providing primitives which are easier to use and less error-prone, while retaining high efficiency.
 
 The second layer is the high-level rendering interface which is the main topic of this thesis, described in further detail in this chapter.
 
@@ -20,18 +20,18 @@ Aside from that, Nucleus offers a post-processing framework, which in turn may u
 The high-level machinery of Nucleus may be built directly on top of a rendering API such as OpenGL or Direct3D, however a wrapper over these is desirable for numerous reasons:
 
 \begin{enumerate}
-\item The OpenGL API is portable and supported by multiple operating systems, however its implementation in drivers is less stable than that of Direct3D. Hence  it is vital to be able to support both APIs.
-\item Hardware may support rendering APIs to varying degrees via feature sets and extensions, yet workarounds may be created and exposed as a common set of features. Additionally, features required by the standards are sometimes implemented in varying, sometimes incorrect bugs. The wrapper allows these exceptional details to be caught in a single point.
+\item The OpenGL API is portable and supported by multiple operating systems, however its implementation in drivers is less stable than that of Direct3D. Hence it is vital to be able to support both APIs.
+\item Hardware may support rendering APIs to varying degrees via feature sets and extensions, yet workarounds can be created and exposed as a common set of features. Additionally, features required by the standards are sometimes implemented to varying degrees, sometimes containing bugs. The wrapper allows these exceptional details to be caught in a single location.
 \item Directly working with the graphics API is error-prone and may be difficult to debug. The wrapper can enforce particular usage patterns, allow easy resource management and reduce code duplication, all of which lead to faster and more straight-forward development.
 \end{enumerate}
 
-The low-level abstraction layer has been built on a level similar to Microsoft's XNA library and currently has a backend utilizing \emph{OpenGL 3.3} and NVidia's \emph{Cg Toolkit}. The main building blocks of the framework are:
+The lowest abstraction layer has been built on a level similar to Microsoft's XNA library and currently has a backend utilizing \emph{OpenGL 3.3} and NVidia's \emph{Cg Toolkit}. The main building blocks of the framework are:
 
 \begin{description}
 
 \item[Effect] --- wraps vertex, geometry and fragment shaders together, allows shader specialization (e.g. setting the implementations of Cg interfaces, providing sizes for unsized Cg arrays). Once compiled, allows the programmer to provide values for uniform parameters shared by all instances of the effect. Finally, it allows instantiation into EffectInstances.
 
-\item[EffectInstance] --- provides a name space and storage for uniform and varying parameters associated with a single instance of an Effect. Additionally, uses a VertexArray to cache current varying parameter bindings. Automatically performs reference counting of resources assigned as uniform (Textures) and varying parameters (VertexBuffers). The memory for EffectInstances is allocated from pools in contiguous slabs for both the structure data and the effect-dependent payload. By adding an indirection to parameter storage, multiple Effects and EffectInstances may source their parameters from the same variable in memory, possibly managed entirely by the client.
+\item[EffectInstance] --- provides a name space and storage for uniform and varying parameters associated with a single instance of an Effect. Additionally, uses a VertexArray to cache current varying parameter bindings. Automatically performs reference counting of resources assigned as uniform (Textures) and varying parameters (VertexBuffers). The memory for EffectInstances is allocated from pools in contiguous slabs for both the structure data and the effect-dependent payload. By adding an indirection to parameter storage, multiple Effects and EffectInstances may source their parameters from the same variable in memory, possibly managed entirely by the client. Typically, each object in the scene will own a single EffectInstance for each Effect it may be rendered with.
 
 \item[Buffer] ---allows the specification and modification of graphics API-allocated memory (VRAM, AGP, system).
 
@@ -62,18 +62,18 @@ The \textbf{RenderList} is a collection of indices (ordinals) of EffectInstances
 \item Mesh topology
 \end{itemize}
 
-An important factor to note is that the RenderList does not plainly contain EffectInstances, but rather their \emph{rendering ordinals}. The ordinals are 32-bit numbers assigned to each effect instance and managed internally by the renderer. Their order is determined by a heuristic attempting to minimize the number of state changes required when rendering the instances (currently: sorting by texture handles). This means that once the render list is constructed, the algorithm to minimize the required state changes basically boils down to \emph{sorting the ordinals}, which is a very cheap operation. More ordering options will be made available in the future, so that the objects may be sorted by distance or using per-Effect routines built with knowledge of their performance characteristics.
+An important factor to note is that the RenderList does not plainly contain EffectInstances, but rather their \emph{rendering ordinals}. The ordinals are 32-bit numbers assigned to each effect instance and managed internally by the renderer. Their order is determined by a heuristic attempting to minimize the number of state changes required when rendering the instances. This means that once the render list is constructed, the algorithm to minimize the required state changes basically boils down to \emph{sorting the ordinals}, which is a cheap operation. More ordering options will be made available in the future, so that the objects may be sorted by distance or using per-Effect routines built with knowledge of their performance characteristics.
 
-As mentioned before, the \textbf{Renderer} also gives access to the \textbf{RenderState}, a set of common rendering settings, such as the mode of Z-testing, blending, back-face culling, etc.
+As mentioned before, the \textbf{Renderer} also gives access to the \textbf{RenderState}, a set of common rendering settings, such as the mode of depth-testing, blending, back-face culling, etc.
 
-The Graphics base layer can therefore be used instead of the underlying graphics API, completely hiding its complexity and error-prone setup. It also makes it possible to change the backend without introducing client code. Implementation of a \textbf{Direct3D}-based \textbf{Renderer} is one possible area of future research.
+The graphics base layer can therefore be used instead of the underlying graphics API, completely hiding its complexity and error-prone setup. It also makes it possible to change the backend without introducing client code. Implementation of a \textbf{Direct3D}-based \textbf{Renderer} is one possible area of future research.
 	
 \section{Kernels}
 \label{sec:Kernels}
 
-The basic building block of the high level rendering interface of Nucleus is called a \emph{kernel}. Conceptually, it is just a function. The implementation of a kernel may be specified using a code snippet (the current implementation allows the Cg language for this purpose). The more interesting option is to define it using a graph. Specifically, a directed acyclic graph whose nodes are either kernels or special-purpose entities. The special-purpose nodes can be used to denote what constitutes the input and output parameters of a graph-based kernel, as well as to request external data for it.
+The basic building block of the high level rendering interface of Nucleus is called a \emph{kernel}. Conceptually, it is just a function. The implementation of a kernel may be specified using a code snippet (the current implementation allows the \emph{Cg} language for this purpose). The more interesting option is to define it using a graph. Specifically, a directed acyclic graph whose nodes are either kernels or special-purpose entities. The special-purpose nodes can be used to denote what constitutes the input and output parameters of a graph-based kernel, as well as to request external data for it.
 
-While first-class support of graphs does not result in more expressive power than of regular function-based composition, it provides a comfortable mental and programmatic framework for such composition. It enables the use of classical graph algorithms and makes development of authoring tools easier.
+While first-class support of graphs does not result in more expressive power than that of regular function-based composition, it provides a comfortable mental and programmatic framework for such composition. It enables the use of classical graph algorithms and makes development of authoring tools easier.
 
 As a convention, the return values of kernels are called \emph{output parameters} and denoted by the \textbf{out} keyword in the kernel signature. Conversely, regular kernel parameters are called \emph{input parameters} and optionally denoted by the \textbf{in} keyword. This is modeled after the Cg shading language.
 
@@ -87,7 +87,7 @@ Similarly to how GPU-based shading requires the specification of shader programs
 
 \item[Structure] --- Defines the macro-structure and mostly contains what a vertex or geometry shader might. It is responsible for providing the primitives to be rendered, including data such as positions, normals, partial derivatives of position with respect to texture coordinates, etc.
 
-\item[Reflectance] --- Enables the object to interact with lights by implementing a reflection model. Examples include the Lambertian model, Phong-Blinn, Cook-Torrance and Ashikhmin-Shirley, all of which have been implemented in Nucleus.
+\item[Reflectance] --- Enables the object to interact with lights by implementing a reflection model. Examples include the Lambertian model, Phong-Blinn, Cook-Torrance, Ashikhmin-Shirley, all of which have been implemented in Nucleus.
 
 \item[Material] --- This is the level on which most artists will work, specifying the albedo of the rendered object, its bumpiness, specular tint, emissive lighting, roughness, etc. Kernels of this type will be created for types of objects in a scene, as well as for particular instances thereof.
 
@@ -95,11 +95,11 @@ Similarly to how GPU-based shading requires the specification of shader programs
 
 Specifying these kernels for a renderable object boils down to designating a \emph{concrete} kernel with an identical signature for each of the above \emph{abstract} kernels.
 
-A scene will usually also contain lights, each of which must be associated with a kernel. In this case, an implementation of the abstract Light. At program runtime, Light kernels are connected to the per-object kernel types. This mechanism allows specification of custom attenuation, sampling and shadowing algorithms, which automatically are applicable to any Reflectance kernel.
+A scene will usually also contain lights, each of which must be associated with a kernel. In this case, an implementation of the abstract \emph{Light} kernel. At program runtime, \emph{Light} kernels are connected to the per-object \emph{Reflectance} kernels. This mechanism allows specification of custom attenuation, sampling and shadowing algorithms, which automatically are applicable to any \emph{Reflectance} kernel.
 
 % TODO: link to info about the signatures of these kernels in some other chapter
 
-Such a break-down of kernels may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{renderer} is free to use these kernels in any rendering algorithm, as detailed in section \ref{sec:Renderers}.
+Such a break-down of domains may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{Renderer} is free to use these kernels in any rendering algorithm, as detailed in section \ref{sec:Renderers}.
 
 Another core kernel type is used in \emph{post-processing} operations and described in section \ref{sec:PostProcessing}.
 
@@ -119,14 +119,14 @@ Volume & --- \\
 \end{tabular}
 \end{center}
 
-Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this split for performance gains in complex scene configurations (for example, sections \ref{sec:ForwardRenderingExample} and \ref{sec:DeferredLightingExample} demonstrate how it allows Nucleus to use the same kernels for \emph{Forward} and \emph{Deferred} rendering, respectably). While it restricts the freedom of an artist to some extent, real-time rendering systems used in AAA productions have often been restricted to just a \emph{single} reflectance model \cite{CryEngine3Deferred, Killzone2Deferred}.
+Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this split for performance gains in complex scene configurations -- for example, sections \ref{sec:ForwardRenderingExample} and \ref{sec:DeferredLightingExample} demonstrate how it allows Nucleus to use the same kernels for \emph{Forward} and \emph{Deferred} rendering, respectably. While it restricts the freedom of an artist to some extent, real-time rendering systems used in AAA productions have often been limited to just a \emph{single} reflectance model \cite{CryEngine3Deferred, Killzone2Deferred}.
 
-There is currently no support whatsoever for volume shaders in Nucleus. A proper solution would require ray marching in fog volumes and is beyond the scope of this thesis.
+There is currently no support whatsoever for volume shaders in Nucleus. A proper solution would require ray marching in volumes and is beyond the scope of this thesis.
 
 \section{Semantic type system}
 
 % TODO: ref the related work section? maybe put semantic types into an index?
-Nucleus uses \emph{semantic types} in order to describe the signatures of computational kernels. Each type is a set of \emph{trait} values and each \emph{trait} is an enumerated type in the classical meaning used in programming languages. Possible traits and their values include (TODO):
+Nucleus uses \emph{semantic types} in order to describe the signatures of computational kernels. Each type is a set of \emph{trait} values and each \emph{trait} is an enumerated type in the classical meaning used in programming languages. Possible traits and their values include (TODO-ish):
 \begin{description}
 \item[basis] --- world, view, clip, tangent,
 \item[colorSpace] --- RGB, sRGB, logLUV,
@@ -138,12 +138,12 @@ Nucleus uses \emph{semantic types} in order to describe the signatures of comput
 
 Trait values of the same name are considered distinct if they belong to different traits. For example, value \emph{A} of trait \emph{X} is distinct from value \emph{A} of trait \emph{Y}. In order to make the definition mathematically sound, a trait value may be considered a $(trait, value)$ tuple.
 
-A type is then any combination of trait values, e.g. \emph{"type float3 + use position + basis world"} and \emph{"type float2 + use uv"}, where the "+" sign denotes a delimiter. An empty set of trait values is a valid type as well.
+A type is then any combination of trait values, e.g. \emph{"type float3 + use position + basis world"} and \emph{"type float2 + use uv"}, where the "+" sign denotes a delimiter (actually, a semantic expression operator, as further described in section \ref{sec:SemanticExpressions}). An empty set of trait values is a valid type as well.
 
 \subsection{Type coercion}
 \label{sec:TypeCoercion}
 
-A kernel graph specified by the user or constructed by an algorithm must be type-checked within Nucleus before it is used in any rendering operation. I first discuss how the process works on individual connections, then extend the result to complete kernel graphs.
+A kernel graph specified by the user or constructed by an algorithm must be type-checked within Nucleus before it is used in any rendering operation. This section first explains the process for individual connections, then extends it to entire kernel graphs.
 
 Given a connection from an output parameter of type $X$ to a input parameter of type $Y$, the connection is determined to be valid if $Y \subseteq X$. Otherwise such a connection is a type mismatch. For example, connecting an output parameter of type \emph{"type float3 + use position"} to an input parameter of type \emph{"type float3"} is valid, however connecting \emph{"type float4"} to \emph{"type float3"} or to \emph{"type float4 + use color"} is a mismatch.
 
@@ -153,7 +153,7 @@ It is possible to define a directed weighted graph $G=(V, E)$ such that its vert
 
 Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
 
-% TODO: some pictures
+TODO: some pictures
 	
 \subsection{Automatic connection determination}
 
@@ -161,13 +161,14 @@ The kernel graph may contain connections not only between particular parameters,
 
 To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error.
 
-% TODO: some pictures
+TODO: some pictures
 
 \subsection{Semantic expressions}
+\label{sec:SemanticExpressions}
 
 Nucleus also extends the technique proposed in \cite{mcguire2006shadetrees} by allowing usage of simple expressions which operate on semantic traits in the specification of output parameter semantics.
 
-When working with a prototype of Nucleus which utilized a simpler version of the type system, it became apparent that it is useful not only to compute values using kernels, but also let the output semantics of kernel functions depend on the input semantics of these functions and the kernels they're connected to. For instance, One could have a kernel which samples a texture. Textures may be tagged with traits, specifying what sort of data they contain. If such a texture is connected to the sampling kernel, it is crucial to be able to express that the type of the sample should retain the traits of the texture. This is enabled by semantic expressions.
+When working with a prototype of Nucleus, which utilized a simpler version of the type system, it became apparent that it is useful not only to compute values using kernels, but also let the output semantics of kernel functions depend on the input semantics of these functions and the kernels they're connected to. For instance, One could have a kernel which samples a texture. Textures may be tagged with traits, specifying what sort of data they contain. If such a texture is connected to the sampling kernel, it is crucial to be able to express that the type of the sample should retain the traits of the texture. This is enabled by semantic expressions.
 
 The sampling kernel could have the following signature:
 
@@ -181,16 +182,16 @@ Tex2D = kernel (
 
 % TODO: change other quotes to the `` ... '' style
 
-In this case, the traits of the output parameter ``sample'' depend on the actual parameter which is connected to the input ``texture'' parameter in a kernel graph. Hence, the result of connecting an input with a semantic \emph{<type sampler2D + use color>} will be a sample with the semantic \emph{<type float4 + use color>}.
+In this case, the traits of the output parameter ``sample'' depend on the \emph{actual parameter} which is connected to the input ``texture'' parameter in a kernel graph. Hence, the result of plugging an input with the semantic \emph{<type sampler2D + use color>} will be a sample with the semantic \emph{<type float4 + use color>}.
 
-There can be only one value for a particular trait for one semantic and any duplicates replace the previous values. For example, \emph{<type float + type float2>} is equivalent to \emph{<type float2>}. This is useful if the semantic expression wants to add a particular trait, overriding whatever it was previously set to.
+There can be only one value for a particular trait within a semantic, and any duplicates within the expression replace the previous values. For example, \emph{<type float + type float2>} is equivalent to \emph{<type float2>}. This is useful if the semantic expression wants to add a particular trait, overriding whatever it was previously set to.
 
 In addition to additive semantic expressions, subtractive ones are allowed. The semantic expression <type float - type> is an empty semantic. Parenthesizing sub-expressions is valid too, e.g. \emph{<type float + (in.foo.actual - type)>} is equivalent to \emph{<in.foo.actual + type.float>}, but due to non-associativity, distinct from \emph{<type float + in.foo.actual - type>}.
 
 \section{Renderers}
 \label{sec:Renderers}
 
-Due to the particular split of shader domains which Nucleus utilizes, it's possible to perform scene rendering using various rendering algorithms. Using an internal toolbox of kernel graph and type system operations, high-level client code may combine kernels into shader programs to fit in multiple rendering pipelines.
+Because of the particular split of shader domains which Nucleus utilizes, it is possible to perform scene rendering using various algorithms. Using an internal toolbox of kernel graph and type system operations, high-level client code may combine kernels into shader programs to fit in multiple rendering pipelines.
 
 Since rendering algorithms will usually have similar requirements in terms of content they operate on, it's viable to extract a common interface. Therefore, Nucleus contains an abstract base \emph{Renderer} class, which allows the details of concrete implementations to be hidden. In end-user code the choice of a rendering algorithm only boils down to choosing an appropriate concrete sub-class.
 
@@ -292,8 +293,6 @@ TODO: example
 
 \section{Functional composition}
 \label{sec:FunctionalComposition}
-
-% TODO: Linear data flow in the kernel DAG too restricting. Nucleus supports functional composition with currying instead.
 
 The post-processing framework required an introduction of one more element into the type system and graph manipulation toolbox. A limitation of the kernel pipeline described so far is that each kernel produces a single set of outputs for a single set of outputs. While this restriction is reasonable for implementing structure, material, light and reflectance shaders, it hinders elegant image processing.
 
@@ -436,7 +435,7 @@ SampleImage = kernel (
 };
 \end{lstlisting}
 
-Inline code within non-graph kernel bodies must be valid for the target language as to be emitted literally during the codegen process. Therefore the ``image.sample(uv)'' expression must be valid in the generated function. This is an aspect which is not entirely satisfactory, because it ties some constructs of kernel implementations to the target language used during code generation. In this particular case, it requires that the target language supports method calls or expressions which look like them. If generalization to other shading languages is required, a more sophisticated codegen process may be used, however for the purposes of this thesis, \emph{Cg} is assumed.
+Inline code within non-graph kernel bodies must be valid for the target language as to be emitted literally during the codegen process. Therefore the ``image.sample(uv)'' expression must be valid inside the generated function. This is an aspect which is not entirely satisfactory, because it ties some constructs of kernel implementations to the target language used during code generation. In this particular case, it requires that the target language supports method calls or expressions which look like them. If generalization to other shading languages is required, a more sophisticated codegen process may be used, however for the purposes of this thesis, \emph{Cg} is assumed.
 
 In order for expressions using kernels to be valid in \emph{Cg}, \emph{interfaces} are generated. In the above case, the following interface would be defined:
 \begin{lstlisting}[frame=single]
