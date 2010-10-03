@@ -24,12 +24,16 @@ The tool has been called ``Nucled''. While it is not yet feature-complete, its c
 \item application and creation of new materials,
 \end{itemize}
 
-The interface of Nucled is based on a custom Graphical User Interface (GUI) toolkit \cite{HybridGUI}, which is able to use the low-level layer of Nucleus as the display backend. This approach guarantees smooth integration of the rendering framework within Nucled and serves as a test of the system. While the editor looks like a regular desktop application, it's in fact rendered entirely by Nucleus, down from each text label, button, up to 3D scene viewports and material previews.
+The interface of Nucled is based on a custom Graphical User Interface (GUI) toolkit\footnote{\url{http://hybrid.team0xf.com/}}, which is able to use the low-level layer of Nucleus as the display backend. This approach guarantees smooth integration of the rendering framework within Nucled and serves as a test of the system. While the editor looks like a regular desktop application, it's in fact rendered entirely by Nucleus, down from each text label, button, up to 3D scene viewports and material previews.
 
 The core improvement Nucled brings over text-based manipulation of kernels is the ability to preview intermediate calculations within graphs. This greatly improves shader development and debugging, enabling the programmer or artist to immediately see the flow of data and its components, instead of just being presented with the final image.
 
 Preview rendering has been implemented by loading a separate scene and drawing it using a specialized \emph{Renderer}, with different settings for each graph node. The specialized \emph{MaterialPreviewRenderer} is a much simplified version of the \emph{ForwardRenderer}, in that it does not evaluate any reflectance kernels, thus assuming completely uniform lighting. For each graph node, it creates a kernel which short-circuits evaluation at the particular node and outputs the intermediate value into the framebuffer. Therefore, each preview viewport actually contains a specialized shader, created by truncating the original kernel graph.
 
-TODO(?): Info about the issues mentioned by Whitted (mentioned in McGuire's paper) about type mismatches and how they're mostly non-existent in Nucled thanks to the semantic type system.
+Besides graph manipulation, Nucled allows the underlying Cg code of simple kernels to be edited. When a graph node is double-clicked, a \emph{Scintilla}\footnote{\url{http://www.scintilla.org/}}-based code editor pops up and shows the source of the matching kernel. A custom backend for Scintilla was created, which allows it to render via Nucleus as well, hence integrating seamlessly with the rest of Nucled.
 
-TODO: Mini-conclusion as how Nucled is a sketch but may become a complete solution for authoring effects.
+TODO(??? I think it can be skipped, due to being mentioned earlier in the section about graph systems in general): Info about the issues mentioned by Whitted (mentioned in McGuire's paper) about type mismatches and how they're mostly non-existent in Nucled thanks to the semantic type system.
+
+TODO(??? should something like that really be in a thesis? I'd skip it too): Mini-conclusion as how Nucled is a sketch but may become a complete solution for authoring effects.
+
+TODO: anything else?

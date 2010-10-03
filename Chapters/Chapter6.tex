@@ -330,7 +330,28 @@ One major drawbacks of standard shadow mapping is that depth maps cannot be filt
   \label{fig:NucleusVSM}
 \end{figure}
 
-\citet{Donnelly06varianceshadow} present an interesting algorithm, which is simple to implement and solves the aliasing problem with minimal additional storage and computation. blah blah blah duh *SLAM* TODO
+\citet{Donnelly06varianceshadow} present an interesting algorithm, which is simple to implement and solves the aliasing problem with low additional storage and computation. In the first step, it proceeds similarly to regular shadow mapping, but in addition to rendering the depths as seen form a light source, squares of the depth values are stored as well, hence rendering a two-component texture. The resulting texture can be filtered through the use of mipmapping, summed area tables and further softened by blurring.
+
+The filtered texture is used to recover the moments $M_1$ and $M_2$ of a probabilistic distribution of depths around the filter region at any point within the image:
+\begin{align*}
+M_1 = E(x) &= \int_{-\infty}^\infty xp(x)dx \\
+M_2 = E(x^2) &= \int_{-\infty}^\infty x^2p(x)dx
+\end{align*}
+From these, the mean $\mu$ and variance $\sigma^2$ are calculated:
+\begin{align*}
+\mu &= E(x) = M_1\\
+\sigma^2 &= E(x^2) - E(x)^2 = M_2 - M_1^2
+\end{align*}
+
+Finally, we can compute the upper bound on the fraction of pixels within the filter region which are farther from the light source than a fixed depth $t$ using \emph{Chebychev's inequality}:
+\[
+P(X \geq t) \leq \frac{\sigma^2}{\sigma^2 + (t - \mu)^2}
+\]
+where $X$ is a random variable drawn from a distribution with mean $\mu$ and variance $\sigma$ and $t > \mu$.
+
+When computing shadowing for a fragment seen from the camera, $t$ is the distance of the fragment from the light source and $P(X \geq t)$ gives an approximation of the fragment's visibility. For the case where $t \leq \mu$, it is assumed that the fragment is completely visible.
+
+The algorithm has been implemented within Nucleus by creating a new light type and an associated kernel. In addition to rendering the moments map, the CPU side of the light implementation exploits the post-processing pipeline in order to perform separable Gaussian blurring of the texture. The implementation also uses light bleeding reduction by darkening the shadow as to perceptually improve on the upper bound given by Chebychev's inequality \cite{SATVSM}.
 
 \clearpage
 \section{Post-processing effects}
