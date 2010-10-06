@@ -48,9 +48,10 @@ A key factor in the formulae described above is the $f_r$ function. It is called
 A spatially-varying \emph{BRDF} can describe the complete appearance of a surface including its texture, reflectivity, glossiness, etc. While it is possible to encode this data within a scene representation, it is not practical for most applications due to storage space and memory bandwidth constraints. Simulating light interaction in a precise manner, even under a geometric optics approximation, is very complicated -- for example, figure \ref{fig:InhomogeneousDielectric} shows some of the possible paths photons might take within an inhomogeneous dielectric. For these reasons, physically and empirically-inspired mathematical models have been proposed, which aim to approximate idealized surfaces of various properties or just provide intuitive parameters to control the appearance of objects. Example models include:
 \begin{itemize}
 \item Lambertian, describing the idealized diffuser. It is a constant \emph{BRDF}.
-\item Phong, the first to introduce specular highlights.
-\item Cook-Torrance, a general model based on \emph{microfacet theory} aimed at rough surfaces, in particular plastics and metals.
-\item Ashikhmin-Shirley, designed to be similar to Phong, but physically plausible, energy-conserving and with intuitive parameters.
+\item Phong \cite{Phong}, the first to introduce specular highlights.
+\item Cook-Torrance \cite{CookTorrance}, a general model based on \emph{microfacet theory} aimed at rough surfaces, in particular plastics and metals.
+\item Ashikhmin-Shirley \cite{Ashikhmin00ananisotropic}, designed to be similar to Phong, but physically plausible, energy-conserving and with intuitive parameters.
+\item ABC and ABg \cite{opticalScattering}, able to model light reflection off surfaces with fractal height autocorrelation.
 \end{itemize}
 
 \begin{figure}[h!]
