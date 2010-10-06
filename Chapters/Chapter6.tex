@@ -43,7 +43,7 @@ As it turns out, this task is straightforward within the framework of Nucleus:
 \STATE $* \Rightarrow \textbf{output}$
 \end{algorithmic}
 
-Where ``$\Rightarrow$'' denotes the operation of graph fusion and \textbf{foldl} is a functional reduction operator similar to the one used by the \emph{Haskell} programming language [TODO: ref], defined in terms of kernel graph composition.
+Where ``$\Rightarrow$'' denotes the operation of graph fusion and \textbf{foldl} is a functional reduction operator similar to the one used by the \emph{Haskell} programming language\footnote{\url{http://www.haskell.org/haskellwiki/Fold}}, defined in terms of kernel graph composition.
 
 \begin{figure}[h!]
   \centering
@@ -82,7 +82,7 @@ A \emph{light pre-pass} renderer was implemented, which may be seamlessly used i
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/lightPrePass/sponza.jpg}
-    \caption[Light pre-pass rendering of Sponza]{The ``Crytek Sponza'' scene under a complex lighting setup consisting of 100 spherical area lights using a custom convolution of the ABC reflectance model rendered via deferred lighting at 15 FPS at the 1680x1050 resolution.}
+    \caption[Light pre-pass rendering of Sponza]{The ``Crytek Sponza'' scene under a complex lighting setup consisting of 100 spherical area lights using a custom convolution of the ABC reflectance model rendered via deferred lighting at 15 FPS at the 1680x1050 resolution. Model courtesy of Crytek and Marko Dabrovic.}
   \label{fig:lightPrePassSponza}
 \end{figure}
 
@@ -147,9 +147,9 @@ if (reflectanceId < A) {
 }
 \end{lstlisting}
 
-The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it. [TODO: ref the latest Siggraph paper about GPU pipelines].
+The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it \cite{overviewOfGPUArch}.
 % TODO: move this to the future work section?
-If this branching still turns out to be prohibitive, it's possible to reduce its cost using tile-based deferred rendering similar to [TODO: ref]. The framebuffer would be split into tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
+If this branching still turns out to be prohibitive, it's possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
 
 As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in Figure \ref{fig:DeferredLightingStage2}), the only distinction is that it's compiled for the purpose of rendering the bounding volumes of lights.
 
@@ -325,7 +325,7 @@ Upon rendering a scene, the set of visible lights is determined and each \emph{L
 
 \subsection{Variance shadow mapping}
 
-One major drawbacks of standard shadow mapping is that depth maps cannot be filtered in the same way as color textures. This typically leads to severe aliasing. Filtering methods based on sampling the depth map multiple times per a shaded fragment, computing the visibility query and averaging the result provide acceptable results, but at a heavy price (TODO: ref Advanced Soft Shadow Mapping Techniques - NVIDIA).
+One major drawbacks of standard shadow mapping is that depth maps cannot be filtered in the same way as color textures. This typically leads to severe aliasing. Filtering methods based on sampling the depth map multiple times per a shaded fragment, computing the visibility query and averaging the result provide acceptable results, but at a heavy price \cite{advancedSoftShadowMapping}.
 
 \begin{figure}[h!]
   \centering
@@ -365,7 +365,7 @@ Several post-processing effects were implemented in order to test the pipeline. 
 \begin{figure}[h!]
   \centering
   \includegraphics[width=0.45\linewidth]{./Figures/postProc/off.jpg}
-  \caption[Post-processing test scene]{The scene used to test post-processing filters}
+  \caption[Post-processing test scene]{The scene used to test post-processing filters. Teapot model courtesy of Martin Newell.}
   \label{fig:postProcOff}
 \end{figure}
 
