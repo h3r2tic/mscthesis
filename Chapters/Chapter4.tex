@@ -151,7 +151,26 @@ It is possible to define a directed weighted graph $G=(V, E)$ such that its vert
 
 Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
 
-TODO: some pictures
+TODO:
+
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.9\linewidth]{SemanticSearchGraph}{
+		"1" [ fillcolor = "\#d0ffd0" label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> model> ];
+		"1a" [ label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> model<br/><font color="\#1040a0" >unit</font> true> ];
+		"2" [ label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> world> ];
+		"2a" [ label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> view> ];
+		"2b" [ label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> clip> ];
+		"3" [ fillcolor = "\#d0ffd0" label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> world<br/><font color="\#1040a0" >unit</font> true> ];
+		"1" -> "2" [ label="modelToWorld" ];
+		"1" -> "1a" [ label="normalize" ];
+		"2" -> "2a" [ label="worldToView" ];
+		"2a" -> "2b" [ label="viewToClip" ];
+		"2" -> "3" [ label="normalize" ];
+	}
+    \caption[SemanticSearchGraph]{SemanticSearchGraph}
+  \label{fig:SemanticSearchGraph}
+\end{figure}
 	
 \subsection{Automatic connection determination}
 
@@ -160,6 +179,56 @@ The kernel graph may contain connections not only between particular parameters,
 To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error.
 
 TODO: some pictures
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[AutoSemanticGraph1]{\label{fig:AutoSemanticGraph1}\digraph[width=0.7\linewidth]{AutoSemanticGraph1}{
+    		"src" [
+    			shape=rectangle style="rounded,filled"
+    			label = <<table border="0" cellborder="0" cellspacing="8" >
+    			<tr><td port="main" ><font point-size="14" >Source</font></td></tr>
+    			<tr><td port="p1" ><font color="\#1040a0" >use</font> position + <font color="\#1040a0" >basis</font> model</td></tr>
+    			<tr><td port="p2" ><font color="\#1040a0" >use</font> normal + <font color="\#1040a0" >basis</font> model</td></tr>
+    			<tr><td port="p3" ><font color="\#1040a0" >use</font> color</td></tr>
+    			</table>>
+    		];
+    		"dst" [
+    			shape=rectangle style="rounded,filled"
+    			label = <<table border="0" cellborder="0" cellspacing="8" >
+    			<tr><td port="main" >Destination</td></tr>
+    			<tr><td port="p1" ><font color="\#1040a0" >use</font> position + <font color="\#1040a0" >basis</font> world</td></tr>
+    			<tr><td port="p2" ><font color="\#1040a0" >use</font> normal + <font color="\#1040a0" >basis</font> world + <font color="\#1040a0" >unit</font> true</td></tr>
+    			<tr><td port="p3" ><font color="\#1040a0" >use</font> color</td></tr>
+    			</table>>
+    		];
+    		src -> dst;
+	}}
+  \subfigure[AutoSemanticGraph2]{\label{fig:AutoSemanticGraph2}\digraph[width=0.9\linewidth]{AutoSemanticGraph2}{
+    		"src" [
+    			shape=rectangle style="rounded,filled"
+    			label = <<table border="0" cellborder="0" cellspacing="8" >
+    			<tr><td port="main" ><font point-size="14" >Source</font></td></tr>
+    			<tr><td port="p1" ><font color="\#1040a0" >use</font> position + <font color="\#1040a0" >basis</font> model</td></tr>
+    			<tr><td port="p2" ><font color="\#1040a0" >use</font> normal + <font color="\#1040a0" >basis</font> model</td></tr>
+    			<tr><td port="p3" ><font color="\#1040a0" >use</font> color</td></tr>
+    			</table>>
+    		];
+    		"dst" [
+    			shape=rectangle style="rounded,filled"
+    			label = <<table border="0" cellborder="0" cellspacing="8" >
+    			<tr><td port="main" >Destination</td></tr>
+    			<tr><td port="p1" ><font color="\#1040a0" >use</font> position + <font color="\#1040a0" >basis</font> world</td></tr>
+    			<tr><td port="p2" ><font color="\#1040a0" >use</font> normal + <font color="\#1040a0" >basis</font> world + <font color="\#1040a0" >unit</font> true</td></tr>
+    			<tr><td port="p3" ><font color="\#1040a0" >use</font> color</td></tr>
+    			</table>>
+    		];
+    		src:p1 -> dst:p1 [ label="modelToWorld" ]
+    		src:p2 -> dst:p2 [ label="modelToWorld, normalize" ];
+    		src:p3 -> dst:p3;
+	}}
+  \caption[trololol]{trololol TODO}
+  \label{fig:AutoSemanticGraph}
+\end{figure}
 
 \subsection{Semantic expressions}
 \label{sec:SemanticExpressions}
