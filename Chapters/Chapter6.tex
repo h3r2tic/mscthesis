@@ -319,7 +319,30 @@ In section \ref{sec:Kernels}, it was mentioned that kernels can receive external
 
 As for shadow map generation, the solution was mentioned in section \ref{sec:Renderers} and boils down to creating a custom \textbf{Renderer}. The implementation is much simpler than that of the \emph{forward} and \emph{light pre-pass} algorithms, because it only uses \emph{structure} kernels associated with \emph{renderables}. Since \emph{structure} kernels must output final positions of the geometry, they need only be connected to a simple kernel which calculates distances from the light.
 
-Finally, this specialized \textbf{DepthRenderer} is used in a custom \textbf{SpotLight\_SM} class on the CPU side, which in turn is a façade for a GPU kernel of the same name. Figure (TODO) demonstrates this relationship.
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.7\linewidth]{ShadowMappingUML}{
+		subgraph "cluster_GPU" {
+			label = "GPU"
+			"gpuLight" [ shape="rect" label=<Light<br/><font point-size="9" >kernel</font>> ];
+			"gpuSpotLight_SM"  [ shape="rect" label=<SpotLight_SM<br/><font point-size="9" >kernel</font>> ];
+		}
+		subgraph "cluster_CPU" {
+			label = "CPU"
+			"cpuLight" [ shape="rect" label=<Light<br/><font point-size="9" >class</font>> ];
+			"cpuSpotLight_SM" [ shape="rect" label=<SpotLight_SM<br/><font point-size="9" >class</font>> ];
+			"cpuDepthRenderer" [ shape="rect" label=<DepthRenderer<br/><font point-size="9" >class</font>> ];
+		}
+		"cpuSpotLight_SM" -> "gpuSpotLight_SM" [ arrowhead = open constraint = false ];
+		"gpuLight" -> "gpuSpotLight_SM" [ arrowtail = onormal dir = "back" ];
+		"cpuLight" -> "cpuSpotLight_SM" [ arrowtail = onormal dir = "back" ];
+		"cpuSpotLight_SM" -> "cpuDepthRenderer" [ arrowhead = open ];
+    }
+    \caption[Shadow mapping components]{The components used to implement regular shadow mapping.}
+  \label{fig:ShadowMappingUML}
+\end{figure}
+
+Finally, this specialized \textbf{DepthRenderer} is used in a custom \textbf{SpotLight\_SM} class on the CPU side, which in turn is a façade for a GPU kernel of the same name. Figure \ref{fig:ShadowMappingUML} demonstrates this relationship.
 
 Upon rendering a scene, the set of visible lights is determined and each \emph{Light} sub-class instance is given a chance to prepare data for the GPU phase of rendering. This is where instances of the custom class will perform depth map rendering.
 

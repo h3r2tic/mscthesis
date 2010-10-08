@@ -327,27 +327,6 @@ Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. 
 
 In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to rescale the images and change their internal format. A simple extension of the post-processing kernel shown in figure \ref{fig:SimplePostProc} could decide to output an image shrunk by 50\% on each side. With a sufficiently wide blur kernel, high-frequency details are lost anyway, so the signal may be represented by a smaller image within reasonable accuracy. Furthermore, combining the operator with itself a few times will approximate a blur with a very wide kernel in a much faster manner than a constant-resolution filter might.
 
-\begin{figure}[h!]
-  \centering
-    \digraph[width=0.7\linewidth]{SimplePostProcBreakdown}{
-		subgraph "cluster_Pass1" {
-			label = "Pass 1"
-			"Horizontal Blur";
-		}
-		subgraph "cluster_Pass2" {
-			label = "Pass 2"
-			"Vertical Blur";
-			"Combine";
-		}
-		"Input" -> "Horizontal Blur";
-		"Horizontal Blur" -> "Vertical Blur";
-		"Vertical Blur" -> "Combine";
-		"Input" -> "Combine";
-	}
-    \caption[Simple post-processing breakdown]{A break-down of the post-processing kernel from figure \ref{fig:SimplePostProc} into individual render passes}
-  \label{fig:SimplePostProcBreakdown}
-\end{figure}
-
 When breaking down the post-processing pipeline into multiple passes, Nucleus will attempt to merge compatible and legal operations into a single pass via \emph{Multiple Render Targets} (\textbf{MRT}). The legality is determined by the topological ordering of filters, as well as by considering the limitations of \emph{MRT}. For example, current GPUs require that all render targets have the same dimensions.
 
 TODO: example
