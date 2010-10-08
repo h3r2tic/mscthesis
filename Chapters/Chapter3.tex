@@ -78,6 +78,15 @@ The number of shaders created this way may be prohibitively large. One obvious w
 
 An alternative solution to this issue is \emph{multi-pass} rendering, where the object is rendered once for an affecting light, and the resulting per-fragment irradiance is summed via additive blending. The downside is that in scenes with complex geometry, rendering objects multiple times will quickly drain the computational budget.
 
+TODO:
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Figures/deferredComposition/deferredComposition.pdf}
+    \caption[DeferredComposition]{DeferredComposition}
+  \label{fig:DeferredComposition}
+\end{figure}
+
 \item Lights can only influence the scene at the granularity of individual objects, not their vertices or rasterized pixels. Even when a light would affect a small part of an object, it must be evaluated for all elements thereof, because a single \emph{batch} may only use a single shader per domain.
 
 Splitting objects into smaller pieces might be an option, however GPU batch submission carries a nontrivial cost \cite{BatchBatchBatch}, hence the tendency is to do the exact opposite and pack multiple objects into shared batches.
@@ -109,6 +118,15 @@ The regular deferred rendering algorithm requires a large G-buffer, which in som
 \item For each light, evaluate its contribution on the surfaces encoded within a subset of the \emph{G-buffer} using only the reflectance model.
 \item Render scene objects again, this time fully evaluating their materials and combining them with the illumination computed in the previous step.
 \end{enumerate}
+
+TODO:
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Figures/deferredComposition/lightPrePassComposition.pdf}
+    \caption[LightPrePassComposition]{LightPrePassComposition}
+  \label{fig:LightPrePassComposition}
+\end{figure}
 
 Such a breakdown of rendering operations trades extra geometric cost for less G-buffer memory utilization, which in particular scene configurations and platforms translates into faster execution.
 
