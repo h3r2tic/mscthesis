@@ -78,12 +78,10 @@ The number of shaders created this way may be prohibitively large. One obvious w
 
 An alternative solution to this issue is \emph{multi-pass} rendering, where the object is rendered once for an affecting light, and the resulting per-fragment irradiance is summed via additive blending. The downside is that in scenes with complex geometry, rendering objects multiple times will quickly drain the computational budget.
 
-TODO:
-
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/deferredComposition/deferredComposition.pdf}
-    \caption[DeferredComposition]{DeferredComposition}
+    \caption[Deferred shading pipeline]{Breakdown of operations in deferred shading. ``UBot'' model courtesy of Eric Andrew.}
   \label{fig:DeferredComposition}
 \end{figure}
 
@@ -92,7 +90,7 @@ TODO:
 Splitting objects into smaller pieces might be an option, however GPU batch submission carries a nontrivial cost \cite{BatchBatchBatch}, hence the tendency is to do the exact opposite and pack multiple objects into shared batches.
 \end{enumerate}
 
-Recently a technique known as \emph{deferred shading} has been gaining popularity, as it offers an elegant solution to both of these problems. Originally proposed in \citet{DeeringDeferred}, the algorithm separates the rendering pipeline into two stages:
+Recently a technique known as \emph{deferred shading} has been gaining popularity, as it offers an elegant solution to both of these problems. Originally proposed in \citet{DeeringDeferred}, the algorithm separates the rendering pipeline into two stages (figure \ref{fig:DeferredComposition}):
 
 \begin{enumerate}
 \item Render surface attributes of the visible scene into a set of framebuffers \emph{(collectively called the \textbf{G-buffer})}.
@@ -111,22 +109,20 @@ A more common approach for handling translucency is to render non-opaque surface
 \label{sec:DeferredLighting}
 
 % TODO(?): ref the olde nvidia paper
-The regular deferred rendering algorithm requires a large G-buffer, which in some cases may be prohibitive due to memory capacity or bandwidth constraints. \citet{Engel08PrePass} proposes an alternative approach, currently known \emph{light pre-pass}, \emph{deferred lighting} or \emph{pre-lighting}. Unlike classical deferred rendering, which consists of two phases, this algorithm is composed of three stages:
+The regular deferred rendering algorithm requires a large G-buffer, which in some cases may be prohibitive due to memory capacity or bandwidth constraints. \citet{Engel08PrePass} proposes an alternative approach, currently known \emph{light pre-pass}, \emph{deferred lighting} or \emph{pre-lighting}. Unlike classical deferred rendering, which consists of two phases, this algorithm is composed of three stages (figure \ref{fig:LightPrePassComposition}):
+
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.9\linewidth]{./Figures/deferredComposition/lightPrePassComposition.pdf}
+    \caption[Light pre-pass pipeline]{Breakdown of operations in the light pre-pass rendering algorithm. ``UBot'' model courtesy of Eric Andrew.}
+  \label{fig:LightPrePassComposition}
+\end{figure}
 
 \begin{enumerate}
 \item Render a minimal \emph{G-buffer}, containing the surface depth and normal.
 \item For each light, evaluate its contribution on the surfaces encoded within a subset of the \emph{G-buffer} using only the reflectance model.
 \item Render scene objects again, this time fully evaluating their materials and combining them with the illumination computed in the previous step.
 \end{enumerate}
-
-TODO:
-
-\begin{figure}[h!]
-  \centering
-    \includegraphics[width=0.9\linewidth]{./Figures/deferredComposition/lightPrePassComposition.pdf}
-    \caption[LightPrePassComposition]{LightPrePassComposition}
-  \label{fig:LightPrePassComposition}
-\end{figure}
 
 Such a breakdown of rendering operations trades extra geometric cost for less G-buffer memory utilization, which in particular scene configurations and platforms translates into faster execution.
 

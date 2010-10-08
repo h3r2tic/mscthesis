@@ -147,12 +147,6 @@ Given a connection from an output parameter of type $X$ to a input parameter of 
 
 In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by inserting additional computational kernels between the source and the destination. The kernels which it considers come from a specially designated set of \emph{semantic converters}. Each semantic converter is a kernel of a single input and a single output parameter. Additionally an integral \emph{cost} value is associated with each converter, which is an estimate of the computational complexity of the code within its definition.
 
-It is possible to define a directed weighted graph $G=(V, E)$ such that its vertices, $V$ are all possible semantic types. The graph contains an edge $e$ from $a$ to $b$ if and only if there exists a converter, which turns type $a$ into a type which may be connected to type $b$ without a mismatch. The weight associated with $e$ is the cost value of the corresponding converter.
-
-Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
-
-TODO:
-
 \begin{figure}[h!]
   \centering
     \digraph[width=0.9\linewidth]{SemanticSearchGraph}{
@@ -168,21 +162,21 @@ TODO:
 		"2a" -> "2b" [ label="viewToClip" ];
 		"2" -> "3" [ label="normalize" ];
 	}
-    \caption[SemanticSearchGraph]{SemanticSearchGraph}
+    \caption[Implicit semantic search tree]{An example slice of the implicit semantic conversion graph.}
   \label{fig:SemanticSearchGraph}
 \end{figure}
+
+It is possible to define a directed weighted graph $G=(V, E)$ such that its vertices, $V$ are all possible semantic types. The graph contains an edge $e$ from $a$ to $b$ if and only if there exists a converter, which turns type $a$ into a type which may be connected to type $b$ without a mismatch. The weight associated with $e$ is the cost value of the corresponding converter.
+
+Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. A fragment of the implicit search tree is visualized in figure \ref{fig:SemanticSearchGraph}. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
 	
 \subsection{Automatic connection determination}
 
 The kernel graph may contain connections not only between particular parameters, but also between kernels. The type-checking process converts these coarse-grained dependencies into individual parameter connections using an extension of the type coercion algorithm.
 
-To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error.
-
-TODO: some pictures
-
 \begin{figure}[h!]
   \centering
-  \subfigure[AutoSemanticGraph1]{\label{fig:AutoSemanticGraph1}\digraph[width=0.7\linewidth]{AutoSemanticGraph1}{
+  \subfigure[Coarse dependency between nodes]{\label{fig:AutoSemanticGraph1}\digraph[width=0.7\linewidth]{AutoSemanticGraph1}{
     		"src" [
     			shape=rectangle style="rounded,filled"
     			label = <<table border="0" cellborder="0" cellspacing="8" >
@@ -203,7 +197,7 @@ TODO: some pictures
     		];
     		src -> dst;
 	}}
-  \subfigure[AutoSemanticGraph2]{\label{fig:AutoSemanticGraph2}\digraph[width=0.9\linewidth]{AutoSemanticGraph2}{
+  \subfigure[The resulting fine-grained connections and conversions]{\label{fig:AutoSemanticGraph2}\digraph[width=0.9\linewidth]{AutoSemanticGraph2}{
     		"src" [
     			shape=rectangle style="rounded,filled"
     			label = <<table border="0" cellborder="0" cellspacing="8" >
@@ -226,9 +220,11 @@ TODO: some pictures
     		src:p2 -> dst:p2 [ label="modelToWorld, normalize" ];
     		src:p3 -> dst:p3;
 	}}
-  \caption[trololol]{trololol TODO}
+  \caption[Automatic connection determination example]{A simple graph in which a dependency between nodes is specified in order to be resolved by the automatic connection determination algorithm into individual parameter connections.}
   \label{fig:AutoSemanticGraph}
 \end{figure}
+
+To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error. An example of this process is shown in figure \ref{fig:AutoSemanticGraph}.
 
 \subsection{Semantic expressions}
 \label{sec:SemanticExpressions}
