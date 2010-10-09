@@ -2,11 +2,11 @@
 
 \chapter{ Related work }
 \label{Chapter3}
-\lhead{Chapter 3. \emph{ Related work }}
+\lhead{Chapter 3. \emph{Related work}}
 
 \section{Über- and micro-shaders}
 
-A popular solution to the shader permutation problem is the \emph{ über-shader }. In this approach, the programmer creates a large monolithic shader containing all the features a rendered object might need. Subsets of the functionality are then selected either at compile-time via preprocessor-based conditional compilation or at run-time via dynamic branching.
+A popular solution to the shader permutation problem is the \emph{über-shader}. In this approach, the programmer creates a large monolithic shader containing all the features a rendered object might need. Subsets of the functionality are then selected either at compile-time via preprocessor-based conditional compilation or at run-time via dynamic branching.
 
 \begin{lstlisting}[frame=single]
 #ifdef NORMAL_MAPPING
@@ -29,7 +29,7 @@ float4 color = 0;
 
 A more advanced take at the problem is to keep shader fragments separate and merge them conditionally using run-time logic or conservatively, yet statically generate permutations in the content pipeline. \citet{Hargreaves04} shows an approach based on runtime shader fragment combining. His implementation relies on a simple extension of the HLSL language in order to define the \emph{imports} and \emph{exports} of a shader fragment. Along with a special \emph{interface block}, a preprocessor is able to combine shader fragments together, linking their inputs and outputs. This effectively hides the complexity from the shader author, making maintenance and debugging easier. Hargreaves praises the robustness of this solution and mentions that it allows the usage of the same shader fragments in various rendering algorithms.
 
-This work builds on shader fragment merging and extends it with automatic parameter type coercion and functional composition. I show how to implement such a scheme in a way that's easy to work with even for non-programmers.
+This work builds on shader fragment merging and extends it with automatic parameter type coercion and functional composition. The thesis demonstrates a way of implementing such a scheme in a way that's easy to work with even for non-programmers.
 
 % http://books.google.com/books?id=DgMSb_10l7IC&pg=PA555&lpg=PA555&dq=%22uber+shaders%22&source=bl&ots=-mu34jRtzO&sig=C3KIgqPIb6F8MDsOU0tSevVuN8M&hl=en&ei=zPZpTNGHNoGA4Aam1aHJCQ&sa=X&oi=book_result&ct=result&resnum=4&ved=0CCIQ6AEwAzgK#v=onepage&q=%22uber%20shaders%22&f=false
 
@@ -49,9 +49,9 @@ The rendering algorithm mainly utilized by Pixar's flagship implementation of Re
 \item \textbf{Sample} --- Generate the final image by stochastically sampling micropolygons for each pixel.
 \end{enumerate}
 
-It may seem that the algorithm is overly complex, especially when compared with regular rasterization, however it is able to exploit texture and geometric locality, parallelism and scales gracefully with increased scene complexity (\cite{Cook87reyes}). Stochastic sampling of micropolygons enables efficient computation of motion blur and depth of field effects. Finally, arbitrary primitive types are allowed, as long as they can be split or diced and finally converted into micropolygons.
+It may seem that the algorithm is overly complex, especially when compared with regular rasterization, however it is able to exploit texture and geometric locality, parallelism and scales gracefully with increased scene complexity \cite{Cook87reyes}. Stochastic sampling of micropolygons enables efficient computation of motion blur and depth of field effects. Finally, arbitrary primitive types are allowed, as long as they can be split or diced and finally converted into micropolygons.
 
-The architecture is programmable via 5 \emph{shader} types (\cite{keyframeRSL1}):
+The architecture is programmable via 5 \emph{shader} types \cite{keyframeRSL1}:
 
 \begin{description}
 \item[Surface] --- Defines how a surface reacts to light, allowing the programmer to define its look. Surface shaders allow custom reflectance models to be defined, but also specify how the pigment or material of an object looks, hence allowing the definition of complete \emph{BRDF}s.
@@ -63,7 +63,7 @@ The architecture is programmable via 5 \emph{shader} types (\cite{keyframeRSL1})
 
 An important aspect of the RenderMan architecture is its ability to freely mix and match any primitives and shaders. Since every primitive eventually resolves to micropolygons, it can be used with any \emph{Displacement}, then processed by any \emph{Surface} shader. The latter may in turn interact with any \emph{Light} shaders, hence ensuring full orthogonality of the building blocks.
 
-Unfortunately, micropolygon-based real-time rendering is still not viable for current commodity hardware. \citet{PatneyRealTimeReyes} present an implementation which performs the Bound, Split and Dice stages using NVidia CUDA, then passes the tessellated geometry into the regular OpenGL pipeline. While the tessellation stage achieves good performance, rendering the resulting micropolygons using conventional rasterization is suboptimal. Due to implementation details of current GPUs, there exists shading overhead for tiny polygons, with up to 8 times the theoretical cost for triangles spanning a single pixel \cite{understandingG80}.
+Unfortunately, micropolygon-based real-time rendering is still not viable for current commodity hardware. \citet{PatneyRealTimeReyes} present an implementation which performs the Bound, Split and Dice stages using NVIDIA CUDA, then passes the tessellated geometry into the regular OpenGL pipeline. While the tessellation stage achieves good performance, rendering the resulting micropolygons using conventional rasterization is suboptimal. Due to implementation details of current GPUs, there exists shading overhead for tiny polygons, with up to 8 times the theoretical cost for triangles spanning a single pixel \cite{understandingG80}.
 
 Still, even without using micropolygon-based rendering, an architecture can be designed to retain some of the advantages RenderMan possesses. In particular, this thesis presents a shading framework decoupled from the shader domains imposed by current GPUs, instead moving closer to the model employed by RenderMan. Additionally, the limitation of \emph{Imager} shaders is lifted, hence enabling more sophisticated post-processing effects to be created.
 
@@ -175,6 +175,6 @@ Such a type system allows stronger checking, but it also enables automating tedi
   \label{fig:AbstractShadeTree}
 \end{figure}
 
-An \emph{Abstract Shade Tree} is normally much more compact than an equivalent \emph{conventional Shade Tree}, as demonstrated by Figure \ref{fig:AbstractShadeTree}. Thanks to the complexity hiding, shader authoring becomes less error prone and especially easier for users who do not have knowledge of programming concepts such as types, variables or the vector math used to implement algorithms inside atoms.
+An \emph{Abstract Shade Tree} is normally much more compact than an equivalent \emph{conventional Shade Tree}, as demonstrated by figure \ref{fig:AbstractShadeTree}. Thanks to the complexity hiding, shader authoring becomes less error prone and especially easier for users who do not have knowledge of programming concepts such as types, variables or the vector math used to implement algorithms inside atoms.
  
 The rendering system presented in this work utilizes a \emph{semantic type system}. In contrast to Abstract Shade Trees, automatic determination of fine-grained dependencies between atoms is not central to its function. Manual connections of inputs and outputs are allowed in addition to setting coarse-grained dependencies. Both the former and the latter are then subject to automatic type coercions, hence type safety is retained. The work of McGuire et al. is also extended by the introduction of \emph{semantic expressions}, which provide parametric polymorphism and basic type algebra for atom parameters.

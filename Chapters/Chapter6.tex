@@ -77,7 +77,7 @@ After code generation, an \emph{Effect} is compiled (as described in section \re
 \section{Deferred lighting}
 \label{sec:DeferredLightingExample}
 
-A \emph{light pre-pass} renderer was implemented, which may be seamlessly used in place of the \emph{forward} algorithm. Figure \ref{fig:lightPrePassSponza} demonstrates one frame of the example running on the test machine\footnote{The test machine used for all examples is a PC with an NVidia GeForce GTX 260 Core 216 GPU, Intel Core2 Quad Q6600 CPU @ 3.05 GHz and 4GB of DDR2 RAM @ 425 MHz}. As described in section \ref{sec:DeferredLighting}, the pipeline is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
+A \emph{light pre-pass} renderer was implemented, which may be seamlessly used in place of the \emph{forward} algorithm. Figure \ref{fig:lightPrePassSponza} demonstrates one frame of the example running on the test machine\footnote{The test machine used for all examples is a PC with an NVIDIA GeForce GTX 260 Core 216 GPU, Intel Core2 Quad Q6600 CPU @ 3.05 GHz and 4GB of DDR2 RAM @ 425 MHz}. As described in section \ref{sec:DeferredLighting}, the pipeline is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
 
 \begin{figure}[h!]
   \centering
@@ -88,7 +88,7 @@ A \emph{light pre-pass} renderer was implemented, which may be seamlessly used i
 
 \subsection{Geometry stage}
 
-Most of the attributes required for the \emph{G-buffer} are computed by the \emph{Structure} kernel. Still, a \emph{Material} kernel may want to alter the normals in order to simulate a bumpy surface. These altered normals must be written into the \emph{G-buffer}. Hence, the first stage composes the two kernels and selectively writes their outputs to the \emph{G-buffer} as shown in Figure \ref{fig:DeferredLightingStage1}. The \emph{Material} kernel possibly writes more outputs than this stage uses, however, graph reduction is performed, so only the relevant parts are actually used at runtime. The \emph{Cg} compiler effectively removes any other extra computations.
+Most of the attributes required for the \emph{G-buffer} are computed by the \emph{Structure} kernel. Still, a \emph{Material} kernel may want to alter the normals in order to simulate a bumpy surface. These altered normals must be written into the \emph{G-buffer}. Hence, the first stage composes the two kernels and selectively writes their outputs to the \emph{G-buffer} as shown in figure \ref{fig:DeferredLightingStage1}. The \emph{Material} kernel possibly writes more outputs than this stage uses, however, graph reduction is performed, so only the relevant parts are actually used at runtime. The \emph{Cg} compiler effectively removes any other extra computations.
 
 \begin{figure}[h!]
   \centering
@@ -151,7 +151,7 @@ The code template includes dependent texture fetches and heavy branching. This i
 % TODO: move this to the future work section?
 If this branching still turns out to be prohibitive, it's possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
 
-As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in Figure \ref{fig:DeferredLightingStage2}), the only distinction is that it's compiled for the purpose of rendering the bounding volumes of lights.
+As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in figure \ref{fig:DeferredLightingStage2}), the only distinction is that it's compiled for the purpose of rendering the bounding volumes of lights.
 
 \begin{figure}[h!]
   \centering
@@ -274,7 +274,7 @@ Once the illumination buffer has been rendered, the final step is to combine it 
 
 Shadows are an important part of 3-dimensional scene rendering. They provide visual cues relative object placement, help distinguish the shapes of objects and serve as a tool for mood shaping. Due to the direct integration of light sources which rasterization algorithms employ, shadows do not appear automatically, contrary to what might be expected from the rendering equation.
 
-There are numerous ways of rendering shadows, however since in the context of this thesis they are only examples of using the rendering framework, I will not attempt to provide a survey of available methods. I will instead focus on \emph{shadow mapping}, a popular family of image-based algorithms offering a fine set of compromises for current hardware.
+There are numerous ways of rendering shadows, however since in the context of this thesis they are only examples of using the rendering framework, a survey of available methods is not provided. Instead, the focus is on \emph{shadow mapping}, a popular family of image-based algorithms offering a fine set of compromises for current hardware.
 
 \subsection{A gentle introduction to standard shadow mapping}
 

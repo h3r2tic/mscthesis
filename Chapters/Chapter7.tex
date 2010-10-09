@@ -1,17 +1,20 @@
 % Chapter 7
 
-\chapter{ Conclusion }
+\chapter{ Conclusions }
 \label{Chapter7}
-\lhead{Chapter 7. \emph{ Conclusion }}
+\lhead{Chapter 7. \emph{ Conclusions }}
 
-TODO
+TODO:
+
+The main contribution of this thesis is a rendering system whose building blocks at several scales are freely reusable in the context of rendering effects and algorithms. The presented framework is built on top of standard rendering facilities supported by graphics hardware, and therefore does not sacrifice performance. At the same time, it provides an intuitive level to program for, similar in many aspects to the field-tested design of \emph{RenderMan}. The high level building blocks of \emph{kernels} can be used throughout the system and have been demonstrated to work in \emph{forward}, \emph{deferred} and \emph{post-processing} pipelines. On the other hand, the low level elements completely abstract away the underlying graphics API and supplement the system with trivial rendering operations, whenever the kernel-based counterpart is not satisfactory or desired.
+
+Due to the implementation of a semantically-rich type system over computational elements, the burden of mundane representation and basis conversion of data has been considerably lifted, therefore improving workflow and reducing the possibility of introducing errors.
+
+The system presented in this thesis has been verified by implementing numerous rendering techniques on top of and through its primitives. Additionally, a graphical authoring tool has been presented, building on top of the framework and being able to feed data back into itself via an easy to use interface.
+
+\section{Future work}
 
 \begin{itemize}
-\item flexible
-\item doesn't sacrifice performance
-\item intuitive primitives - kernels decoupled from the GPU shader domains
-
-\item implemented numerous rendering techniques within the framework
-\item created a tool for shader authoring - Nucled
-\item 
+\item the type system could use a formalization -- semantic expressions started out as a simple addition
+\item more meta-programming goodies -- such as advanced constraints, e.g. that both args to a function have the same semantics
 \end{itemize}
