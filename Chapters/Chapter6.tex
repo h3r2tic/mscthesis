@@ -124,7 +124,7 @@ Another solution is to render the majority of the scene using deferred rendering
 
 The approach which Nucleus takes instead is not a novel one, but has not been widely adopted due to being costly on past generations of graphics hardware.
 
-The G-buffer stores the \emph{surface ID} to be used at a given pixel and a fragment shader of the light stage branches on it, choosing the appropriate \emph{Reflectance} kernel implementation. The kernel index and parameters for it are stored in a texture, into which the \emph{G-buffer} contains a coordinate. The current approach allows up to 256 different surfaces, each of which might potentially use a different \emph{Reflectance} kernel. Obviously, this is not free either, however with the advent of real branching in recent GPU generations means that in practice the cost is not very high [TODO: numbers].
+The G-buffer stores the \emph{surface ID} to be used at a given pixel and a fragment shader of the light stage branches on it, choosing the appropriate \emph{Reflectance} kernel implementation. The kernel index and parameters for it are stored in a texture, into which the \emph{G-buffer} contains a coordinate. The current approach allows up to 256 different surfaces, each of which might potentially use a different \emph{Reflectance} kernel.
 
 The code template used to compose multiple BRDFs together has the following structure:
 
@@ -147,9 +147,18 @@ if (reflectanceId < A) {
 }
 \end{lstlisting}
 
-The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it \cite{overviewOfGPUArch}.
+The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it \cite{overviewOfGPUArch}, therefore it is not likely to become a real issue. For example, the scene presented in figure \ref{fig:lppBranching1} renders at 301 FPS with the branching removed, 300 FPS when the BRDF to be used is the first one in the branch chain and 299 FPS when it is the fourth. This is obviously an easy test case due to its perfect spatial coherence which allows the GPU to execute the shader efficiently. However, in configurations with reasonably increased divergence, the performance hit is still hardly noticeable -- the scene shown in figure \ref{fig:lppBranching2} containing two objects, each with a different reflectance kernel, renders at 168 FPS. With just a single reflectance model applied to both objects, it renders at 169 FPS.
+
+\begin{figure}[h!]
+  \centering
+  \subfigure[Single reflectance kernel]{\label{fig:lppBranching1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/branching1.jpg}}
+  \subfigure[Two reflectance kernels]{\label{fig:lppBranching2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/branching2.jpg}}
+  \caption[Test scenes for branching performance]{The scenes used to test branching performance in the light pre-pass renderer. ``Dragon'' model courtesy of The Stanford 3D Scanning Repository.}
+\label{fig:lppBranching}
+\end{figure}
+
 % TODO: move this to the future work section?
-If this branching still turns out to be prohibitive, it is possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
+If this branching still turns out to be prohibitive in more complex configurations, it is possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
 
 As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in figure \ref{fig:DeferredLightingStage2}), the only distinction is that it is compiled for the purpose of rendering the bounding volumes of lights.
 
