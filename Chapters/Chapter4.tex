@@ -330,11 +330,11 @@ PostProcess = kernel(
 \label{fig:lppFalloffBetterCase}
 \end{figure}
 
-Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. The crucial item to notice in this graph is the \textbf{Blit} node. It is not a concrete kernel with an implementation in code, but a special entity which only the \emph{PostProcessor} understands. Such nodes are used to break the graph to be rendered in multiple passes. Since certain classes of image convolution operators are \emph{linearly separable}, they may be applied to a two-dimensional image as two single-dimensional operations. This is just what happens in this graph. Had the \emph{Blit} node been removed, the pipeline would implement a regular two-dimensional blur. With the \emph{Blit} in place, an equivalent operation \emph{(for all practical purposes)} is done an order of magnitude more efficiently. Figure \ref{fig:SimplePostProcBreakdown} demonstrates the rendering steps which the graph from figure \ref{fig:SimplePostProc} is broken down into.
+Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. The crucial item to notice in this graph is the \textbf{Blit} node. It is not a concrete kernel with an implementation in code, but a special entity which only the \emph{PostProcessor} understands. Such nodes are used to break the graph to be rendered in multiple passes. Since certain classes of image convolution operators are \emph{linearly separable}, they may be applied to a two-dimensional image as two single-dimensional operations. This is just what happens in this graph. Had the \emph{Blit} node been removed, the pipeline would implement a regular two-dimensional blur. With the \emph{Blit} in place, an equivalent operation \emph{(for all practical purposes)} is done an order of magnitude more efficiently. Figure \ref{fig:SimplePostProcBreakdown} demonstrates the rendering steps which the graph from Figure \ref{fig:SimplePostProc} is broken down into.
 
 \begin{figure}[h!]
   \centering
-    \digraph[width=0.9\linewidth]{SimplePostProc}{
+  \subfigure[The source pipeline]{\label{fig:SimplePostProc}\digraph[width=0.9\linewidth]{SimplePostProc}{
 		"Blit" [
 			fillcolor = "\#d0ffd0"
 		];
@@ -343,9 +343,24 @@ Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. 
 		"Blit" -> "Vertical Blur";
 		"Vertical Blur" -> "Combine";
 		"Input" -> "Combine";
-	}
-    \caption[Simple post-processing]{A simple post-processing pipeline}
-  \label{fig:SimplePostProc}
+	}}
+  \subfigure[Breakdown into rendering passes]{\label{fig:SimplePostProcBreakdown}\digraph[width=0.6\linewidth]{SimplePostProcBreakdown}{
+		subgraph "cluster_Pass1" {
+			label = "Pass 1"
+			"Blur1";
+		}
+		subgraph "cluster_Pass2" {
+			label = "Pass 2"
+			"Blur2";
+			"Combine";
+		}
+		"Input" -> "Blur1";
+		"Blur1" -> "Blur2";
+		"Blur2" -> "Combine";
+		"Input" -> "Combine";
+	}}
+  \caption[Simple post-processing with breakdown]{A simple post-processing pipeline.}
+\label{fig:SimplePostProcWithBreakdown}
 \end{figure}
 
 In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to rescale the images and change their internal format. A simple extension of the post-processing kernel shown in figure \ref{fig:SimplePostProc} could decide to output an image shrunk by 50\% on each side. With a sufficiently wide blur kernel, high-frequency details are lost anyway, so the signal may be represented by a smaller image within reasonable accuracy. Furthermore, combining the operator with itself a few times will approximate a blur with a very wide kernel in a much faster manner than a constant-resolution filter might.
