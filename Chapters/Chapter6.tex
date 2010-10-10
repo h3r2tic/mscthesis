@@ -147,20 +147,18 @@ if (reflectanceId < A) {
 }
 \end{lstlisting}
 
-The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it \cite{overviewOfGPUArch}, therefore it is not likely to become a real issue. For example, the scene presented in figure \ref{fig:lppBranching1} renders at 301 FPS with the branching removed, 300 FPS when the BRDF to be used is the first one in the branch chain and 299 FPS when it is the fourth. This is obviously an easy test case due to its perfect spatial coherence which allows the GPU to execute the shader efficiently. However, in configurations with reasonably increased divergence, the performance hit is still hardly noticeable -- the scene shown in figure \ref{fig:lppBranching2} containing two objects, each with a different reflectance kernel, renders at 168 FPS. With just a single reflectance model applied to both objects, it renders at 169 FPS.
+The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it \cite{overviewOfGPUArch}, therefore it is not likely to become a real issue. For example, the scene presented in figure \ref{fig:lppBranching1} renders at 301 FPS with the branching removed, 300 FPS when the BRDF to be used is the first one in the branch chain and 299 FPS when it is the fourth. This is obviously an easy test case due to its perfect spatial coherence which allows the GPU to execute the shader efficiently. However, in configurations with reasonably increased divergence, the performance hit is still hardly noticeable -- the scene shown in figure \ref{fig:lppBranching2} containing two objects, each with a different reflectance kernel, renders at 168 FPS. With just a single reflectance model applied to both objects, it renders at 169 FPS. Finally, figure \ref{fig:lppBranching3} shows a scene synthesized to have very poor coherence. With two overlaid quadrilaterals alpha-masked using a texture to create a randomly-looking pattern, the performance is 439 FPS for a single reflectance model and 324 FPS for two.
 
 \begin{figure}[h!]
   \centering
   \subfigure[Single reflectance kernel]{\label{fig:lppBranching1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/branching1.jpg}}
   \subfigure[Two reflectance kernels]{\label{fig:lppBranching2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/branching2.jpg}}
-  \caption[Test scenes for branching performance]{The scenes used to test branching performance in the light pre-pass renderer. ``Dragon'' model courtesy of The Stanford 3D Scanning Repository.}
+  \subfigure[Synthetic bad case]{\label{fig:lppBranching3}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/branching3.jpg}}
+  \caption[Test scenes for branching performance]{The scenes used to test branching performance in the light pre-pass renderer. Each one is lit by three spherical area lights using variations of the \emph{ABC} BRDF. ``Dragon'' model courtesy of The Stanford 3D Scanning Repository.}
 \label{fig:lppBranching}
 \end{figure}
 
-% TODO: move this to the future work section?
-If this branching still turns out to be prohibitive in more complex configurations, it is possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
-
-As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in figure \ref{fig:DeferredLightingStage2}), the only distinction is that it is compiled for the purpose of rendering the bounding volumes of lights.
+If this branching turns out to be prohibitive in real scene configurations, it is possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
 
 \begin{figure}[h!]
   \centering
@@ -179,6 +177,8 @@ As any of the other passes, the \emph{Light stage} generates a kernel graph (an 
     \caption[Light Pre-Pass Stage 2]{The composition of kernels for the \emph{Light} stage of the  \emph{light pre-pass} rendering algorithm}
   \label{fig:DeferredLightingStage2}
 \end{figure}
+
+As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in figure \ref{fig:DeferredLightingStage2}), the only distinction is that it is compiled for the purpose of rendering the bounding volumes of lights.
 
 The current implementation uses a geometry shader to instantiate a cube for each light, taking a single point as the input. Only the quads facing away from the camera are drawn and reverse depth testing is performed in order to do approximate light culling. \\
 Such setup will enable rendering of thousands of lights in a single batch, however this is not implemented yet. The downside of doing this for every light type would be large overdraw, since some lights may span a large portion of the screen and would benefit from more exact culling instead. Because of this, lights are actually drawn in separate batches, and approximate culling of their volumes is performed via the EXT\_depth\_bounds\_test OpenGL extension. Whereas the aforementioned reverse depth test allows culling of light volumes which are entirely in front of scene geometry, it does not do anything about the volumes being behind geometry. Depth bounds testing allows a range of depth values to be specified, so that no fragment is rendered if the value \emph{already in the depth buffer} is outside of this range. By conservatively specifying the minimum and maximum depth values of light volumes for this test, this effectively allows coarse culling. Figure \ref{fig:lightingComplexityComparison} demonstrates a case where the lighting complexity is reduced dramatically due to scene occlusion.
@@ -229,7 +229,7 @@ Where $r_m$ is the radius bounding the influence of the light and $s : float \ri
   \centering
   \subfigure[$1 / (1 + r^2)$ falloff]{\label{fig:lppInvSqFalloff1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/invSq-1.png}}
   \subfigure[Modified $1 / (1 + r^2)$ falloff ]{\label{fig:lppModFalloff1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/mod-1.png}}
-  \caption[Modified falloff, tricky case]{A tricky case for the modified light intensity falloff. ``UBot'' model courtesy of Eric Andrew.}
+  \caption[Modified falloff, tricky case]{A tricky case for the modified light intensity falloff.}
 \label{fig:lppFalloffTrickyCase}
 \end{figure}
 
@@ -237,7 +237,7 @@ Where $r_m$ is the radius bounding the influence of the light and $s : float \ri
   \centering
   \subfigure[$1 / (1 + r^2)$ falloff]{\label{fig:lppInvSqFalloff2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/invSq-2.jpg}}
   \subfigure[Modified $1 / (1 + r^2)$ falloff ]{\label{fig:lppModFalloff2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/mod-2.jpg}}
-  \caption[Modified falloff, better case]{The modified falloff converging with $1 / (1 + r^2)$. ``UBot'' model courtesy of Eric Andrew.}
+  \caption[Modified falloff, better case]{The modified falloff converging with $1 / (1 + r^2)$.}
 \label{fig:lppFalloffBetterCase}
 \end{figure}
 
@@ -246,7 +246,7 @@ Figure \ref{fig:lppInvSqFalloff1} demonstrates the light clipping artifact when 
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/falloffSame.jpg}
-    \caption[Falloffs converged]{Both falloff models produce the same image. ``UBot'' model courtesy of Eric Andrew.}
+    \caption[Falloffs converged]{Both falloff models produce the same image.}
   \label{fig:lppFalloffConverged}
 \end{figure}
 
@@ -362,7 +362,7 @@ One major drawbacks of standard shadow mapping is that depth maps cannot be filt
 \begin{figure}[h!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/shadowMapping/manitouVSM.png}
-    \caption[VSM in Nucleus]{Variance Shadow Mapping in Nucleus. ``Manitou'' model courtesy of Marcin Stachowiak (Banak).}
+    \caption[VSM in Nucleus]{Variance Shadow Mapping in Nucleus.}
   \label{fig:NucleusVSM}
 \end{figure}
 
