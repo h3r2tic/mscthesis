@@ -103,12 +103,13 @@ Most of the attributes required for the \emph{G-buffer} are computed by the \emp
 The \emph{G-buffer} has the following layout:
 
 \begin{center}
-\begin{tabular}{ | c | c | c | c | }
+\begin{tabular}{ | c | c | }
 \hline
-\multicolumn{4}{|c|}{ depth : f32 } \\
+\multicolumn{2}{|c|}{ \textbf{depth} : 32 bit float } \\
 \hline
-normal\_a:f16 & normal\_b:f16 \\
-surface\_id:f16 & roughness:f16 \\
+\textbf{normal\_a} : 16 bit float & \textbf{normal\_b} : 16 bit float \\
+\hline
+\textbf{surface\_id} : 16 bit float & \textbf{roughness} : 16 bit float \\
 \hline
 \end{tabular}
 \end{center}
