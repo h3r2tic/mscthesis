@@ -279,7 +279,7 @@ In addition to additive semantic expressions, subtractive ones are allowed. The 
 
 Because of the particular split of shader domains which Nucleus utilizes, it is possible to perform scene rendering using various algorithms. Using an internal toolbox of kernel graph and type system operations, high-level client code may combine kernels into shader programs to fit in multiple rendering pipelines.
 
-Since rendering algorithms will usually have similar requirements in terms of content they operate on, it's viable to extract a common interface. Therefore, Nucleus contains an abstract base \emph{Renderer} class, which allows the details of concrete implementations to be hidden. In end-user code the choice of a rendering algorithm only boils down to choosing an appropriate concrete sub-class.
+Since rendering algorithms will usually have similar requirements in terms of content they operate on, it is viable to extract a common interface. Therefore, Nucleus contains an abstract base \emph{Renderer} class, which allows the details of concrete implementations to be hidden. In end-user code the choice of a rendering algorithm only boils down to choosing an appropriate concrete sub-class.
 
 Conceptually, a \emph{Renderer} is a straightforward entity. Besides being able to draw the scene for a particular viewpoint using a set of visible objects, it must support miscellaneous operations, like:
 
@@ -295,20 +295,20 @@ Ultimately, the work a \emph{Renderer} does is relatively straightforward -- it 
 
 Chapter \ref{Chapter6} describes \emph{Renderer} implementations for \emph{forward} and \emph{light pre-pass} algorithms, as well as a specialized shadow map renderer. The latter is a particularly interesting case, since it only uses the \emph{Structure} kernel of each renderable, skipping any other unnecessary calculations as to only compute per-pixel depth information.
 
-Despite the \emph{Renderer} framework being the default for scene rendering operations, it's not the only way to utilize renderables and kernels associated with them. The same set of tools may be used with little effort for other rendering purposes. Both the \emph{post processing} pipeline described in the next section and material previews in the \emph{Nucled} editor are internally very similar to regular renderers.
+Despite the \emph{Renderer} framework being the default for scene rendering operations, it is not the only way to utilize renderables and kernels associated with them. The same set of tools may be used with little effort for other rendering purposes. Both the \emph{post processing} pipeline described in the next section and material previews in the \emph{Nucled} editor are internally very similar to regular renderers.
 
 Had there been need to access any intermediate results of rendering algorithms, the \emph{Renderer} interface may be skipped altogether. For the purposes of this dissertation, having a unified interface over renderers is a desirable property, however it may not always be so. There exist algorithms, which weave between steps of deferred rendering or utilize the created G-buffers for final image manipulation purposes; examples include volumetric decal rendering \cite{VolumeDecals} and horizon-based ambient occlusion \cite{HBAO}. Nevertheless, only the abstraction of a \emph{Renderer} would need to be surpassed for these techniques -- internally, they can still use the kernel-based shader generation mechanism and benefit from the other components of Nucleus.
 
 \section{Post-processing}
 \label{sec:PostProcessing}
 
-In addition to regular scene rendering, Nucleus contains special support for image manipulation. Be that a video game or a film production, the results of 3D rendering are usually touched up by several filters put together by artists and technical directors. There's a multitude of motivations behind doing so:
+In addition to regular scene rendering, Nucleus contains special support for image manipulation. Be that a video game or a film production, the results of 3D rendering are usually touched up by several filters put together by artists and technical directors. There is a multitude of motivations behind doing so:
 
 \begin{itemize}
 \item The output device usually has a limited display range with respect to brightness. For optimal results, the rendered values must be translated into this range via \textbf{tone mapping}.
 \item \textbf{Psychophysical effects} may be simulated, such as glare, spatial acuity loss and scotopic vision.
 \item Color grading, contrast enhancement and other stylistic effects may be applied in order to increase \textbf{immersion} and steer the \textbf{mood} of a particular scene.
-\item Visual \textbf{gameplay cues} may be provided seamlessly to the player without resorting to artificial bars or number displays. For example, it's common practice to indicate low health of the player in a first person game by blurring the screen, as well as adding bloody detail to the edges of the screen.
+\item Visual \textbf{gameplay cues} may be provided seamlessly to the player without resorting to artificial bars or number displays. For example, it is common practice to indicate low health of the player in a first person game by blurring the screen, as well as adding bloody detail to the edges of the screen.
 \item \textbf{Attention focusing} via depth-of-field and selective coloring is often used in cutscenes and gameplay.
 \end{itemize}
 
@@ -330,7 +330,7 @@ PostProcess = kernel(
 \label{fig:lppFalloffBetterCase}
 \end{figure}
 
-Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. The crucial item to notice in this graph is the \textbf{Blit} node. It's not a concrete kernel with an implementation in code, but a special entity which only the \emph{PostProcessor} understands. Such nodes are used to break the graph to be rendered in multiple passes. Since certain classes of image convolution operators are \emph{linearly separable}, they may be applied to a two-dimensional image as two single-dimensional operations. This is just what happens in this graph. Had the \emph{Blit} node been removed, the pipeline would implement a regular two-dimensional blur. With the \emph{Blit} in place, an equivalent operation \emph{(for all practical purposes)} is done an order of magnitude more efficiently. Figure \ref{fig:SimplePostProcBreakdown} demonstrates the rendering steps which the graph from figure \ref{fig:SimplePostProc} is broken down into.
+Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. The crucial item to notice in this graph is the \textbf{Blit} node. It is not a concrete kernel with an implementation in code, but a special entity which only the \emph{PostProcessor} understands. Such nodes are used to break the graph to be rendered in multiple passes. Since certain classes of image convolution operators are \emph{linearly separable}, they may be applied to a two-dimensional image as two single-dimensional operations. This is just what happens in this graph. Had the \emph{Blit} node been removed, the pipeline would implement a regular two-dimensional blur. With the \emph{Blit} in place, an equivalent operation \emph{(for all practical purposes)} is done an order of magnitude more efficiently. Figure \ref{fig:SimplePostProcBreakdown} demonstrates the rendering steps which the graph from figure \ref{fig:SimplePostProc} is broken down into.
 
 \begin{figure}[h!]
   \centering
@@ -353,14 +353,15 @@ In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to re
 \begin{figure}[h!]
   \centering
     \digraph[width=0.7\linewidth]{PostProcMRT}{
+		"Input";
 		subgraph "cluster_MRT" {
 			label = "rendered simultaneously"
-			"Input";
-			"Calc1" [shape = none style = "" label = "..."];
-			"Calc2" [shape = none style = "" label = "..."];
+			"Calc1";
+			"Calc2";
 			"Blit1" [ label = "Blit" fillcolor = "\#d0ffd0" ];
 			"Blit2" [ label = "Blit" fillcolor = "\#d0ffd0" ];
 		}
+		"Calc3";
 		"Input" -> "Calc1";
 		"Input" -> "Calc2";
 		"Calc1" -> "Blit1";
@@ -382,7 +383,7 @@ When breaking down the post-processing pipeline into multiple passes, Nucleus wi
 
 The post-processing framework required an introduction of one more element into the type system and graph manipulation toolbox. A limitation of the kernel pipeline described so far is that each kernel produces a single set of outputs for a single set of outputs. While this restriction is reasonable for implementing structure, material, light and reflectance shaders, it hinders elegant image processing.
 
-Consider the post-processing pipeline presented in figure \ref{fig:TrickyPostProc}. The \textbf{Blur} kernel expects to receive an image which it may sample multiple times, with various offsets. Connecting the \emph{Input} directly to \emph{Blur} would have worked fine within the framework described so far. However, in this particular case, the user decided to filter the input image through a power function first. The function is not specialized to work on images, but on individual values. There's a clear type mismatch, but intuitively this case should work just fine.
+Consider the post-processing pipeline presented in figure \ref{fig:TrickyPostProc}. The \textbf{Blur} kernel expects to receive an image which it may sample multiple times, with various offsets. Connecting the \emph{Input} directly to \emph{Blur} would have worked fine within the framework described so far. However, in this particular case, the user decided to filter the input image through a power function first. The function is not specialized to work on images, but on individual values. There is a clear type mismatch, but intuitively this case should work just fine.
 
 \begin{figure}[h!]
   \centering
@@ -405,7 +406,7 @@ Image = kernel(
 );
 \end{lstlisting}
 
-The \emph{Blur} kernel in figure \ref{fig:TrickyPostProc} expects a \emph{kernel} as its input (it also expects two more parameters, which are irrelevant to the example), but the parameter connected to this input is not a kernel. Its type, however, is the type of the kernel's \emph{output} (\emph{float4}). What's more, the incoming subgraph contains a free ``float2 uv'' parameter, which is exactly what the \emph{Image} kernel needs. Hence despite the type mismatch, the entire subgraph connected to the final \emph{Blur} node can be converted to an \emph{Image}.
+The \emph{Blur} kernel in figure \ref{fig:TrickyPostProc} expects a \emph{kernel} as its input (it also expects two more parameters, which are irrelevant to the example), but the parameter connected to this input is not a kernel. Its type, however, is the type of the kernel's \emph{output} (\emph{float4}). Moreover, the incoming subgraph contains a free ``float2 uv'' parameter, which is exactly what the \emph{Image} kernel needs. Hence despite the type mismatch, the entire subgraph connected to the final \emph{Blur} node can be converted to an \emph{Image}.
 
 \begin{figure}[h!]
   \centering
@@ -428,7 +429,7 @@ The \emph{Blur} kernel in figure \ref{fig:TrickyPostProc} expects a \emph{kernel
 
 More specifically, when the kernel graph contains a connection from an output of type $V$ to an input of type $F = (P \rightarrow O)$, $V \neq F$, such that $c_O : V \rightarrow O$ is a valid conversion within the semantic type system, the coercion algorithm will attempt to perform functional composition of kernels. In order for it to succeed, the incoming subgraph from which the $V$-typed output came must contain a free parameter of type $I$ such that $c_I : P \rightarrow I$ is a valid conversion within the semantic type system.
 
-Any kernel subgraph may be considered a function. Let's call the incoming subgraph from the aforementioned example $g$. If the criteria for kernel composition are satisfied, it's possible to construct a function $g\prime : P \rightarrow O = c_O \circ g \circ c_I$. This function is hence provided to the (higher-order) destination kernel and type coercion is complete.
+Any kernel subgraph may be considered a function. Let $g$ be the incoming subgraph from the aforementioned example. If the criteria for kernel composition are satisfied, it is possible to construct a function $g\prime : P \rightarrow O = c_O \circ g \circ c_I$. This function is hence provided to the (higher-order) destination kernel and type coercion is complete.
 
 Substituting $float2$ for $P$ and $I$, $float4$ for $O$ and $V$, as well as the identity function for $c_O$ and $c_I$, the particular example with image blurring from figure \ref{fig:TrickyPostProc} is achieved. The result is shown in figure \ref{fig:TrickyPostProcResolve}.
 
@@ -439,7 +440,7 @@ A requirement for functional composition is that the incoming subgraph contains 
 
 Overall, the functional composition algorithm allows for a natural extension of graph-based processing, reducing the restriction of linear data flow in the \emph{DAG}, while still retaining functional purity, important for easy reasoning about and optimizations of the generated code. Conceptually, this feature is similar to automatic ``lifting'' of functions in some programming languages natively supporting arrays, such as \emph{APL} and \emph{J}.
 
-Naturally this very mechanism is not restricted to just the post-processing component of Nucleus and may be used e.g. in order to implement procedural texturing. In this case, the \emph{Image} kernel may be used to abstract away regular texture access and procedural texture generation.
+Naturally this very mechanism is not restricted to just the post-processing component of Nucleus and may be used e.g. in order to implement procedural texturing. In this case, the \emph{Image} kernel will abstract away regular texture access and procedural texture generation, providing an unified interface over them without any runtime overhead.
 % TODO: ref the blurred checker example
 	
 \section{Code generation}
@@ -483,7 +484,7 @@ That is, \textbf{out} parameters are declared before each kernel function call, 
 
 \subsection{Optimization due to linear functions}
 
-The presented assignment of computational nodes to GPU domains is sufficient but not optimal. A typical scene rendering processes more fragments than vertices, so it is desirable to move calculations from the fragment to the vertex stage where possible. In order to show how this is possible, let's first take a closer look at the vertex and pixel processing pipeline from a mathematical point of view. Due to machine precision limits, the following consideration is strictly correct, but suffices for all practical purposes.
+The presented assignment of computational nodes to GPU domains is sufficient but not optimal. A typical scene rendering processes more fragments than vertices, so it is desirable to move calculations from the fragment to the vertex stage where possible. In order to show how this is possible, it is convenient to take a closer look at the vertex and pixel processing pipeline from a mathematical point of view. Due to machine precision limits, the following consideration is strictly correct, but suffices for all practical purposes.
 
 Let $f$ be the fragment shader, $v$ the vertex shader and $p_0 p_1 p_2$ the triangle being rasterized. The GPU computes $f(w_0 v(p_0) + w_1 v(p_1) + w_2 v(p_2))$ for each pixel of the triangle, where $w_0$, $w_1$ and $w_2$ are the barycentric coordinates of the center of the pixel with respect to $p_0 p_1 p_2$. Let now $g$ and $h$ be functions so that $h$ is linear and $g \circ h = f$. \\
 Because $h$ is linear, \\
