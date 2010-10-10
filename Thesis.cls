@@ -25,6 +25,8 @@
 \LoadClass{\baseclass}
 \newcommand\bhrule{\typeout{------------------------------------------------------------------------------}}
  
+\newwrite\dotfile
+
 \newcommand\Declaration[1]{
 \btypeout{Declaration of Authorship}
 \addtotoc{Declaration of Authorship}

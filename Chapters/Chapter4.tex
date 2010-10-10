@@ -98,25 +98,23 @@ The basic building block of the high level rendering interface of Nucleus is cal
 
 While first-class support of graphs does not result in more expressive power than that of regular function-based composition, it provides a comfortable mental and programmatic framework for such composition. It enables the use of classical graph algorithms and makes development of authoring tools easier.
 
-As a convention, the return values of kernels are called \emph{output parameters} and denoted by the \textbf{out} keyword in the kernel signature. Conversely, regular kernel parameters are called \emph{input parameters} and optionally denoted by the \textbf{in} keyword. This is modeled after the Cg shading language.
+As a convention, the return values of kernels are called \emph{output parameters} and denoted by the \textbf{out} keyword in the kernel signature. Conversely, regular kernel parameters are called \emph{input parameters} and optionally denoted by the \textbf{in} keyword. This is modeled after the \emph{Cg} shading language.
 
-Within a kernel graph, connections may exist between particular nodes, as well as between particular parameters of the nodes.
+Within a kernel graph, connections may exist between nodes, as well as between particular parameters of the nodes. The implications of this decision are discussed further in this chapter.
 
 \subsection{Standard kernel types}
 
 Similarly to how GPU-based shading requires the specification of shader programs for each of the processing domains, Nucleus demands that a kernel be provided for each of its domains. Where it differs drastically, is what the domains are. Each object to be rendered must have 3 kernels specified for it:
 
 \begin{description}
-
 \item[Structure] --- Defines the macro-structure and mostly contains what a vertex or geometry shader might. It is responsible for providing the primitives to be rendered, including data such as positions, normals, partial derivatives of position with respect to texture coordinates, etc.
 
-\item[Reflectance] --- Enables the object to interact with lights by implementing a reflection model. Examples include the Lambertian model, Phong-Blinn, Cook-Torrance, Ashikhmin-Shirley, all of which have been implemented in Nucleus.
+\item[Reflectance] --- Enables the object to interact with lights by implementing a reflection model. Examples include the Lambertian model, Blinn-Phong, Cook-Torrance and Ashikhmin-Shirley, all of which have been implemented in Nucleus.
 
 \item[Material] --- This is the level on which most artists will work, specifying the albedo of the rendered object, its bumpiness, specular tint, emissive lighting, roughness, etc. Kernels of this type will be created for types of objects in a scene, as well as for particular instances thereof.
-
 \end{description}
 
-Specifying these kernels for a renderable object boils down to designating a \emph{concrete} kernel with an identical signature for each of the above \emph{abstract} kernels.
+Specifying these kernels for a renderable object boils down to designating a \emph{concrete} kernel with a compatible signature for each of the above \emph{abstract} kernels.
 
 A scene will usually also contain lights, each of which must be associated with a kernel. In this case, an implementation of the abstract \emph{Light} kernel. At program runtime, \emph{Light} kernels are connected to the per-object \emph{Reflectance} kernels. This mechanism allows specification of custom attenuation, sampling and shadowing algorithms, which automatically are applicable to any \emph{Reflectance} kernel.
 
@@ -126,7 +124,7 @@ Such a break-down of domains may superficially look similar to the shader types 
 
 Another core kernel type is used in \emph{post-processing} operations and described in section \ref{sec:PostProcessing}.
 
-This particular break-down of processing domains is comparable to the \emph{RenderMan} model:
+This particular breakdown of processing domains is comparable to the \emph{RenderMan} model:
 
 \begin{center}
 \begin{tabular}{ | c | c | c | }
@@ -142,7 +140,7 @@ Volume & --- \\
 \end{tabular}
 \end{center}
 
-Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this split for performance gains in complex scene configurations -- for example, sections \ref{sec:ForwardRenderingExample} and \ref{sec:DeferredLightingExample} demonstrate how it allows Nucleus to use the same kernels for \emph{Forward} and \emph{Deferred} rendering, respectably. While it restricts the freedom of an artist to some extent, real-time rendering systems used in large, commercially successful computer games have often been limited to just a \emph{single} reflectance model \cite{CryEngine3Deferred, Killzone2Deferred}.
+Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this distinction for performance gains in complex scene configurations -- for example, sections \ref{sec:ForwardRenderingExample} and \ref{sec:DeferredLightingExample} demonstrate how it allows Nucleus to use the same kernels for \emph{Forward} and \emph{Deferred} rendering, respectably. While it restricts the freedom of an artist to some extent, real-time rendering systems used in large, commercially successful computer games have often been limited to just a \emph{single} reflectance model \cite{CryEngine3Deferred, Killzone2Deferred}.
 
 There is currently no support whatsoever for volume shaders in Nucleus. A proper solution would require ray marching in volumes and is beyond the scope of this thesis.
 
@@ -170,7 +168,7 @@ A kernel graph specified by the user or constructed by an algorithm must be type
 
 Given a connection from an output parameter of type $X$ to a input parameter of type $Y$, the connection is determined to be valid if $Y \subseteq X$. Otherwise such a connection is a type mismatch. For example, connecting an output parameter of type \emph{"type float3 + use position"} to an input parameter of type \emph{"type float3"} is valid, however connecting \emph{"type float4"} to \emph{"type float3"} or to \emph{"type float4 + use color"} is a mismatch.
 
-In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by inserting additional computational kernels between the source and the destination. The kernels which it considers come from a specially designated set of \emph{semantic converters}. Each semantic converter is a kernel of a single input and a single output parameter. Additionally an integral \emph{cost} value is associated with each converter, which is an estimate of the computational complexity of the code within its definition.
+In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by inserting additional computational kernels between the source and the destination. The kernels which it considers come from a specifically designated set of \emph{semantic converters}. Each semantic converter is a kernel of a single input and a single output parameter. Additionally an integral \emph{cost} value is associated with each converter, which is an estimate of the computational complexity of the code within its definition.
 
 \begin{figure}[h!]
   \centering
@@ -191,13 +189,13 @@ In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by i
   \label{fig:SemanticSearchGraph}
 \end{figure}
 
-It is possible to define a directed weighted graph $G=(V, E)$ such that its vertices, $V$ are all possible semantic types. The graph contains an edge $e$ from $a$ to $b$ if and only if there exists a converter, which turns type $a$ into a type which may be connected to type $b$ without a mismatch. The weight associated with $e$ is the cost value of the corresponding converter.
+It is possible to define a directed weighted graph $G=(V, E)$ such that its vertices, $V$ are all the possible semantic types. The graph contains an edge $e$ from $a$ to $b$ if and only if there exists a converter, which turns type $a$ into a type which may be connected to type $b$ without a mismatch. The weight associated with $e$ is the cost value of the corresponding converter.
 
 Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. A fragment of the implicit search tree is visualized in figure \ref{fig:SemanticSearchGraph}. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
 	
 \subsection{Automatic connection determination}
 
-The kernel graph may contain connections not only between particular parameters, but also between kernels. The type-checking process converts these coarse-grained dependencies into individual parameter connections using an extension of the type coercion algorithm.
+The kernel graph may contain connections not only between particular parameters, but also between nodes. The type-checking process converts these coarse-grained dependencies into individual parameter connections using an extension of the type coercion algorithm.
 
 \begin{figure}[h!]
   \centering
@@ -352,9 +350,30 @@ Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. 
 
 In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to rescale the images and change their internal format. A simple extension of the post-processing kernel shown in figure \ref{fig:SimplePostProc} could decide to output an image shrunk by 50\% on each side. With a sufficiently wide blur kernel, high-frequency details are lost anyway, so the signal may be represented by a smaller image within reasonable accuracy. Furthermore, combining the operator with itself a few times will approximate a blur with a very wide kernel in a much faster manner than a constant-resolution filter might.
 
-When breaking down the post-processing pipeline into multiple passes, Nucleus will attempt to merge compatible and legal operations into a single pass via \emph{Multiple Render Targets} (\textbf{MRT}). The legality is determined by the topological ordering of filters, as well as by considering the limitations of \emph{MRT}. For example, current GPUs require that all render targets have the same dimensions.
+\begin{figure}[h!]
+  \centering
+    \digraph[width=0.7\linewidth]{PostProcMRT}{
+		subgraph "cluster_MRT" {
+			label = "rendered simultaneously"
+			"Input";
+			"Calc1" [shape = none style = "" label = "..."];
+			"Calc2" [shape = none style = "" label = "..."];
+			"Blit1" [ label = "Blit" fillcolor = "\#d0ffd0" ];
+			"Blit2" [ label = "Blit" fillcolor = "\#d0ffd0" ];
+		}
+		"Input" -> "Calc1";
+		"Input" -> "Calc2";
+		"Calc1" -> "Blit1";
+		"Calc2" -> "Blit2";
+		"Blit1" -> "Calc3";
+		"Blit2" -> "Calc3";
+		"Calc3" -> "Output";
+	}
+    \caption[MRT usage in post-processing]{A simple post-processing pipeline in which multiple operations may be processed in the same pass through the usage of the \emph{Multiple Render Targets} functionality of GPUs.}
+  \label{fig:PostProcMRT}
+\end{figure}
 
-TODO: example
+When breaking down the post-processing pipeline into multiple passes, Nucleus will attempt to merge compatible and legal operations into a single pass via \emph{Multiple Render Targets} (\textbf{MRT}). An example is given in figure \ref{fig:PostProcMRT}. In this case, multiple textures are attached to a single framebuffer and their values are written by outputting a matching count of colors from the generated fragment shader. The legality is determined by the topological ordering of filters, as well as by considering the limitations of \emph{MRT}. For example, current GPUs require that all render targets have the same dimensions.
 
 % TODO: describe the algorithm for breaking down processing into passes
 
