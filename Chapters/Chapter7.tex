@@ -4,8 +4,6 @@
 \label{Chapter7}
 \lhead{Chapter 7. \emph{ Conclusions }}
 
-TODO:
-
 The main contribution of this thesis is a rendering system whose building blocks at several scales are freely reusable in the context of rendering effects and algorithms. The presented framework is built on top of standard rendering facilities supported by graphics hardware, and therefore does not sacrifice performance. At the same time, it provides an intuitive level to program for, similar in many aspects to the field-tested design of \emph{RenderMan}. The high level building blocks of \emph{kernels} can be used throughout the system and have been demonstrated to work in \emph{forward}, \emph{deferred} and \emph{post-processing} pipelines. On the other hand, the low level elements completely abstract away the underlying graphics API and supplement the system with trivial rendering operations, whenever the kernel-based counterpart is not satisfactory or desired.
 
 Due to the implementation of a semantically-rich type system over computational elements, the burden of mundane representation and basis conversion of data has been considerably lifted, therefore improving workflow and reducing the possibility of introducing errors.
@@ -14,8 +12,16 @@ The system presented in this thesis has been verified by implementing numerous r
 
 \section{Future work}
 
+Despite all the work poured in it, Nucleus is still only the beginning of a rendering system which might be used in a game or for complex visualization purposes. Therefore the potential ways to expand it are vast, ranging from optimization, to implementing particular algorithms such as Tiled Deferred Rendering \cite{tiledDeferred}. Most importantly, it lacks several important features omitted entirely in this thesis, e.g.:
 \begin{itemize}
-\item the type system could use a formalization -- semantic expressions started out as a simple addition
-\item more meta-programming goodies -- such as advanced constraints, e.g. that both args to a function have the same semantics
-\item tiled deferred rendering
+\item Hidden surface removal (the implementation contains stubs for it and uses only view frustum culling)
+\item Skeletal animation
+\item Particle system simulation and rendering
+\item Run-time background streaming of assets
 \end{itemize}
+
+The aforementioned functionality would be implemented either on top of the existing framework or beside it. At the same time, existing features may be improved upon as well. First and foremost, the kernel authoring tool, \emph{Nucled}, is in dire need of improvements. The groundwork has been laid, but before it becomes a full-fledged editor, it needs better error handling, more detailed previews, support for arbitrary manipulation of loaded scenes and proper management of asset libraries.
+
+Besides \emph{Nucled}, the very core of the system requires further work. \emph{Semantic expressions} have been added during late development stages of Nucleus, and while very useful, they only point out that a more flexible, generic type system would be beneficial. For example, it is not currently possible to define a function, constraining some of its parameters to the same value of a trait, without specifying what this value is -- such as stating that the parameters should all come from the same coordinate system, but allow it to be generic instead of specifying it to be e.g. ``local'' or ``world''. Currently, the only way to do this is via copy-paste. Perhaps even more importantly, the type system should be rigorously defined in terms of programming language theory, as the current implementation is very much ad-hoc.
+
+Lastly, a potential area of future research lies in determining how the presented system might be extended to support hardware tessellation introduced in \emph{Shader Model 5} \cite{SM5}.
