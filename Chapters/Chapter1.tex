@@ -30,6 +30,13 @@ The hemispherical integral in the rendering equation evaluates light contributio
 
 While generally not solvable analytically, this equation may be approached through Monte Carlo methods such as \emph{Path Tracing} \cite{Kajiya86RenderingEq} or \emph{Metropolis Light Transport} \cite{MLT} or via finite element methods such as \emph{Radiosity} \cite{Radiosity}. These algorithms are able to produce excellent results often indistinguishable from real photographs. Unfortunately they have only recently been approaching interactive rendering performance, making them still unsuitable for real-time purposes. Relatively simple scenes can still take minutes or hours to converge into acceptable solutions, whereas rendering times of under \emph{30 milliseconds} are desirable in order to create the impression of flicker-free animation.
 
+\begin{figure}[h!]
+  \centering
+    \includegraphics[width=0.7\linewidth]{./mlt.jpg}
+    \caption[Metropolis Light Transport]{A scene rendered by the \emph{Metropolis Light Transport} algorithm. Image courtesy of Eric Veach and Leonidas J. Guibas.}
+  \label{fig:MLT}
+\end{figure}
+
 When the scene and lights therein are static, radiance or irradiance at surface points can be pre-computed and \emph{baked} into a representation which is then efficient to query at real-time. Most commonly, summed irradiance is stored in special images called \emph{Lightmaps} \cite{lightmaps} which are then mapped onto surface geometry. While some implementations \cite{Chen08Halo3} allow directional effects to be captured by encoding the irradiance in an angle-dependent way, dynamic lights and dynamic scene elements must be handled differently. It is common practice to store static parts of the radiance transfer in such a pre-computed representation and add simpler, dynamically computed elements at run-time. Further discussion of static methods is beyond the scope of this thesis, so from now on, it will only be concerned with the dynamic component and assume that any static components are a part of the emissive term.
 
 For the purposes of real-time rendering in games and other interactive three-dimensional applications, the rendering equation is often approximated by replacing the hemispherical integral $\int_\Omega \ldots d \overrightarrow{\omega}'$ with a sum over a finite set of point lights \cite{Naty06Reflectance}:
