@@ -90,7 +90,7 @@ An alternative solution to this issue is \emph{multi-pass} rendering, where the 
 Splitting objects into smaller pieces might be an option, however GPU batch submission carries a nontrivial cost \cite{BatchBatchBatch}, hence the tendency is to do the exact opposite and pack multiple objects into shared batches.
 \end{enumerate}
 
-Recently a technique known as \emph{deferred shading} has been gaining popularity, as it offers an elegant solution to both of these problems. Originally proposed in \citet{DeeringDeferred}, the algorithm separates the rendering pipeline into two stages (figure \ref{fig:DeferredComposition}):
+Recently a technique known as \emph{deferred shading} has been gaining popularity, as it offers an elegant solution to both of these problems. Originally proposed in \citet{DeeringDeferred}, the algorithm separates the rendering pipeline into two stages (Figure \ref{fig:DeferredComposition}):
 
 \begin{enumerate}
 \item Render surface attributes of the visible scene into a set of framebuffers \emph{(collectively called the \textbf{G-buffer})}.
@@ -109,7 +109,7 @@ A more common approach for handling translucency is to render non-opaque surface
 \label{sec:DeferredLighting}
 
 % TODO(?): ref the olde nvidia paper
-The regular deferred rendering algorithm requires a large G-buffer, which in some cases may be prohibitive due to memory capacity or bandwidth constraints. \citet{Engel08PrePass} proposes an alternative approach, currently known \emph{light pre-pass}, \emph{deferred lighting} or \emph{pre-lighting}. Unlike classical deferred rendering, which consists of two phases, this algorithm is composed of three stages (figure \ref{fig:LightPrePassComposition}):
+The regular deferred rendering algorithm requires a large G-buffer, which in some cases may be prohibitive due to memory capacity or bandwidth constraints. \citet{Engel08PrePass} proposes an alternative approach, currently known \emph{light pre-pass}, \emph{deferred lighting} or \emph{pre-lighting}. Unlike classical deferred rendering, which consists of two phases, this algorithm is composed of three stages (Figure \ref{fig:LightPrePassComposition}):
 
 \begin{figure}[h!]
   \centering
@@ -130,7 +130,7 @@ Such a breakdown of rendering operations trades extra geometric cost for less G-
 
 \section{Graph-based systems}
 
-Creating immersive environments requires many complex shaders. \citet{Tatarchuk06ToyShop} mentions that the ``Toy Shop'' demo (shown in figure \ref{fig:ATItoyshop}) contained about 500 custom shaders, so this number can only be expected to be higher in a complete game. It must therefore be easy to create custom shaders, and it must be straightforward for artists in particular.
+Creating immersive environments requires many complex shaders. \citet{Tatarchuk06ToyShop} mentions that the ``Toy Shop'' demo (shown in Figure \ref{fig:ATItoyshop}) contained about 500 custom shaders, so this number can only be expected to be higher in a complete game. It must therefore be easy to create custom shaders, and it must be straightforward for artists in particular.
 
 \begin{figure}[h!]
   \centering
@@ -175,6 +175,6 @@ Such a type system allows stronger checking, but it also enables automating tedi
   \label{fig:AbstractShadeTree}
 \end{figure}
 
-An \emph{Abstract Shade Tree} is normally much more compact than an equivalent \emph{conventional Shade Tree}, as demonstrated by figure \ref{fig:AbstractShadeTree}. Thanks to the complexity hiding, shader authoring becomes less error prone and especially easier for users who do not have knowledge of programming concepts such as types, variables or the vector math used to implement algorithms inside atoms.
+An \emph{Abstract Shade Tree} is normally much more compact than an equivalent \emph{conventional Shade Tree}, as demonstrated by Figure \ref{fig:AbstractShadeTree}. Thanks to the complexity hiding, shader authoring becomes less error prone and especially easier for users who do not have knowledge of programming concepts such as types, variables or the vector math used to implement algorithms inside atoms.
  
 The rendering system presented in this work utilizes a \emph{semantic type system}. In contrast to Abstract Shade Trees, automatic determination of fine-grained dependencies between atoms is not central to its function. Manual connections of inputs and outputs are allowed in addition to setting coarse-grained dependencies. Both the former and the latter are then subject to automatic type coercions, hence type safety is retained. The work of McGuire et al. is also extended by the introduction of \emph{semantic expressions}, which provide parametric polymorphism and basic type algebra for atom parameters.

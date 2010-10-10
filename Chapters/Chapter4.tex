@@ -70,7 +70,7 @@ An important factor to note is that the RenderList does not plainly contain Effe
 
 As mentioned before, the \textbf{Renderer} also gives access to the \textbf{RenderState}, a set of common rendering settings, such as the mode of depth-testing, blending, back-face culling, etc.
 
-The graphics base layer can therefore be used instead of the underlying graphics API, completely hiding its complexity and error-prone setup. It also makes it possible to change the backend without touching client code. The following is a code fragment of a Chunked LoD \cite{chunkedLoD} terrain rendering example (shown in figure \ref{fig:terrainRendering}) implemented using the low-level interface only:
+The graphics base layer can therefore be used instead of the underlying graphics API, completely hiding its complexity and error-prone setup. It also makes it possible to change the backend without touching client code. The following is a code fragment of a Chunked LoD \cite{chunkedLoD} terrain rendering example (shown in Figure \ref{fig:terrainRendering}) implemented using the low-level interface only:
 \begin{lstlisting}[frame=single]
 efInst = renderer.instantiateEffect(effect);
 EffectHelper.allocateDefaultUniformStorage(efInst);
@@ -120,9 +120,9 @@ A scene will usually also contain lights, each of which must be associated with 
 
 % TODO: link to info about the signatures of these kernels in some other chapter
 
-Such a break-down of domains may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{Renderer} is free to use these kernels in any rendering algorithm, as detailed in section \ref{sec:Renderers}.
+Such a break-down of domains may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{Renderer} is free to use these kernels in any rendering algorithm, as detailed in Section \ref{sec:Renderers}.
 
-Another core kernel type is used in \emph{post-processing} operations and described in section \ref{sec:PostProcessing}.
+Another core kernel type is used in \emph{post-processing} operations and described in Section \ref{sec:PostProcessing}.
 
 This particular breakdown of processing domains is comparable to the \emph{RenderMan} model:
 
@@ -140,7 +140,7 @@ Volume & --- \\
 \end{tabular}
 \end{center}
 
-Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this distinction for performance gains in complex scene configurations -- for example, sections \ref{sec:ForwardRenderingExample} and \ref{sec:DeferredLightingExample} demonstrate how it allows Nucleus to use the same kernels for \emph{Forward} and \emph{Deferred} rendering, respectably. While it restricts the freedom of an artist to some extent, real-time rendering systems used in large, commercially successful computer games have often been limited to just a \emph{single} reflectance model \cite{CryEngine3Deferred, Killzone2Deferred}.
+Requiring that material and reflectance be defined by separate kernels gives Nucleus the ability to split the rendering equation into independent components and apply algorithms which utilize this distinction for performance gains in complex scene configurations -- for example, Sections \ref{sec:ForwardRenderingExample} and \ref{sec:DeferredLightingExample} demonstrate how it allows Nucleus to use the same kernels for \emph{Forward} and \emph{Deferred} rendering, respectably. While it restricts the freedom of an artist to some extent, real-time rendering systems used in large, commercially successful computer games have often been limited to just a \emph{single} reflectance model \cite{CryEngine3Deferred, Killzone2Deferred}.
 
 There is currently no support whatsoever for volume shaders in Nucleus. A proper solution would require ray marching in volumes and is beyond the scope of this thesis.
 
@@ -159,7 +159,7 @@ Nucleus uses \emph{semantic types} in order to describe the signatures of comput
 
 Trait values of the same name are considered distinct if they belong to different traits. For example, value \emph{A} of trait \emph{X} is distinct from value \emph{A} of trait \emph{Y}. In order to make the definition mathematically sound, a trait value may be considered a $(trait, value)$ tuple.
 
-A type is then any combination of trait values, e.g. \emph{"type float3 + use position + basis world"} and \emph{"type float2 + use uv"}, where the "+" sign denotes a delimiter (actually, a semantic expression operator, as further described in section \ref{sec:SemanticExpressions}). An empty set of trait values is a valid type as well.
+A type is then any combination of trait values, e.g. \emph{"type float3 + use position + basis world"} and \emph{"type float2 + use uv"}, where the "+" sign denotes a delimiter (actually, a semantic expression operator, as further described in Section \ref{sec:SemanticExpressions}). An empty set of trait values is a valid type as well.
 
 \subsection{Type coercion}
 \label{sec:TypeCoercion}
@@ -191,7 +191,7 @@ In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by i
 
 It is possible to define a directed weighted graph $G=(V, E)$ such that its vertices, $V$ are all the possible semantic types. The graph contains an edge $e$ from $a$ to $b$ if and only if there exists a converter, which turns type $a$ into a type which may be connected to type $b$ without a mismatch. The weight associated with $e$ is the cost value of the corresponding converter.
 
-Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. A fragment of the implicit search tree is visualized in figure \ref{fig:SemanticSearchGraph}. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
+Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. A fragment of the implicit search tree is visualized in Figure \ref{fig:SemanticSearchGraph}. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
 	
 \subsection{Automatic connection determination}
 
@@ -247,7 +247,7 @@ The kernel graph may contain connections not only between particular parameters,
   \label{fig:AutoSemanticGraph}
 \end{figure}
 
-To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error. An example of this process is shown in figure \ref{fig:AutoSemanticGraph}.
+To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error. An example of this process is shown in Figure \ref{fig:AutoSemanticGraph}.
 
 \subsection{Semantic expressions}
 \label{sec:SemanticExpressions}
@@ -289,9 +289,9 @@ Conceptually, a \emph{Renderer} is a straightforward entity. Besides being able 
 \item Custom implementation-dependent configuration
 \end{itemize}
 
-Within this thin framework, implementations may choose to perform arbitrary caching of shader and geometric data. The API can remain this small because many render state settings are already exposed by the low-level rendering API described in section \ref{sec:lowLevelInfo}. For example, in order to render into a specific framebuffer, it is sufficient to configure it in the low-level backend.
+Within this thin framework, implementations may choose to perform arbitrary caching of shader and geometric data. The API can remain this small because many render state settings are already exposed by the low-level rendering API described in Section \ref{sec:lowLevelInfo}. For example, in order to render into a specific framebuffer, it is sufficient to configure it in the low-level backend.
 
-Ultimately, the work a \emph{Renderer} does is relatively straightforward -- it only needs to generate a complete kernel graph for each render stage (e.g. one in the \emph{forward} algorithm, three for \emph{light pre-pass}), then submit it to the separate \emph{code generation} pass, as described in section \ref{sec:codegen}. After doing this, its job is relatively simple due to the \emph{Effect}-based interface which the low-level backend provides.
+Ultimately, the work a \emph{Renderer} does is relatively straightforward -- it only needs to generate a complete kernel graph for each render stage (e.g. one in the \emph{forward} algorithm, three for \emph{light pre-pass}), then submit it to the separate \emph{code generation} pass, as described in Section \ref{sec:codegen}. After doing this, its job is relatively simple due to the \emph{Effect}-based interface which the low-level backend provides.
 
 Chapter \ref{Chapter6} describes \emph{Renderer} implementations for \emph{forward} and \emph{light pre-pass} algorithms, as well as a specialized shadow map renderer. The latter is a particularly interesting case, since it only uses the \emph{Structure} kernel of each renderable, skipping any other unnecessary calculations as to only compute per-pixel depth information.
 
@@ -457,7 +457,7 @@ A vertex shader processes each vertex in isolation and has a single mandatory ou
 
 The \textbf{Rasterize} node is normally a part of a \emph{Structure} kernel graph specified for a renderable, but any node which accepts a position parameter may be used instead if a custom \emph{Renderer} deems it necessary. Due to the semantic type system, any data convertible to a clip space position may be supplied as the input.
 
-Functions defined within the semantic type system do not need their storage types to be defined -- for example, an addition kernel should work on vectors, scalars and matrices, therefore it is a generic function. The type for its parameters is determined within the coercion mechanism described in section \ref{sec:TypeCoercion}. Therefore it may happen that the same kernel has to be generated in multiple instances, with types specialized for each fully coerced type. The code generation step resolves this gracefully by renaming functions in the target language and substituting types within the declarations.
+Functions defined within the semantic type system do not need their storage types to be defined -- for example, an addition kernel should work on vectors, scalars and matrices, therefore it is a generic function. The type for its parameters is determined within the coercion mechanism described in Section \ref{sec:TypeCoercion}. Therefore it may happen that the same kernel has to be generated in multiple instances, with types specialized for each fully coerced type. The code generation step resolves this gracefully by renaming functions in the target language and substituting types within the declarations.
 
 Since graph-based kernels building up the final kernel graph for which codegen runs, the graph being compiled consists of only code-based kernels. Therefore it emits the code-based kernels as functions in the target language (\emph{Cg} currently) and creates glue code within entry points for each shader domain. The generated glue may look like:
 \begin{lstlisting}[frame=single]
