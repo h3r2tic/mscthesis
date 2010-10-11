@@ -129,7 +129,7 @@ An important aspect of the RenderMan architecture is its ability to freely mix a
 
 Unfortunately, micropolygon-based real-time rendering is still not viable for current commodity hardware. \citet{PatneyRealTimeReyes} present an implementation which performs the Bound, Split and Dice stages using NVIDIA CUDA, then passes the tessellated geometry into the regular OpenGL pipeline. While the tessellation stage achieves good performance, rendering the resulting micropolygons using conventional rasterization is suboptimal. Due to implementation details of current GPUs, there exists shading overhead for tiny polygons, with up to 8 times the theoretical cost for triangles spanning a single pixel \cite{understandingG80}.
 
-Still, even without using micropolygon-based rendering, an architecture can be designed to retain some of the advantages RenderMan possesses. In particular, this thesis presents a shading framework decoupled from the shader domains imposed by current GPUs, instead moving closer to the model employed by RenderMan. Additionally, the limitation of \emph{Imager} shaders is lifted, hence enabling more sophisticated post-processing effects to be created.
+Still, even without using micropolygon-based rendering, an architecture can be designed to retain some of the advantages RenderMan possesses. In particular, this thesis presents a shading framework decoupled from the shader domains imposed by current GPUs, instead moving closer to the model employed by RenderMan. Additionally, the limitation of \emph{Imager} shaders to only access a single pixel is lifted, hence enabling more sophisticated post-processing effects to be created.
 
 
 \section{Graph-based systems}
