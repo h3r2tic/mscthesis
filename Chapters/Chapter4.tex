@@ -189,7 +189,7 @@ In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by i
 
 \begin{figure}[ht!]
   \centering
-    \digraph[width=0.9\linewidth]{SemanticSearchGraph}{
+    \digraph[width=0.95\linewidth]{SemanticSearchGraph}{
 		"1" [ fillcolor = "\#d0ffd0" label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> model> ];
 		"1a" [ label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> model<br/><font color="\#1040a0" >unit</font> true> ];
 		"2" [ label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> world> ];
@@ -216,7 +216,7 @@ The kernel graph may contain connections not only between particular parameters,
 
 \begin{figure}[ht!]
   \centering
-  \subfigure[Coarse dependency between nodes]{\label{fig:AutoSemanticGraph1}\digraph[width=0.7\linewidth]{AutoSemanticGraph1}{
+  \subfigure[Coarse dependency between nodes]{\label{fig:AutoSemanticGraph1}\digraph[width=0.8\linewidth]{AutoSemanticGraph1}{
     		"src" [
     			shape=rectangle style="rounded,filled"
     			label = <<table border="0" cellborder="0" cellspacing="8" >
@@ -237,7 +237,7 @@ The kernel graph may contain connections not only between particular parameters,
     		];
     		src -> dst;
 	}}
-  \subfigure[The resulting fine-grained connections and conversions]{\label{fig:AutoSemanticGraph2}\digraph[width=0.9\linewidth]{AutoSemanticGraph2}{
+  \subfigure[The resulting fine-grained connections and conversions]{\label{fig:AutoSemanticGraph2}\digraph[width=0.95\linewidth]{AutoSemanticGraph2}{
     		"src" [
     			shape=rectangle style="rounded,filled"
     			label = <<table border="0" cellborder="0" cellspacing="8" >
