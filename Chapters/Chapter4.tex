@@ -271,7 +271,7 @@ To automatically determine the parameter which should be connected to an input o
 
 Nucleus also extends the technique proposed in \cite{mcguire2006shadetrees} by allowing usage of simple expressions which operate on semantic traits in the specification of output parameter semantics.
 
-When working with a prototype of Nucleus, which utilized a simpler version of the type system, it became apparent that it is useful not only to compute values using kernels, but also let the output semantics of kernel functions depend on the input semantics of these functions and the kernels they're connected to. For instance, One could have a kernel which samples a texture. Textures may be tagged with traits, specifying what sort of data they contain. If such a texture is connected to the sampling kernel, it is crucial to be able to express that the type of the sample should retain the traits of the texture. This is enabled by semantic expressions.
+When working with a prototype of Nucleus, which utilized a simpler version of the type system, it became apparent that it is useful not only to compute values using kernels, but also let the output semantics of kernel functions depend on the input semantics of these functions and the kernels they're connected to. For instance, one could have a kernel which samples a texture. Textures may be tagged with traits, specifying what sort of data they contain. If such a texture is connected to the sampling kernel, it is crucial to be able to express that the type of the sample should retain the traits of the texture. This is enabled by semantic expressions.
 
 The sampling kernel could have the following signature:
 
