@@ -329,7 +329,7 @@ In addition to regular scene rendering, Nucleus contains special support for ima
 \item The output device usually has a limited display range with respect to brightness. For optimal results, the rendered values must be translated into this range via \textbf{tone mapping}.
 \item \textbf{Psychophysical effects} may be simulated, such as glare, spatial acuity loss and scotopic vision.
 \item Color grading, contrast enhancement and other stylistic effects may be applied in order to increase \textbf{immersion} and steer the \textbf{mood} of a particular scene.
-\item Visual \textbf{gameplay cues} may be provided seamlessly to the player without resorting to artificial bars or number displays. For example, it is common practice to indicate low health of the player in a first person game by blurring the screen, as well as adding bloody detail to the edges of the screen.
+\item Visual \textbf{gameplay cues} may be provided seamlessly to the player without resorting to artificial bars or number displays. For example, it is common practice to indicate low health of the player in a first person game by blurring the screen, as well as adding bloody detail to its edges.
 \item \textbf{Attention focusing} via depth-of-field and selective coloring is often used in cutscenes and gameplay.
 \end{itemize}
 
@@ -386,7 +386,7 @@ PostProcess = kernel(
 \label{fig:SimplePostProcWithBreakdown}
 \end{figure}
 
-In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to rescale the images and change their internal format. A simple extension of the post-processing kernel shown in \fref{fig:SimplePostProc} could decide to output an image shrunk by 50\% on each side. With a sufficiently wide blur kernel, high-frequency details are lost anyway, so the signal may be represented by a smaller image within reasonable accuracy. Furthermore, combining the operator with itself a few times will approximate a blur with a very wide kernel in a much faster manner than a constant-resolution filter might.
+In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to rescale the images and change their internal format. A simple extension of the post-processing kernel shown in \fref{fig:SimplePostProc} could decide to output an image shrunk by 50\% on each side. With a sufficiently wide blur kernel, high-frequency details are lost anyway, so the signal may be represented by a smaller image within reasonable accuracy. Furthermore, combining the operator with itself a few times will approximate a blur with a very wide kernel in a much more efficient manner than a constant-resolution filter might.
 
 \begin{figure}[ht!]
   \centering
@@ -419,9 +419,9 @@ When breaking down the post-processing pipeline into multiple passes, Nucleus wi
 \section{Functional composition}
 \label{sec:FunctionalComposition}
 
-The post-processing framework required an introduction of one more element into the type system and graph manipulation toolbox. A limitation of the kernel pipeline described so far is that each kernel produces a single set of outputs for a single set of outputs. While this restriction is reasonable for implementing structure, material, light and reflectance shaders, it hinders elegant image processing.
+The post-processing framework required an introduction of one more element into the type system and graph manipulation toolbox. A limitation of the kernel pipeline described so far is that each kernel produces a single set of outputs for a single set of inputs. While this restriction is reasonable for implementing structure, material, light and reflectance shaders, it hinders elegant image processing.
 
-Consider the post-processing pipeline presented in \fref{fig:TrickyPostProc}. The \textbf{Blur} kernel expects to receive an image which it may sample multiple times, with various offsets. Connecting the \emph{Input} directly to \emph{Blur} would have worked fine within the framework described so far. However, in this particular case, the user decided to filter the input image through a power function first. The function is not specialized to work on images, but on individual values. There is a clear type mismatch, but intuitively this case should work just fine.
+Consider the post-processing pipeline presented in \fref{fig:TrickyPostProc}. The \textbf{Blur} kernel expects to receive an image which it may sample multiple times, with various offsets. Connecting the input \emph{Image} directly to \emph{Blur} would have worked fine within the framework described so far. However, in this particular case, the user decided to filter the input image through a power function first. The function is not specialized to work on images, but on individual values. There is a clear type mismatch, but intuitively this case should work just fine.
 
 \begin{figure}[ht!]
   \centering
@@ -480,7 +480,7 @@ A requirement for functional composition is that the incoming subgraph contains 
 
 Overall, the functional composition algorithm allows for a natural extension of graph-based processing, reducing the restriction of linear data flow in the \emph{DAG}, while still retaining functional purity, important for easy reasoning about and optimizations of the generated code. Conceptually, this feature is similar to automatic ``lifting'' of functions in some programming languages natively supporting arrays, such as \emph{APL} and \emph{J}.
 
-Naturally this very mechanism is not restricted to just the post-processing component of Nucleus and may be used e.g. in order to implement procedural texturing. In this case, the \emph{Image} kernel will abstract away regular texture access and procedural texture generation, providing an unified interface over them without any runtime overhead.
+Naturally this very mechanism is not restricted to just the post-processing component of Nucleus and may be used e.g. in order to implement procedural texturing. In this case, the \emph{Image} kernel will abstract away regular texture access and procedural texture generation, providing a unified interface over them without any runtime overhead.
 % TODO: ref the blurred checker example
 	
 \section{Code generation}
@@ -488,18 +488,18 @@ Naturally this very mechanism is not restricted to just the post-processing comp
 
 Before anything can be rendered via kernels, they need to be translated to a form which a low-level rendering API (and hence the GPU) understands. This is done by generating shader code. The input to this final pass (henceforth called \emph{codegen}) is a complete kernel graph, with all conversions resolved and automatic flow deduced. Given this graph, the first step is determining which of its parts should run in which stages of the rasterization process.
 
-A vertex shader processes each vertex in isolation and has a single mandatory output - the clip space position of the vertex. Such transformed vertex is then used by the primitive assembly stage of the GPU, which subsequently proceeds to scan-line conversion. Attributes output by the vertex shader are linearly interpolated across the primitive and made available to the fragment shader. The key observation here is that only the vertex position is special and must be made available in a particular format. All other outputs of the vertex shader are simply parameters which the fragment shader needs to generate the final color. It is then safe to assume that all computations of the kernel graph except the position may be done in the fragment stage. This assumption translates directly into the first step of the algorithm which determines the domain of each concrete kernel node:
+A vertex shader processes each vertex in isolation and has a single mandatory output - the clip space position of the vertex. Such transformed vertex is then used by the primitive assembly stage of the GPU, which subsequently proceeds to scan-line conversion. Attributes output by the vertex shader are linearly interpolated across the primitive and made available to the fragment shader. The key observation here is that only the vertex position is special and must be made available in a particular format. All other outputs of the vertex shader are simply parameters which the fragment shader needs in order to generate the final color. Hence it is safe to assume that all computations of the kernel graph except the position may be done in the fragment stage. This assumption translates directly into the first step of the algorithm which determines the domain of each concrete kernel node:
 
 \begin{enumerate}
 \item Assume all nodes should run in the fragment domain.
-\item Find a specially designated \textbf{Rasterize} node, mark it and all of the nodes in its incoming subgraph to run in the vertex domain.
+\item Find a specially designated \textbf{Rasterize} node. Mark all of the nodes in its incoming subgraph to run in the vertex domain.
 \end{enumerate}
 
 The \textbf{Rasterize} node is normally a part of a \emph{Structure} kernel graph specified for a renderable, but any node which accepts a position parameter may be used instead if a custom \emph{Renderer} deems it necessary. Due to the semantic type system, any data convertible to a clip space position may be supplied as the input.
 
 Functions defined within the semantic type system do not need their storage types to be defined -- for example, an addition kernel should work on vectors, scalars and matrices, therefore it is a generic function. The type for its parameters is determined within the coercion mechanism described in \sref{sec:TypeCoercion}. Therefore it may happen that the same kernel has to be generated in multiple instances, with types specialized for each fully coerced type. The code generation step resolves this gracefully by renaming functions in the target language and substituting types within the declarations.
 
-Since graph-based kernels building up the final kernel graph for which codegen runs, the graph being compiled consists of only code-based kernels. Therefore it emits the code-based kernels as functions in the target language (\emph{Cg} currently) and creates glue code within entry points for each shader domain. The generated glue may look like:
+Since graph-based kernels building up the final kernel graph for which codegen runs, the graph being compiled consists of only code-based kernels. Therefore it emits them as functions in the target language (\emph{Cg} currently) and creates glue code within entry points for each shader domain. The generated glue may look like:
 
 \noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
@@ -528,13 +528,13 @@ That is, \textbf{out} parameters are declared before each kernel function call, 
 
 \subsection{Optimization due to linear functions}
 
-The presented assignment of computational nodes to GPU domains is sufficient but not optimal. A typical scene rendering processes more fragments than vertices, so it is desirable to move calculations from the fragment to the vertex stage where possible. In order to show how this is possible, it is convenient to take a closer look at the vertex and pixel processing pipeline from a mathematical point of view. Due to machine precision limits, the following consideration is strictly correct, but suffices for all practical purposes.
+The presented assignment of computational nodes to GPU domains is sufficient but not optimal. A typical scene rendering processes more fragments than vertices, so it is desirable to move calculations from the fragment to the vertex stage where possible. In order to show how this is possible, it is convenient to take a closer look at the vertex and pixel processing pipeline from a mathematical point of view. Due to machine precision limits, the following consideration is not strictly correct, but suffices for all practical purposes.
 
 Let $f$ be the fragment shader, $v$ the vertex shader and $p_0 p_1 p_2$ the triangle being rasterized. The GPU computes $f(w_0 v(p_0) + w_1 v(p_1) + w_2 v(p_2))$ for each pixel of the triangle, where $w_0$, $w_1$ and $w_2$ are the barycentric coordinates of the center of the pixel with respect to $p_0 p_1 p_2$. Let now $g$ and $h$ be functions so that $h$ is linear and $g \circ h = f$. \\
 Because $h$ is linear, \\
 $g(h(w_0 v(p_0) + w_1 v(p_1) + w_2 v(p_2))) = g(w_0 h(v(p_0)) + w_1 h(v(p_1)) + w_2 h(v(p_2))$.
 
-Subsequently, we can define a vertex shader function $v\prime = h \circ v$ and a fragment shader function $f\prime = g$. This result shows that it is legal to move a kernel from the fragment stage to the vertex stage as long as all of its inputs come from the vertex stage and the kernel implements a linear function. By utilizing this rule repeatedly in topological order, the process can be done in a single pass for the entire kernel graph. Nucleus currently allows a kernel to be tagged as linear, however in a future implementation this may be inferred automatically through semantic analysis of the code.
+Subsequently, we can define a vertex shader function $v\prime = h \circ v$ and a fragment shader function $f\prime = g$. This result shows that it is legal to move a kernel from the fragment stage to the vertex stage as long as all of its inputs come from the vertex stage and the kernel implements a linear function. By utilizing this rule repeatedly in topological order, the process can be realized in a single pass for the entire kernel graph. Nucleus currently allows a kernel to be tagged as linear, however in a future implementation this may be inferred automatically through semantic analysis of the code.
 
 \begin{figure}[ht!]
   \centering
