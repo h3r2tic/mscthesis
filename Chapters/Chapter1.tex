@@ -19,7 +19,7 @@ L_o(\mathbf x, \overrightarrow{\omega}, \lambda) = L_e(\mathbf x, \overrightarro
 where:
 \begin{itemize}
 \item $\lambda$ is a wavelength of light.
-\item $L_o(\mathbf x, \overrightarrow{\omega}, \lambda)$ is light of wavelength $\lambda$ a particular position $\mathbf x$ directed outward in direction $\overrightarrow{\omega}$.
+\item $L_o(\mathbf x, \overrightarrow{\omega}, \lambda)$ is total light of wavelength $\lambda$ at position $\mathbf x$, leaving in the outward direction $\overrightarrow{\omega}$.
 \item $L_e(\mathbf x, \overrightarrow{\omega}, \lambda)$ is light emitted from the same position at the same direction at wavelength $\lambda$.
 \item $\Omega$ is a hemisphere centered at point $\mathbf x$ and directed at the normal vector $\mathbf n$.
 \item $\overrightarrow{\omega}'$ is an inward vector on the integration hemisphere.
@@ -123,7 +123,7 @@ When programmable shading was being introduced, the only way to perform it was b
 
 \section{Mental and hardware programming model mismatch}
 
-Modern GPUs provide a very efficient model of computation allowing for creation of photorealistic renderings of three-dimensional scenes. Still, the programming model is not exactly the most intuitive one. The rendering equation does not feature vertex, geometry and fragment shaders either.
+Modern GPUs provide a very efficient model of computation allowing for creation of photorealistic renderings of three-dimensional scenes. Still, the programming model is not exactly the most intuitive one. It binds artists and programmers to think in terms of the rasterization algorithm, instead of reasoning about light transfer within scene elements. The rendering equation does not feature vertex, geometry and fragment shaders either.
 
 If we consider the elements that make up the rendering equation and the commonly used scene representation, then the logical elements emerge automatically. Under the aforementioned assumptions, we would ideally want to work with shader programs which describe:
 \begin{itemize}

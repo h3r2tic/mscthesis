@@ -105,6 +105,7 @@
 \usepackage{booktabs}
 \usepackage{rotating}
 \usepackage{listings}
+\usepackage{color}
 
 %\usepackage[dvips]{graphicx}
 \input{graphviz}

@@ -35,40 +35,6 @@ This work builds on shader fragment merging and extends it with automatic parame
 
 % http://books.google.com/books?id=DgMSb_10l7IC&pg=PA555&lpg=PA555&dq=%22uber+shaders%22&source=bl&ots=-mu34jRtzO&sig=C3KIgqPIb6F8MDsOU0tSevVuN8M&hl=en&ei=zPZpTNGHNoGA4Aam1aHJCQ&sa=X&oi=book_result&ct=result&resnum=4&ved=0CCIQ6AEwAzgK#v=onepage&q=%22uber%20shaders%22&f=false
 
-\section{RenderMan}
-
-% TODO: the name is also a pun on Point Reyes
-
-When designing a graphics rendering system, it is impossible not to bump into what currently constitutes the industry standard for film rendering -- RenderMan. Despite being over 20 years old, it continues to thrive as the benchmark for all rendering technology. It has been used in several dozen successful feature film productions and among its achievements is the first Oscar even awarded to the developers of a software package \cite{RenderManAwards}. An interesting aspect concerning RenderMan is that the overall structure of its Interface Specification (\emph{RISpec} in short) has survived mostly unchanged since its very first publication in 1988.
-
-The rendering algorithm mainly utilized by Pixar's flagship implementation of RenderMan is called \textbf{REYES} (acronym for \emph{Renders Everything You Ever Saw}). It can be divided into the following steps:
-	
-\begin{enumerate}
-\item \textbf{Bound} --- Conservatively cull off-screen objects using their bounding volumes. This early-out mechanism allows many calculations to be skipped for objects which can be trivially shown not to contribute to the final image.
-\item \textbf{Split} --- Perform primitive-specific subdivision of the incoming geometry, generating more primitives as a result. Steps 1 -- 2 are evaluated recursively until the size of primitives meets a pre-configured threshold or a primitive declares that it is not splittable.
-\item \textbf{Dice} --- Create a grid of \emph{micropolygons} from each primitive generated in the previous step. Each micropolygon is a quadrilateral approximately $^1/_2$ a pixel on a side. Micropolygons can be generated in a pattern matching the orientation of a texture applied to the primitive, enhancing quality via simplified filtering and improving performance due to access locality.
-\item \textbf{Shade} --- Compute the lighting and shading at each vertex of the micropolygon grid.
-\item \textbf{Sample} --- Generate the final image by stochastically sampling micropolygons for each pixel.
-\end{enumerate}
-
-It may seem that the algorithm is overly complex, especially when compared with regular rasterization, however it is able to exploit texture and geometric locality, parallelism and scales gracefully with increased scene complexity \cite{Cook87reyes}. Stochastic sampling of micropolygons enables efficient computation of motion blur and depth of field effects. Finally, arbitrary primitive types are allowed, as long as they can be split or diced and finally converted into micropolygons.
-
-The architecture is programmable via 5 \emph{shader} types \cite{keyframeRSL1}:
-
-\begin{description}
-\item[Surface] --- Defines how a surface reacts to light, allowing the programmer to define its look. Surface shaders allow custom reflectance models to be defined, but also specify how the pigment or material of an object looks, hence allowing the definition of complete \emph{BRDF}s.
-\item[Displacement] --- These shaders change the macro-structure of the surface, being able to alter normal vectors or offset the positions of micropolygons.
-\item[Volume] --- Changes the color of light rays as they travel through a volume. May be used to create effects such as fog or smoke.
-\item[Light] --- Represents the light source, allowing specification of light colors, shadows, intensity, falloff, ``barn door'' effects, etc. Computes the amount of lights which arrives at a particular point in space -- the surface being shaded.
-\item[Imager] --- Imager shaders operate on image pixels just prior to the final output. They may be used e.g. to perform color correction or procedural background generation. Unfortunately, an imager shader being run for a single output pixel may only use the corresponding single pixel as an input, so more advanced effects, such as tone mapping (which require global or localized image statistics) are not feasible.
-\end{description}
-
-An important aspect of the RenderMan architecture is its ability to freely mix and match any primitives and shaders. Since every primitive eventually resolves to micropolygons, it can be used with any \emph{Displacement}, then processed by any \emph{Surface} shader. The latter may in turn interact with any \emph{Light} shaders, hence ensuring full orthogonality of the building blocks.
-
-Unfortunately, micropolygon-based real-time rendering is still not viable for current commodity hardware. \citet{PatneyRealTimeReyes} present an implementation which performs the Bound, Split and Dice stages using NVIDIA CUDA, then passes the tessellated geometry into the regular OpenGL pipeline. While the tessellation stage achieves good performance, rendering the resulting micropolygons using conventional rasterization is suboptimal. Due to implementation details of current GPUs, there exists shading overhead for tiny polygons, with up to 8 times the theoretical cost for triangles spanning a single pixel \cite{understandingG80}.
-
-Still, even without using micropolygon-based rendering, an architecture can be designed to retain some of the advantages RenderMan possesses. In particular, this thesis presents a shading framework decoupled from the shader domains imposed by current GPUs, instead moving closer to the model employed by RenderMan. Additionally, the limitation of \emph{Imager} shaders is lifted, hence enabling more sophisticated post-processing effects to be created.
-
 
 \section{Deferred rendering}
 
@@ -103,7 +69,7 @@ Of the two passes, only the first one requires the actual geometry of the scene 
 
 The main strength of deferred shading is at the same time the root of a drawback. Since the second pass only runs light shaders and has no knowledge of the source objects which contributed to the \emph{G-buffer}, it may no longer run per-object shader code. When all objects are just samples in the \emph{G-buffer}, there is no clear way of supporting per-object reflection models.
 
-Another tricky issue is that of translucency. Because the \emph{G-buffer} may only store properties of a single surface at a single fragment location, it does not handle translucency in a natural fashion. \citet{HumusDeepDeferred} demonstrates an approach using depth peeling, which is able to overcome this limitation. He uses texture arrays to encode attributes of multiple depth layers. The second pass of deferred shading then computes light influence on each of these layers, stopping on opaque surfaces. This results in good performance for typical scene configurations, since most will have far more opaque elements than translucent ones. The main downside of his approach is the fact that the technique requires $n$ G-buffers in order to support $n$ depth layers, putting much strain on memory.
+Another problematic issue is that of translucency. Because the \emph{G-buffer} may only store properties of a single surface at a single fragment location, it does not handle translucency in a natural fashion. \citet{HumusDeepDeferred} demonstrates an approach using depth peeling, which is able to overcome this limitation. He uses texture arrays to encode attributes of multiple depth layers. The second pass of deferred shading then computes light influence on each of these layers, stopping on opaque surfaces. This results in good performance for typical scene configurations, since most will have far more opaque elements than translucent ones. The main downside of his approach is the fact that the technique requires $n$ G-buffers in order to support $n$ depth layers, putting much strain on memory.
 
 A more common approach for handling translucency is to render non-opaque surfaces in a separate pass using a traditional forward rendering algorithm. Using read-only depth testing against a depth buffer containing the opaque parts of the scene, translucent surfaces can be blended into the result of deferred shading. A major inconvenience this approach entails is having to maintain both a deferred and a forward renderer, along with material and light shaders which might be used in both of them. The rendering system presented in this work makes it relatively easy by allowing the same \emph{material}, \emph{light}, \emph{reflectance} and \emph{structure} shaders (or \emph{kernels} in its nomenclature) to be used in any of the implemented rendering algorithms.
 
@@ -129,6 +95,42 @@ The regular deferred rendering algorithm requires a large G-buffer, which in som
 Such a breakdown of rendering operations trades extra geometric cost for less G-buffer memory utilization, which in particular scene configurations and platforms translates into faster execution.
 
 % http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter09.html
+
+
+\section{RenderMan}
+
+% TODO: the name is also a pun on Point Reyes
+
+When designing a graphics rendering system, it is impossible not to bump into what currently constitutes the industry standard for film rendering -- RenderMan. Despite being over 20 years old, it continues to thrive as the benchmark for all rendering technology. It has been used in several dozen successful feature film productions and among its achievements is the first Oscar even awarded to the developers of a software package \cite{RenderManAwards}. An interesting aspect concerning RenderMan is that the overall structure of its Interface Specification (\emph{RISpec} in short) has survived mostly unchanged since its very first publication in 1988.
+
+The rendering algorithm mainly utilized by Pixar's flagship implementation of RenderMan is called \textbf{REYES} (acronym for \emph{Renders Everything You Ever Saw}). It can be divided into the following steps:
+	
+\begin{enumerate}
+\item \textbf{Bound} --- Conservatively cull off-screen objects using their bounding volumes. This early-out mechanism allows many calculations to be skipped for objects which can be trivially shown not to contribute to the final image.
+\item \textbf{Split} --- Perform primitive-specific subdivision of the incoming geometry, generating more primitives as a result. Steps 1 -- 2 are evaluated recursively until the size of primitives meets a pre-configured threshold or a primitive declares that it is not splittable.
+\item \textbf{Dice} --- Create a grid of \emph{micropolygons} from each primitive generated in the previous step. Each micropolygon is a quadrilateral approximately $^1/_2$ a pixel on a side. Micropolygons can be generated in a pattern matching the orientation of a texture applied to the primitive, enhancing quality via simplified filtering and improving performance due to access locality.
+\item \textbf{Shade} --- Compute the lighting and shading at each vertex of the micropolygon grid.
+\item \textbf{Sample} --- Generate the final image by stochastically sampling micropolygons for each pixel.
+\end{enumerate}
+
+It may seem that the algorithm is overly complex, especially when compared with regular rasterization, however it is able to exploit texture and geometric locality, parallelism and scales gracefully with increased scene complexity \cite{Cook87reyes}. Stochastic sampling of micropolygons enables efficient computation of motion blur and depth of field effects. Finally, arbitrary primitive types are allowed, as long as they can be split or diced and finally converted into micropolygons.
+
+The architecture is programmable via 5 \emph{shader} types \cite{keyframeRSL1}:
+
+\begin{description}
+\item[Surface] --- Defines how a surface reacts to light, allowing the programmer to define its look. Surface shaders allow custom reflectance models to be defined, but also specify how the pigment or material of an object looks, hence allowing the definition of complete \emph{BRDF}s.
+\item[Displacement] --- These shaders change the macro-structure of the surface, being able to alter normal vectors or offset the positions of micropolygons.
+\item[Volume] --- Changes the color of light rays as they travel through a volume. May be used to create effects such as fog or smoke.
+\item[Light] --- Represents the light source, allowing specification of light colors, shadows, intensity, falloff, ``barn door'' effects, etc. Computes the amount of lights which arrives at a particular point in space -- the surface being shaded.
+\item[Imager] --- Imager shaders operate on image pixels just prior to the final output. They may be used e.g. to perform color correction or procedural background generation. Unfortunately, an imager shader being run for a single output pixel may only use the corresponding single pixel as an input, so more advanced effects, such as tone mapping (which require global or localized image statistics) are not feasible.
+\end{description}
+
+An important aspect of the RenderMan architecture is its ability to freely mix and match any primitives and shaders. Since every primitive eventually resolves to micropolygons, it can be used with any \emph{Displacement}, then processed by any \emph{Surface} shader. The latter may in turn interact with any \emph{Light} shaders, hence ensuring full orthogonality of the building blocks.
+
+Unfortunately, micropolygon-based real-time rendering is still not viable for current commodity hardware. \citet{PatneyRealTimeReyes} present an implementation which performs the Bound, Split and Dice stages using NVIDIA CUDA, then passes the tessellated geometry into the regular OpenGL pipeline. While the tessellation stage achieves good performance, rendering the resulting micropolygons using conventional rasterization is suboptimal. Due to implementation details of current GPUs, there exists shading overhead for tiny polygons, with up to 8 times the theoretical cost for triangles spanning a single pixel \cite{understandingG80}.
+
+Still, even without using micropolygon-based rendering, an architecture can be designed to retain some of the advantages RenderMan possesses. In particular, this thesis presents a shading framework decoupled from the shader domains imposed by current GPUs, instead moving closer to the model employed by RenderMan. Additionally, the limitation of \emph{Imager} shaders is lifted, hence enabling more sophisticated post-processing effects to be created.
+
 
 \section{Graph-based systems}
 

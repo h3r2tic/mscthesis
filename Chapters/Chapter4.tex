@@ -6,11 +6,22 @@
 \label{Chapter4}
 \lhead{Chapter 3. \emph{ Nucleus }}
 
+This chapter contains a description of the internal structure of a rendering system created for the purposes of this thesis, henceforth called ``\textbf{Nucleus}.'' After a brief overview of the major components in the following section, the building blocks used therein are presented. Finally, the chapter provides an in-depth look at the internal manipulation of the basic elements and how they are optimized and translated into a form which the underlying GPU can understand.
+
 \section{Overall structure}
 
-At the highest level, the architecture of Nucleus is split in two layers. The first layer completely wraps an underlying rendering API, providing primitives which are easier to use and less error-prone, while retaining high efficiency.
+At the highest level, the architecture of Nucleus is split in two layers.
+\begin{itemize}
+\item The first layer completely wraps an underlying rendering API, providing primitives which are easier to use and less error-prone, while retaining high efficiency.
+\item The second layer is the high-level rendering interface which is the main topic of this thesis, described in further detail in this chapter.
+\end{itemize}
 
-The second layer is the high-level rendering interface which is the main topic of this thesis, described in further detail in this chapter.
+\begin{figure}[ht!]
+  \centering
+    \includegraphics[width=0.5\linewidth]{./Figures/layers.png}
+    \caption[Nucleus Layers]{The top-level composition of Nucleus.}
+  \label{fig:nucleusLayers}
+\end{figure}
 
 Aside the above, Nucleus offers a post-processing framework, which in turn may use both of these layers.
 
@@ -45,7 +56,7 @@ The lowest abstraction layer has been built on a level similar to Microsoft's XN
 
 \item[Framebuffer] --- wrapper over all classes of framebuffers with automatic usage of Multiple Render Targets, rendering to textures, floating point support, etc.
 
-\item[Texture] --- 1D, 2D, 3D, rectangle, cube, \ldots
+\item[Texture] --- provides access to 1D, 2D, 3D, rectangle and cube texture maps, updating and querying their data.
 \end{description}
 
 The aforementioned resources are accessed via opaque handles created and managed by a \textbf{Renderer}, eliminating the potential of fatal user mistakes such as manual disposal of a resource and its subsequent usage or memory corruption. For example, calling \emph{createVertexBuffer(\ldots)} on a \emph{Renderer} instance yields a \emph{VertexBuffer} instance with meaningful access methods, such as \emph{mapRange} and \emph{setSubData} -- it is however only a thin \textbf{struct} wrapping a resource handle. The methods within it only pass the parameters along with the handle to the API provided by the \emph{Renderer}.
@@ -110,7 +121,7 @@ Within a kernel graph, connections may exist between nodes, as well as between p
 
 \subsection{Standard kernel types}
 
-Similarly to how GPU-based shading requires the specification of shader programs for each of the processing domains, Nucleus demands that a kernel be provided for each of its domains. Where it differs drastically, is what the domains are. Each object to be rendered must have 3 kernels specified for it:
+Similarly to how GPU-based shading requires the specification of shader programs for each of the processing domains (vertex, geometry an fragment), Nucleus demands that a kernel be provided for each of \emph{its} domains. The major difference lies in what the domains are. Each object to be rendered within Nucleus must have 3 kernels specified for it:
 
 \begin{description}
 \item[Structure] --- Defines the macro-structure and mostly contains what a vertex or geometry shader might. It is responsible for providing the primitives to be rendered, including data such as positions, normals, partial derivatives of position with respect to texture coordinates, etc.
@@ -153,14 +164,14 @@ There is currently no support whatsoever for volume shaders in Nucleus. A proper
 \section{Semantic type system}
 
 % TODO: ref the related work section? maybe put semantic types into an index?
-Nucleus uses \emph{semantic types} in order to describe the signatures of computational kernels. Each type is a set of \emph{trait} values and each \emph{trait} is an enumerated type in the classical meaning used in programming languages. Possible traits and their values include (TODO-ish):
+Nucleus uses \emph{semantic types} in order to describe the signatures of computational kernels. Each type is a set of \emph{trait} values and each \emph{trait} is an enumerated type in the classical meaning used in programming languages. Possible traits and their values include:
 \begin{description}
-\item[basis] --- world, view, clip, tangent,
-\item[colorSpace] --- RGB, sRGB, logLUV,
-\item[length] --- unit, any,
-\item[linearity] --- linear, logarithmic, exponential,
-\item[use] --- position, normal, color, uv,
-\item[type] --- float, float2, float3, float4, float4x4, ... (Cg type)
+\item[basis] --- The coordinate space of a vector: model, world, view, clip, tangent,
+\item[colorSpace] --- RGB, sRGB, logLUV, etc.,
+\item[unit] --- Whether the magnitude of a vector equals one: true, false,
+\item[linearity] --- linear, logarithmic, exponential, etc.,
+\item[use] --- What instances of this type are to be used for: position, normal, color, uv, etc.,
+\item[type] --- The underlying plain type in the target language: float, float2, float3, float4, int, bool, sampler2D, etc.
 \end{description}
 
 Trait values of the same name are considered distinct if they belong to different traits. For example, value \emph{A} of trait \emph{X} is distinct from value \emph{A} of trait \emph{Y}. In order to make the definition mathematically sound, a trait value may be considered a $(trait, value)$ tuple.
@@ -280,7 +291,9 @@ In this case, the traits of the output parameter ``sample'' depend on the \emph{
 
 There can be only one value for a particular trait within a semantic, and any duplicates within the expression replace the previous values. For example, \emph{<type float + type float2>} is equivalent to \emph{<type float2>}. This is useful if the semantic expression wants to add a particular trait, overriding whatever it was previously set to.
 
-In addition to additive semantic expressions, subtractive ones are allowed. The semantic expression <type float - type> is an empty semantic. Parenthesizing sub-expressions is valid too, e.g. \emph{<type float + (in.foo.actual - type)>} is equivalent to \emph{<in.foo.actual + type.float>}, but due to non-associativity, distinct from \emph{<type float + in.foo.actual - type>}.
+In addition to additive semantic expressions, subtractive ones are allowed. Subtraction works both on the level of trait names and (name, value) tuples. For example, the expression \emph{<type float - type>} is an empty semantic and so is \emph{<type float - type float>}. In the former case, only a trait name is specified for the subtrahend, hence a trait of any value will be removed from the semantic. In the latter case, where a trait name and an associated value are provided, an exact match must exist or the operation is redundant. Therefore \emph{<type float - type int>} is equivalent to \emph{<type float>}.
+
+Parenthesizing sub-expressions is valid as well, in which case parenthesized expression are evaluated first, via post-order evaluation of the expression tree. Semantic expressions are thus non-associative. For example, \emph{<type float + (in.foo.actual - type)>} is equivalent to \emph{<in.foo.actual + type.float>}, but due to non-associativity, distinct from \emph{<type float + in.foo.actual - type>}.
 
 \section{Renderers}
 \label{sec:Renderers}
@@ -305,7 +318,7 @@ Ultimately, the work a \emph{Renderer} does is relatively straightforward -- it 
 
 Despite the \emph{Renderer} framework being the default for scene rendering operations, it is not the only way to utilize renderables and kernels associated with them. The same set of tools may be used with little effort for other rendering purposes. Both the \emph{post processing} pipeline described in the next section and material previews in the \emph{Nucled} editor are internally very similar to regular renderers.
 
-Had there been need to access any intermediate results of rendering algorithms, the \emph{Renderer} interface may be skipped altogether. For the purposes of this dissertation, having a unified interface over renderers is a desirable property, however it may not always be so. There exist algorithms, which weave between steps of deferred rendering or utilize the created G-buffers for final image manipulation purposes; examples include volumetric decal rendering \cite{VolumeDecals} and horizon-based ambient occlusion \cite{HBAO}. Nevertheless, only the abstraction of a \emph{Renderer} would need to be surpassed for these techniques -- internally, they can still use the kernel-based shader generation mechanism and benefit from the other components of Nucleus.
+Should the need arise to access any intermediate results of rendering algorithms, the \emph{Renderer} interface may be skipped altogether. For the purposes of this dissertation, having a unified interface over renderers is a desirable property, however it may not always be so. There exist algorithms, which weave between steps of deferred rendering or utilize the created G-buffers for final image manipulation purposes; examples include volumetric decal rendering \cite{VolumeDecals} and horizon-based ambient occlusion \cite{HBAO}. Nevertheless, only the abstraction of a \emph{Renderer} would need to be surpassed for these techniques -- internally, they can still use the kernel-based shader generation mechanism and benefit from the other components of Nucleus.
 
 \section{Post-processing}
 \label{sec:PostProcessing}

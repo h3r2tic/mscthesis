@@ -14,10 +14,10 @@ The system presented in this thesis has been verified by implementing numerous r
 
 Despite all the work poured in it, Nucleus is still only the beginning of a rendering system which might be used in a game or for complex visualization purposes. Therefore the potential ways to expand it are vast, ranging from optimization, to implementing particular algorithms such as Tiled Deferred Rendering \cite{tiledDeferred}. Most importantly, it lacks several important features omitted entirely in this thesis, e.g.:
 \begin{itemize}
-\item Hidden surface removal (the implementation contains stubs for it and uses only view frustum culling)
-\item Skeletal animation
-\item Particle system simulation and rendering
-\item Run-time background streaming of assets
+\item Hidden surface removal (the implementation contains stubs for it and uses only view frustum culling),
+\item Character animation,
+\item Particle system simulation and rendering,
+\item Run-time background streaming of assets.
 \end{itemize}
 
 The aforementioned functionality would be implemented either on top of the existing framework or beside it. At the same time, existing features may be improved upon as well. First and foremost, the kernel authoring tool, \emph{Nucled}, is in dire need of improvements. The groundwork has been laid, but before it becomes a full-fledged editor, it needs better error handling, more detailed previews, support for arbitrary manipulation of loaded scenes and proper management of asset libraries.
