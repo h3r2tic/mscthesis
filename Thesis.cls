@@ -37,7 +37,7 @@
 \setlength{\parskip}{2.0ex plus0.5ex minus0.2ex}
 
 \usepackage[a4paper]{geometry}
-  \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=3.5cm,rmargin=2.5cm}
+  \geometry{verbose,tmargin=3.5cm,bmargin=3.5cm,lmargin=3.5cm,rmargin=2.5cm}
   \setlength{\headheight}{20pt}
   \setlength{\headsep}{0.25in}
   \setlength{\footskip}{0.3in}
@@ -203,7 +203,7 @@ nr albumu: 187455\\
 
 \begin{onehalfspace}
 \begin{flushright}
-\vspace{0.3in}
+\vspace{0.2in}
 \begin{minipage}[t]{0.6\columnwidth}%
 \begin{flushleft}
 {\Large Opiekun pracy dyplomowej}\\
@@ -261,22 +261,11 @@ nr albumu: 187455\\
 \newenvironment{abstract}
 {
   \btypeout{Abstract Page}
-  \thispagestyle{empty}
+  \thispagestyle{plain}
   \null\vfil
   \begin{center}
     \setlength{\parskip}{0pt}
-    {\normalsize \UNIVNAME \par}
-    \bigskip
     {\huge{\textit{Abstract}} \par}
-    \bigskip
-    {\normalsize \facname \par}
-    {\normalsize \deptname \par}
-    \bigskip
-    {\normalsize Master of Science\par}
-    \bigskip
-    {\normalsize\bf \@title \par}
-    \medskip
-    {\normalsize by \authornames \par}
     \bigskip
   \end{center}
 }
@@ -291,6 +280,7 @@ nr albumu: 187455\\
 \refstepcounter{dummy}
 \addcontentsline{toc}{chapter}{#1}}
 \renewcommand\tableofcontents{
+\pagestyle{plain}
 \btypeout{Table of Contents}
 \begin{spacing}{1}{
     \setlength{\parskip}{1pt}
@@ -376,15 +366,19 @@ nr albumu: 187455\\
 \begin{longtable}[c]{#1}#2\end{longtable}\par
     \cleardoublepage
 }
-\newcommand\acknowledgements[1]{
-\btypeout{Acknowledgements}
-\addtotoc{Acknowledgements}
-\thispagestyle{plain}
-\begin{center}{\huge{\textit{Acknowledgements}} \par}\end{center}
-{\normalsize #1}
-\vfil\vfil\null
 
+\newenvironment{acknowledgements}
+{
+  \btypeout{Acknowledgements}
+  \thispagestyle{plain}
+  \null\vfil
+  \begin{center}
+    \setlength{\parskip}{0pt}
+    {\huge{\textit{Acknowledgements}} \par}
+    \bigskip
+  \end{center}
 }
+
 \newcommand\dedicatory[1]{
 \btypeout{Dedicatory}
 \thispagestyle{plain}
