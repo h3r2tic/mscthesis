@@ -24,21 +24,7 @@
 \ProcessOptions\relax
 \LoadClass{\baseclass}
 \newcommand\bhrule{\typeout{------------------------------------------------------------------------------}}
- 
 \newwrite\dotfile
-
-\newcommand\Declaration[1]{
-\btypeout{Declaration of Authorship}
-\addtotoc{Declaration of Authorship}
-\thispagestyle{plain}
-\null\vfil
-%\vskip 60\p@
-\begin{center}{\huge\bf Declaration of Authorship\par}\end{center}
-%\vskip 60\p@
-{\normalsize #1}
-\vfil\vfil\null
-%\cleardoublepage
-}
 
 \newcommand\btypeout[1]{\bhrule\typeout{\space #1}\bhrule}
 \def\today{\ifcase\month\or
@@ -49,15 +35,13 @@
 \onehalfspacing
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{2.0ex plus0.5ex minus0.2ex}
-\usepackage{vmargin}
-\setmarginsrb           { 1.2in}  % left margin
-                        { 1.0in}  % top margin
-                        { 1.2in}  % right margin
-                        { 1.0in}  % bottom margin
-                        {  20pt}  % head height
-                        {0.25in}  % head sep
-                        {   9pt}  % foot height
-                        { 0.3in}  % foot sep
+
+\usepackage[a4paper]{geometry}
+  \geometry{verbose,tmargin=2.5cm,bmargin=2.5cm,lmargin=3.5cm,rmargin=2.5cm}
+  \setlength{\headheight}{20pt}
+  \setlength{\headsep}{0.25in}
+  \setlength{\footskip}{0.3in}
+
 \raggedbottom
 \setlength{\topskip}{1\topskip \@plus 5\p@}
 \doublehyphendemerits=10000       % No consecutive line hyphens.
@@ -139,12 +123,11 @@
 \usepackage[pdfpagemode={UseOutlines},bookmarks=true,bookmarksopen=true,
    bookmarksopenlevel=0,bookmarksnumbered=true,hypertexnames=false,
    colorlinks,linkcolor={blue},citecolor={blue},urlcolor={red},
-   pdfstartview={FitV},unicode,breaklinks=true]{hyperref}
+  unicode,breaklinks=true]{hyperref}
 \pdfstringdefDisableCommands{
    \let\\\space
 }
 \newcommand*{\supervisor}[1]{\def\supname{#1}}
-\newcommand*{\examiner}[1]{\def\examname{#1}}
 \newcommand*{\degree}[1]{\def\degreename{#1}}
 \newcommand*{\authors}[1]{\def\authornames{#1}}
 \newcommand*{\addresses}[1]{\def\addressnames{#1}}
@@ -152,83 +135,115 @@
 \newcommand*{\UNIVERSITY}[1]{\def\UNIVNAME{#1}}
 \newcommand*{\department}[1]{\def\deptname{#1}}
 \newcommand*{\DEPARTMENT}[1]{\def\DEPTNAME{#1}}
-\newcommand*{\group}[1]{\def\groupname{#1}}
-\newcommand*{\GROUP}[1]{\def\GROUPNAME{#1}}
 \newcommand*{\faculty}[1]{\def\facname{#1}}
 \newcommand*{\FACULTY}[1]{\def\FACNAME{#1}}
 \newcommand*{\subject}[1]{\def\subjectname{#1}}
 \newcommand*{\keywords}[1]{\def\keywordnames{#1}}
-\supervisor  {}
-\examiner    {}
-\degree      {}
-\authors     {}
-\university  {\texorpdfstring{\href{University Web Site URL Here (include http://)}
+\supervisor  {Dr. Michał Chlebiej}
+\degree      {Master of Science}
+\authors     {Tomasz Stachowiak}
+\university  {\texorpdfstring{\href{http://www.umk.pl/}
                 {Nicolaus Copernicus University}}
                 {Nicolaus Copernicus University}}
-\UNIVERSITY  {\texorpdfstring{\href{University Web Site URL Here (include http://)}
+\UNIVERSITY  {\texorpdfstring{\href{http://www.umk.pl/}
                 {NICOLAUS COPERNICUS UNIVERSITY}}
                 {NICOLAUS COPERNICUS UNIVERSITY)}}
-\department  {\texorpdfstring{\href{Department or School Web Site URL Here (include http://)}
+\department  {\texorpdfstring{\href{http://www.mat.umk.pl/}
                 {Departament of Mathematics and Computer Science}}
                 {Departament of Mathematics and Computer Science}}
-\DEPARTMENT  {\texorpdfstring{\href{Department or School Web Site URL Here (include http://)}
+\DEPARTMENT  {\texorpdfstring{\href{http://www.mat.umk.pl/}
                 {DEPARTAMENT OF MATHEMATICS AND COMPUTER SCIENCE}}
                 {DEPARTAMENT OF MATHEMATICS AND COMPUTER SCIENCE}}
-\group       {\texorpdfstring{\href{Research Group Web Site URL Here (include http://)}
-                {Research Group Name}}
-                {Research Group Name}}
-\GROUP       {\texorpdfstring{\href{Research Group Web Site URL Here (include http://)}
-                {RESEARCH GROUP NAME (IN BLOCK CAPITALS)}}
-                {RESEARCH GROUP NAME (IN BLOCK CAPITALS)}}
-\faculty     {\texorpdfstring{\href{Faculty Web Site URL Here (include http://)}
-                {Faculty Name}}
-                {Faculty Name}}
-\FACULTY     {\texorpdfstring{\href{Faculty Web Site URL Here (include http://)}
-                {FACULTY NAME (IN BLOCK CAPITALS)}}
-                {FACULTY NAME (IN BLOCK CAPITALS)}}
+\faculty     {\texorpdfstring{\href{http://www.mat.umk.pl/web/zorir/zorir}
+                {Zakład Obliczeń Równoległych i Rozproszonych}}
+                {Zakład Obliczeń Równoległych i Rozproszonych}}
+\FACULTY     {\texorpdfstring{\href{http://www.mat.umk.pl/web/zorir/zorir}
+                {ZAKŁAD OBLICZEŃ RÓWNOLEGŁYCH I ROZPROSZONYCH}}
+                {ZAKŁAD OBLICZEŃ RÓWNOLEGŁYCH I ROZPROSZONYCH}}
 \addresses   {}
 \subject     {}
-\keywords    {}
+\keywords    {real-time, rendering, Nucleus, GPU, shading, graphics}
 \renewcommand\maketitle{
   \btypeout{Title Page}
   \hypersetup{pdftitle={\@title}}
-  \hypersetup{pdfsubject=\subjectname}
   \hypersetup{pdfauthor=\authornames}
   \hypersetup{pdfkeywords=\keywordnames}
   \thispagestyle{empty}
+
   \begin{titlepage}
+    \setlength{\parskip}{0.0ex}
+
     \let\footnotesize\small
     \let\footnoterule\relax
     \let \footnote \thanks
     \setcounter{footnote}{0}
-    \null\vfil
-    \vskip 60\p@
-    \begin{center}
-      \setlength{\parskip}{0pt}
-      {\large\textbf{\UNIVNAME}\par}
-      \vfill
-      {\huge \bf \@title \par}
-      \vfill
-      {\LARGE by \par}
-      \smallskip
-      {\LARGE \authornames \par}
-      \vfill
-      {\large A thesis submitted in partial fulfillment for the \par}
-      {\large degree of Master of Science \par}
-      \bigskip
-      \bigskip
-      {\large in the \par}
-      {\large \facname \par}
-      {\large \deptname \par}
-      \bigskip
-      \bigskip
-      \bigskip
-      {\Large \@date \par}
-      \bigskip
-    \end{center}
-    \par
-    \@thanks
-    \vfil\null
+
+\begin{onehalfspace}
+\begin{center}
+{\huge Uniwersystet Mikołaja Kopernika}\\
+{\huge Wydział Matematyki i Informatyki}\\
+{\huge Zakład Obliczeń Równoległych}\\
+{\huge i Rozproszonych}
+\par\end{center}{\huge \par}
+
+\begin{center}
+\vspace{0.5in}
+{\LARGE Tomasz Stachowiak}{\Large }\\
+nr albumu: 187455\\
+{\small \vspace{0.5in}
+}{\Large Praca magisterska}\\
+{\Large na kierunku informatyka}
+\par\end{center}{\large \par}
+
+\begin{center}
+\vspace{0.5in}
+\textbf{\Huge \@title}
+\par\end{center}{\Huge \par}
+\end{onehalfspace}
+
+\begin{onehalfspace}
+\begin{flushright}
+\vspace{0.3in}
+\begin{minipage}[t]{0.6\columnwidth}%
+\begin{flushleft}
+{\Large Opiekun pracy dyplomowej}\\
+{\Large dr Michał Chlebiej}\\
+{\Large Zakład Obliczeń Równoległych}\\
+{\Large i Rozproszonych}
+\par\end{flushleft}%
+\end{minipage}
+\par\end{flushright}{\large \par}
+\end{onehalfspace}
+
+\begin{onehalfspace}
+\begin{center}
+\vfill
+{\Large Toruń 2010}
+\par\end{center}{\large \par}
+\end{onehalfspace}
+
+\begin{onehalfspace}
+\vspace{0.2in}
+%
+\begin{minipage}[t]{0.33\columnwidth}%
+\begin{center}
+{\small Pracę przyjmuję i akceptuję}\\
+\vspace{0.3in}
+...................................................\\
+\textit{\footnotesize data i podpis opiekuna pracy}
+\par\end{center}%
+\end{minipage}\hfill{}%
+\begin{minipage}[t]{0.4\columnwidth}%
+\begin{center}
+{\small Potwierdzam złożenie pracy dyplomowej}\\
+\vspace{0.3in}
+.................................................\\
+\textit{\footnotesize data i podpis pracownika dziekanatu}
+\par\end{center}%
+\end{minipage}\end{onehalfspace}
+
+
+    \setlength{\parskip}{2.0ex plus0.5ex minus0.2ex}
   \end{titlepage}
   \setcounter{footnote}{0}%
   \global\let\thanks\relax

@@ -6,7 +6,7 @@
 
 The goal of this dissertation is to develop a real-time graphics rendering system which, while making no compromises in terms of run-time efficiency, provides an easier path of defining and using the building blocks of three-dimensional scenes.
 
-The remaining part of this chapter introduces computer graphics with a particular focus on real-time rendering. Chapter \ref{Chapter3} outlines the third-party work on which this thesis builds, delivering motivation of various design choices and further background information of the various implemented features. Therefore Chapter \ref{Chapter4} presents the core of the implemented framework and details novel ideas introduced by this dissertation. Chapter \ref{Chapter5} briefly illustrates a visual authoring tool which has been created as a part of this thesis. Finally, Chapter \ref{Chapter6} describes some of the many rendering algorithms implemented within the developed system. The examples serve to highlight how various features of the framework interact, and provide additional insight into the workings of the system.
+The remaining part of this chapter introduces computer graphics with a particular focus on real-time rendering. \cref{Chapter3} outlines the third-party work on which this thesis builds, delivering motivation of various design choices and further background information of the various implemented features. Therefore \cref{Chapter4} presents the core of the implemented framework and details novel ideas introduced by this dissertation. \cref{Chapter5} briefly illustrates a visual authoring tool which has been created as a part of this thesis. Finally, \cref{Chapter6} describes some of the many rendering algorithms implemented within the developed system. The examples serve to highlight how various features of the framework interact, and provide additional insight into the workings of the system.
 
 \section{Real-time rendering}
 
@@ -31,7 +31,7 @@ The hemispherical integral in the rendering equation evaluates light contributio
 
 While generally not solvable analytically, this equation may be approached through Monte Carlo methods such as \emph{Path Tracing} \cite{Kajiya86RenderingEq} or \emph{Metropolis Light Transport} \cite{MLT} or via finite element methods such as \emph{Radiosity} \cite{Radiosity}. These algorithms are able to produce excellent results often indistinguishable from real photographs. Unfortunately they have only recently been approaching interactive rendering performance, making them still unsuitable for real-time purposes. Relatively simple scenes can still take minutes or hours to converge into acceptable solutions, whereas rendering times of under \emph{30 milliseconds} are desirable in order to create the impression of flicker-free animation.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.7\linewidth]{./mlt.jpg}
     \caption[Metropolis Light Transport]{A scene rendered by the \emph{Metropolis Light Transport} algorithm. Image courtesy of Eric Veach and Leonidas J. Guibas.}
@@ -48,7 +48,7 @@ where $I_l$ is light intensity and $d_l$ is distance to light $l$ from point $\m
 
 A key factor in the formulae described above is the $f_r$ function. It is called the \emph{bidirectional reflectance distribution function (\textbf{BRDF})} \cite{Nicodemus:65}. It defines how a surface reflects light at a particular position and therefore is the most important element describing the appearance of surfaces in a scene.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.4\linewidth]{./Chapters/InhomogeneousDielectric.png}
     \caption[Inhomogeneous dielectric]{Some of the possible light interaction paths within an inhomogeneous dielectric. Image courtesy of Nathaniel Hoffman.}
@@ -56,7 +56,7 @@ A key factor in the formulae described above is the $f_r$ function. It is called
 \end{figure}
 % TODO: more pictures?
 
-A spatially-varying \emph{BRDF} can describe the complete appearance of a surface including its texture, reflectivity, glossiness, etc. While it is possible to encode this data within a scene representation, it is not practical for most applications due to storage space and memory bandwidth constraints. Simulating light interaction in a precise manner, even under a geometric optics approximation, is very complicated -- for example, Figure \ref{fig:InhomogeneousDielectric} shows some of the possible paths photons might take within an inhomogeneous dielectric. For these reasons, physically and empirically-inspired mathematical models have been proposed, which aim to approximate idealized surfaces of various properties or just provide intuitive parameters to control the appearance of objects. Example models include:
+A spatially-varying \emph{BRDF} can describe the complete appearance of a surface including its texture, reflectivity, glossiness, etc. While it is possible to encode this data within a scene representation, it is not practical for most applications due to storage space and memory bandwidth constraints. Simulating light interaction in a precise manner, even under a geometric optics approximation, is very complicated -- for example, \fref{fig:InhomogeneousDielectric} shows some of the possible paths photons might take within an inhomogeneous dielectric. For these reasons, physically and empirically-inspired mathematical models have been proposed, which aim to approximate idealized surfaces of various properties or just provide intuitive parameters to control the appearance of objects. Example models include:
 \begin{itemize}
 \item Lambertian, describing the idealized diffuser. It is a constant \emph{BRDF}.
 \item Phong \cite{Phong}, the first to introduce specular highlights.
@@ -65,7 +65,7 @@ A spatially-varying \emph{BRDF} can describe the complete appearance of a surfac
 \item ABC and ABg \cite{opticalScattering}, able to model light reflection off surfaces with fractal height autocorrelation.
 \end{itemize}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Lambertian]{\label{fig:Buddha_Lambert}\includegraphics[width=0.32\linewidth]{./BRDFs/Lambert.jpg}}
   \subfigure[Blinn-Phong]{\label{fig:Buddha_BlinnPhong}\includegraphics[width=0.32\linewidth]{./BRDFs/BlinnPhong_120.jpg}}
@@ -85,7 +85,7 @@ The parameters influencing particular components of the reflection are intuitive
 
 Real-time rendering requires scenes to be described in a manner which is efficient in terms of storage and interpretation at run-time. Most commonly, objects are discretized as polygonal meshes with extra detail added in by two-dimensional images (called \textbf{textures}) parametrized onto the meshes. The former provide the macro structure of an object, whereas the latter cheaply represent fine detail wrapped over the mesh.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure{\label{fig:PostApCarWireframe}\includegraphics[width=0.45\linewidth]{./Figures/postApocalypticCar/wireframe.jpg}}
   \subfigure{\label{fig:PostApCarTextured}\includegraphics[width=0.45\linewidth]{./Figures/postApocalypticCar/textured.jpg}}

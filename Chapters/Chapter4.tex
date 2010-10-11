@@ -1,8 +1,10 @@
 % Chapter 4
 
+% TODO: something about the CPU-side of things
+
 \chapter{ Nucleus }
 \label{Chapter4}
-\lhead{Chapter 4. \emph{ Nucleus }}
+\lhead{Chapter 3. \emph{ Nucleus }}
 
 \section{Overall structure}
 
@@ -61,7 +63,7 @@ The \textbf{RenderList} is a collection of indices (ordinals) of EffectInstances
 
 An important factor to note is that the RenderList does not plainly contain EffectInstances, but rather their \emph{rendering ordinals}. The ordinals are 32-bit numbers assigned to each effect instance and managed internally by the renderer. Their order is determined by a heuristic attempting to minimize the number of state changes required when rendering the instances. This means that once the render list is constructed, the algorithm to minimize the required state changes basically boils down to \emph{sorting the ordinals}, which is a cheap operation. More ordering options will be made available in the future, so that the objects may be sorted by distance or using per-Effect routines built with knowledge of their performance characteristics.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/terrainRendering.jpg}
     \caption[terrainRendering]{A terrain example implemented using the low-level rendering API wrapper.}
@@ -70,7 +72,9 @@ An important factor to note is that the RenderList does not plainly contain Effe
 
 As mentioned before, the \textbf{Renderer} also gives access to the \textbf{RenderState}, a set of common rendering settings, such as the mode of depth-testing, blending, back-face culling, etc.
 
-The graphics base layer can therefore be used instead of the underlying graphics API, completely hiding its complexity and error-prone setup. It also makes it possible to change the backend without touching client code. The following is a code fragment of a Chunked LoD \cite{chunkedLoD} terrain rendering example (shown in Figure \ref{fig:terrainRendering}) implemented using the low-level interface only:
+The graphics base layer can therefore be used instead of the underlying graphics API, completely hiding its complexity and error-prone setup. It also makes it possible to change the backend without touching client code. The following is a code fragment of a Chunked LoD \cite{chunkedLoD} terrain rendering example (shown in \fref{fig:terrainRendering}) implemented using the low-level interface only:
+
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 efInst = renderer.instantiateEffect(effect);
 EffectHelper.allocateDefaultUniformStorage(efInst);
@@ -89,6 +93,8 @@ final vdata = efInst.getVaryingParamData("VertexProgram.input.position");
 vdata.buffer = &vb;
 vdata.attrib = &va;
 \end{lstlisting}
+\end{minipage}
+
 The above sample instantiates an \emph{Effect} containing a vertex and a fragment shader, then creates a vertex buffer and finally binds a varying parameter in the vertex shader to a portion of that buffer. Such code would be considerably longer if the underlying OpenGL and Cg APIs were used instead.
 	
 \section{Kernels}
@@ -120,9 +126,9 @@ A scene will usually also contain lights, each of which must be associated with 
 
 % TODO: link to info about the signatures of these kernels in some other chapter
 
-Such a break-down of domains may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{Renderer} is free to use these kernels in any rendering algorithm, as detailed in Section \ref{sec:Renderers}.
+Such a break-down of domains may superficially look similar to the shader types GPUs require. \emph{Structure} kernels resemble \emph{vertex} shaders, \emph{Material} kernels resemble \emph{pixel} shaders. The first major distinction is that the signatures of the above kernels are fixed in Nucleus, hence each Material may be combined with any Reflectance, any Structure and any Light. The second important difference is that these kernels are not tied to any particular part of the pipeline. Instead, a \emph{Renderer} is free to use these kernels in any rendering algorithm, as detailed in \sref{sec:Renderers}.
 
-Another core kernel type is used in \emph{post-processing} operations and described in Section \ref{sec:PostProcessing}.
+Another core kernel type is used in \emph{post-processing} operations and described in \sref{sec:PostProcessing}.
 
 This particular breakdown of processing domains is comparable to the \emph{RenderMan} model:
 
@@ -159,18 +165,18 @@ Nucleus uses \emph{semantic types} in order to describe the signatures of comput
 
 Trait values of the same name are considered distinct if they belong to different traits. For example, value \emph{A} of trait \emph{X} is distinct from value \emph{A} of trait \emph{Y}. In order to make the definition mathematically sound, a trait value may be considered a $(trait, value)$ tuple.
 
-A type is then any combination of trait values, e.g. \emph{"type float3 + use position + basis world"} and \emph{"type float2 + use uv"}, where the "+" sign denotes a delimiter (actually, a semantic expression operator, as further described in Section \ref{sec:SemanticExpressions}). An empty set of trait values is a valid type as well.
+A type is then any combination of trait values, e.g. \emph{``type float3 + use position + basis world''} and \emph{``type float2 + use uv''}, where the ``+'' sign denotes a delimiter (actually, a semantic expression operator, as further described in \sref{sec:SemanticExpressions}). An empty set of trait values is a valid type as well.
 
 \subsection{Type coercion}
 \label{sec:TypeCoercion}
 
 A kernel graph specified by the user or constructed by an algorithm must be type-checked within Nucleus before it is used in any rendering operation. This section first explains the process for individual connections, then extends it to entire kernel graphs.
 
-Given a connection from an output parameter of type $X$ to a input parameter of type $Y$, the connection is determined to be valid if $Y \subseteq X$. Otherwise such a connection is a type mismatch. For example, connecting an output parameter of type \emph{"type float3 + use position"} to an input parameter of type \emph{"type float3"} is valid, however connecting \emph{"type float4"} to \emph{"type float3"} or to \emph{"type float4 + use color"} is a mismatch.
+Given a connection from an output parameter of type $X$ to a input parameter of type $Y$, the connection is determined to be valid if $Y \subseteq X$. Otherwise such a connection is a type mismatch. For example, connecting an output parameter of type \emph{``type float3 + use position''} to an input parameter of type \emph{``type float3''} is valid, however connecting \emph{``type float4''} to \emph{``type float3''} or to \emph{``type float4 + use color''} is a mismatch.
 
 In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by inserting additional computational kernels between the source and the destination. The kernels which it considers come from a specifically designated set of \emph{semantic converters}. Each semantic converter is a kernel of a single input and a single output parameter. Additionally an integral \emph{cost} value is associated with each converter, which is an estimate of the computational complexity of the code within its definition.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.9\linewidth]{SemanticSearchGraph}{
 		"1" [ fillcolor = "\#d0ffd0" label=<<font color="\#1040a0" >use</font> normal<br/><font color="\#1040a0" >basis</font> model> ];
@@ -191,13 +197,13 @@ In the case of a mismatch, Nucleus will try to perform \emph{type coercion} by i
 
 It is possible to define a directed weighted graph $G=(V, E)$ such that its vertices, $V$ are all the possible semantic types. The graph contains an edge $e$ from $a$ to $b$ if and only if there exists a converter, which turns type $a$ into a type which may be connected to type $b$ without a mismatch. The weight associated with $e$ is the cost value of the corresponding converter.
 
-Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. A fragment of the implicit search tree is visualized in Figure \ref{fig:SemanticSearchGraph}. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
+Because $G$ contains all possible semantic types, it must contain $X$ and $Y$. A search for the shortest path is performed using Dijkstra's algorithm. A fragment of the implicit search tree is visualized in \fref{fig:SemanticSearchGraph}. If a path from $X$ to $Y$ in $G$ does not exist, an error is reported. If two or more shortest paths are found, an ambiguity error is reported. Otherwise, the path defines a valid \emph{type coercion}. New nodes are created within the kernel graph and inserted in place of the original parameter connection.
 	
 \subsection{Automatic connection determination}
 
 The kernel graph may contain connections not only between particular parameters, but also between nodes. The type-checking process converts these coarse-grained dependencies into individual parameter connections using an extension of the type coercion algorithm.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Coarse dependency between nodes]{\label{fig:AutoSemanticGraph1}\digraph[width=0.7\linewidth]{AutoSemanticGraph1}{
     		"src" [
@@ -247,7 +253,7 @@ The kernel graph may contain connections not only between particular parameters,
   \label{fig:AutoSemanticGraph}
 \end{figure}
 
-To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error. An example of this process is shown in Figure \ref{fig:AutoSemanticGraph}.
+To automatically determine the parameter which should be connected to an input of a kernel graph node, all output parameters of all nodes connected to this node are considered. The possible type coercions are evaluated in parallel and the shortest one is selected. Similarly to the aforementioned algorithm, an ambiguous choice is an error. An example of this process is shown in \fref{fig:AutoSemanticGraph}.
 
 \subsection{Semantic expressions}
 \label{sec:SemanticExpressions}
@@ -258,6 +264,7 @@ When working with a prototype of Nucleus, which utilized a simpler version of th
 
 The sampling kernel could have the following signature:
 
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 Tex2D = kernel (
     in texture <type sampler2D>,
@@ -265,6 +272,7 @@ Tex2D = kernel (
     out sample <in.texture.actual + type float4>
 );
 \end{lstlisting}
+\end{minipage}
 
 % TODO: change other quotes to the `` ... '' style
 
@@ -289,11 +297,11 @@ Conceptually, a \emph{Renderer} is a straightforward entity. Besides being able 
 \item Custom implementation-dependent configuration
 \end{itemize}
 
-Within this thin framework, implementations may choose to perform arbitrary caching of shader and geometric data. The API can remain this small because many render state settings are already exposed by the low-level rendering API described in Section \ref{sec:lowLevelInfo}. For example, in order to render into a specific framebuffer, it is sufficient to configure it in the low-level backend.
+Within this thin framework, implementations may choose to perform arbitrary caching of shader and geometric data. The API can remain this small because many render state settings are already exposed by the low-level rendering API described in \sref{sec:lowLevelInfo}. For example, in order to render into a specific framebuffer, it is sufficient to configure it in the low-level backend.
 
-Ultimately, the work a \emph{Renderer} does is relatively straightforward -- it only needs to generate a complete kernel graph for each render stage (e.g. one in the \emph{forward} algorithm, three for \emph{light pre-pass}), then submit it to the separate \emph{code generation} pass, as described in Section \ref{sec:codegen}. After doing this, its job is relatively simple due to the \emph{Effect}-based interface which the low-level backend provides.
+Ultimately, the work a \emph{Renderer} does is relatively straightforward -- it only needs to generate a complete kernel graph for each render stage (e.g. one in the \emph{forward} algorithm, three for \emph{light pre-pass}), then submit it to the separate \emph{code generation} pass, as described in \sref{sec:codegen}. After doing this, its job is relatively simple due to the \emph{Effect}-based interface which the low-level backend provides.
 
-Chapter \ref{Chapter6} describes \emph{Renderer} implementations for \emph{forward} and \emph{light pre-pass} algorithms, as well as a specialized shadow map renderer. The latter is a particularly interesting case, since it only uses the \emph{Structure} kernel of each renderable, skipping any other unnecessary calculations as to only compute per-pixel depth information.
+\cref{Chapter6} describes \emph{Renderer} implementations for \emph{forward} and \emph{light pre-pass} algorithms, as well as a specialized shadow map renderer. The latter is a particularly interesting case, since it only uses the \emph{Structure} kernel of each renderable, skipping any other unnecessary calculations as to only compute per-pixel depth information.
 
 Despite the \emph{Renderer} framework being the default for scene rendering operations, it is not the only way to utilize renderables and kernels associated with them. The same set of tools may be used with little effort for other rendering purposes. Both the \emph{post processing} pipeline described in the next section and material previews in the \emph{Nucled} editor are internally very similar to regular renderers.
 
@@ -314,6 +322,7 @@ In addition to regular scene rendering, Nucleus contains special support for ima
 
 Similarly to regular rendering operations, post-processing in Nucleus is done within the framework of kernel graphs and operations thereon. A special \emph{PostProcessor} class is provided, which gives an easy interface for using kernel graphs in image filtering operations. It only requires that an input \emph{Texture} and an \emph{output} Framebuffer be specified along with a kernel matching the \textbf{PostProcess} signature:
 
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 PostProcess = kernel(
     in  input  <type Image>,
@@ -321,8 +330,9 @@ PostProcess = kernel(
     out output <type Image>
 );
 \end{lstlisting}
+\end{minipage}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Post-processing off]{\label{fig:UBotPostOff}\includegraphics[width=0.45\linewidth]{./Figures/UBotPostOff.jpg}}
   \subfigure[Post-processing on]{\label{fig:UBotPostOn}\includegraphics[width=0.45\linewidth]{./Figures/UBotPostOn.jpg}}
@@ -330,9 +340,9 @@ PostProcess = kernel(
 \label{fig:lppFalloffBetterCase}
 \end{figure}
 
-Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. The crucial item to notice in this graph is the \textbf{Blit} node. It is not a concrete kernel with an implementation in code, but a special entity which only the \emph{PostProcessor} understands. Such nodes are used to break the graph to be rendered in multiple passes. Since certain classes of image convolution operators are \emph{linearly separable}, they may be applied to a two-dimensional image as two single-dimensional operations. This is just what happens in this graph. Had the \emph{Blit} node been removed, the pipeline would implement a regular two-dimensional blur. With the \emph{Blit} in place, an equivalent operation \emph{(for all practical purposes)} is done an order of magnitude more efficiently. Figure \ref{fig:SimplePostProcBreakdown} demonstrates the rendering steps which the graph from Figure \ref{fig:SimplePostProc} is broken down into.
+\fref{fig:SimplePostProc} shows an example of a post-processing pipeline. The crucial item to notice in this graph is the \textbf{Blit} node. It is not a concrete kernel with an implementation in code, but a special entity which only the \emph{PostProcessor} understands. Such nodes are used to break the graph to be rendered in multiple passes. Since certain classes of image convolution operators are \emph{linearly separable}, they may be applied to a two-dimensional image as two single-dimensional operations. This is just what happens in this graph. Had the \emph{Blit} node been removed, the pipeline would implement a regular two-dimensional blur. With the \emph{Blit} in place, an equivalent operation \emph{(for all practical purposes)} is done an order of magnitude more efficiently. \fref{fig:SimplePostProcBreakdown} demonstrates the rendering steps which the graph from \fref{fig:SimplePostProc} is broken down into.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[The source pipeline]{\label{fig:SimplePostProc}\digraph[width=0.9\linewidth]{SimplePostProc}{
 		"Blit" [
@@ -363,9 +373,9 @@ Figure \ref{fig:SimplePostProc} shows an example of a post-processing pipeline. 
 \label{fig:SimplePostProcWithBreakdown}
 \end{figure}
 
-In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to rescale the images and change their internal format. A simple extension of the post-processing kernel shown in figure \ref{fig:SimplePostProc} could decide to output an image shrunk by 50\% on each side. With a sufficiently wide blur kernel, high-frequency details are lost anyway, so the signal may be represented by a smaller image within reasonable accuracy. Furthermore, combining the operator with itself a few times will approximate a blur with a very wide kernel in a much faster manner than a constant-resolution filter might.
+In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to rescale the images and change their internal format. A simple extension of the post-processing kernel shown in \fref{fig:SimplePostProc} could decide to output an image shrunk by 50\% on each side. With a sufficiently wide blur kernel, high-frequency details are lost anyway, so the signal may be represented by a smaller image within reasonable accuracy. Furthermore, combining the operator with itself a few times will approximate a blur with a very wide kernel in a much faster manner than a constant-resolution filter might.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.7\linewidth]{PostProcMRT}{
 		"Input";
@@ -389,7 +399,7 @@ In addition to causing multi-pass rendering, \emph{Blit} nodes may be used to re
   \label{fig:PostProcMRT}
 \end{figure}
 
-When breaking down the post-processing pipeline into multiple passes, Nucleus will attempt to merge compatible and legal operations into a single pass via \emph{Multiple Render Targets} (\textbf{MRT}). An example is given in figure \ref{fig:PostProcMRT}. In this case, multiple textures are attached to a single framebuffer and their values are written by outputting a matching count of colors from the generated fragment shader. The legality is determined by the topological ordering of filters, as well as by considering the limitations of \emph{MRT}. For example, current GPUs require that all render targets have the same dimensions.
+When breaking down the post-processing pipeline into multiple passes, Nucleus will attempt to merge compatible and legal operations into a single pass via \emph{Multiple Render Targets} (\textbf{MRT}). An example is given in \fref{fig:PostProcMRT}. In this case, multiple textures are attached to a single framebuffer and their values are written by outputting a matching count of colors from the generated fragment shader. The legality is determined by the topological ordering of filters, as well as by considering the limitations of \emph{MRT}. For example, current GPUs require that all render targets have the same dimensions.
 
 % TODO: describe the algorithm for breaking down processing into passes
 
@@ -398,9 +408,9 @@ When breaking down the post-processing pipeline into multiple passes, Nucleus wi
 
 The post-processing framework required an introduction of one more element into the type system and graph manipulation toolbox. A limitation of the kernel pipeline described so far is that each kernel produces a single set of outputs for a single set of outputs. While this restriction is reasonable for implementing structure, material, light and reflectance shaders, it hinders elegant image processing.
 
-Consider the post-processing pipeline presented in figure \ref{fig:TrickyPostProc}. The \textbf{Blur} kernel expects to receive an image which it may sample multiple times, with various offsets. Connecting the \emph{Input} directly to \emph{Blur} would have worked fine within the framework described so far. However, in this particular case, the user decided to filter the input image through a power function first. The function is not specialized to work on images, but on individual values. There is a clear type mismatch, but intuitively this case should work just fine.
+Consider the post-processing pipeline presented in \fref{fig:TrickyPostProc}. The \textbf{Blur} kernel expects to receive an image which it may sample multiple times, with various offsets. Connecting the \emph{Input} directly to \emph{Blur} would have worked fine within the framework described so far. However, in this particular case, the user decided to filter the input image through a power function first. The function is not specialized to work on images, but on individual values. There is a clear type mismatch, but intuitively this case should work just fine.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.7\linewidth]{TrickyPostProc}{
 		"Image" -> "pow2 (in float4, out float4)";
@@ -414,16 +424,18 @@ The key to solving this issue lies in realizing what exactly is an image. In the
 
 Kernels within Nucleus are technically functions, so unsurprisingly, the \emph{Image} type seen in the aforementioned example is indeed a kernel; particularly, one with the following signature:
 	
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 Image = kernel(
     in uv <type float2 + use uv>,
     out sample <type float4 + use color>
 );
 \end{lstlisting}
+\end{minipage}
 
-The \emph{Blur} kernel in figure \ref{fig:TrickyPostProc} expects a \emph{kernel} as its input (it also expects two more parameters, which are irrelevant to the example), but the parameter connected to this input is not a kernel. Its type, however, is the type of the kernel's \emph{output} (\emph{float4}). Moreover, the incoming subgraph contains a free ``float2 uv'' parameter, which is exactly what the \emph{Image} kernel needs. Hence despite the type mismatch, the entire subgraph connected to the final \emph{Blur} node can be converted to an \emph{Image}.
+The \emph{Blur} kernel in \fref{fig:TrickyPostProc} expects a \emph{kernel} as its input (it also expects two more parameters, which are irrelevant to the example), but the parameter connected to this input is not a kernel. Its type, however, is the type of the kernel's \emph{output} (\emph{float4}). Moreover, the incoming subgraph contains a free ``float2 uv'' parameter, which is exactly what the \emph{Image} kernel needs. Hence despite the type mismatch, the entire subgraph connected to the final \emph{Blur} node can be converted to an \emph{Image}.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.8\linewidth]{TrickyPostProcResolve}{
 		subgraph "cluster" {
@@ -438,7 +450,7 @@ The \emph{Blur} kernel in figure \ref{fig:TrickyPostProc} expects a \emph{kernel
 		"pow2" -> "sample";
 		"sample" -> "Blur";
 	}
-    \caption[The tricky post-processing pipeline resolved]{The tricky post-processing pipeline from figure \ref{fig:TrickyPostProc} resolved via functional composition}
+    \caption[The tricky post-processing pipeline resolved]{The tricky post-processing pipeline from \fref{fig:TrickyPostProc} resolved via functional composition}
   \label{fig:TrickyPostProcResolve}
 \end{figure}
 
@@ -446,7 +458,7 @@ More specifically, when the kernel graph contains a connection from an output of
 
 Any kernel subgraph may be considered a function. Let $g$ be the incoming subgraph from the aforementioned example. If the criteria for kernel composition are satisfied, it is possible to construct a function $g\prime : P \rightarrow O = c_O \circ g \circ c_I$. This function is hence provided to the (higher-order) destination kernel and type coercion is complete.
 
-Substituting $float2$ for $P$ and $I$, $float4$ for $O$ and $V$, as well as the identity function for $c_O$ and $c_I$, the particular example with image blurring from figure \ref{fig:TrickyPostProc} is achieved. The result is shown in figure \ref{fig:TrickyPostProcResolve}.
+Substituting $float2$ for $P$ and $I$, $float4$ for $O$ and $V$, as well as the identity function for $c_O$ and $c_I$, the particular example with image blurring from \fref{fig:TrickyPostProc} is achieved. The result is shown in \fref{fig:TrickyPostProcResolve}.
 
 A requirement for functional composition is that the incoming subgraph contains free parameters. In order to prevent automatic flow determination from connecting anything to parameters meant to be used in composition, graph inputs may be marked to opt-out of automatic data flow. The kernel definition \emph{domain-specific language} provides a handy annotation to be used for this purpose.
 
@@ -472,9 +484,11 @@ A vertex shader processes each vertex in isolation and has a single mandatory ou
 
 The \textbf{Rasterize} node is normally a part of a \emph{Structure} kernel graph specified for a renderable, but any node which accepts a position parameter may be used instead if a custom \emph{Renderer} deems it necessary. Due to the semantic type system, any data convertible to a clip space position may be supplied as the input.
 
-Functions defined within the semantic type system do not need their storage types to be defined -- for example, an addition kernel should work on vectors, scalars and matrices, therefore it is a generic function. The type for its parameters is determined within the coercion mechanism described in Section \ref{sec:TypeCoercion}. Therefore it may happen that the same kernel has to be generated in multiple instances, with types specialized for each fully coerced type. The code generation step resolves this gracefully by renaming functions in the target language and substituting types within the declarations.
+Functions defined within the semantic type system do not need their storage types to be defined -- for example, an addition kernel should work on vectors, scalars and matrices, therefore it is a generic function. The type for its parameters is determined within the coercion mechanism described in \sref{sec:TypeCoercion}. Therefore it may happen that the same kernel has to be generated in multiple instances, with types specialized for each fully coerced type. The code generation step resolves this gracefully by renaming functions in the target language and substituting types within the declarations.
 
 Since graph-based kernels building up the final kernel graph for which codegen runs, the graph being compiled consists of only code-based kernels. Therefore it emits the code-based kernels as functions in the target language (\emph{Cg} currently) and creates glue code within entry points for each shader domain. The generated glue may look like:
+
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 void FragmentProgram (
 	in float2 n4__uv : TEXCOORD,
@@ -495,6 +509,8 @@ void FragmentProgram (
 	bridge__0 = n12__output;
 }
 \end{lstlisting}
+\end{minipage}
+
 That is, \textbf{out} parameters are declared before each kernel function call, then passed to subsequent calls as arguments. At the end of the generated function, its outputs are gathered from the temporary variables created within the generated glue code, as can be seen in the last line of ``FragmentProgram'' in the above example. The extra variables and function calls only exist in the semantic phase of the high-level shading language compiler (\emph{cgc} in this case), but are inlined in the generated code, therefore do not cause any slowdown or bloat at runtime.
 
 \subsection{Optimization due to linear functions}
@@ -507,7 +523,7 @@ $g(h(w_0 v(p_0) + w_1 v(p_1) + w_2 v(p_2))) = g(w_0 h(v(p_0)) + w_1 h(v(p_1)) + 
 
 Subsequently, we can define a vertex shader function $v\prime = h \circ v$ and a fragment shader function $f\prime = g$. This result shows that it is legal to move a kernel from the fragment stage to the vertex stage as long as all of its inputs come from the vertex stage and the kernel implements a linear function. By utilizing this rule repeatedly in topological order, the process can be done in a single pass for the entire kernel graph. Nucleus currently allows a kernel to be tagged as linear, however in a future implementation this may be inferred automatically through semantic analysis of the code.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure{\label{fig:linFuncOpt1}\includegraphics[width=0.4\linewidth]{./Chapters/linearOptScr1.jpg}}
   \subfigure{\label{fig:linFuncOpt2}\includegraphics[width=0.4\linewidth]{./Chapters/linearOptScr2.jpg}}
@@ -515,18 +531,24 @@ Subsequently, we can define a vertex shader function $v\prime = h \circ v$ and a
   \label{fig:linFuncOpt}
 \end{figure}
 
-Figure \ref{fig:linFuncOpt} shows two scenes, which render respectively at 93 and 131 FPS without the optimization step. With it enabled, the performance reaches 96 FPS and 133 FPS respectively.
+\fref{fig:linFuncOpt} shows two scenes, which render respectively at 93 and 131 FPS without the optimization step. With it enabled, the performance reaches 96 FPS and 133 FPS respectively.
 
 \subsection{Code generation for functional composition}
 
 Functional composition does not require anything special from kernels, aside from them having the proper signatures. For instance, given the following ``Image'' kernel:
+
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 Image = kernel(
     in uv <type float2 + use uv>,
     out sample <type float4 + use color>
 );
 \end{lstlisting}
+\end{minipage}
+
 One could construct a kernel which uses it like so:
+
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 SampleImage = kernel (
 	in image <type Image>,
@@ -536,17 +558,23 @@ SampleImage = kernel (
 	sample = image.sample(uv);
 };
 \end{lstlisting}
+\end{minipage}
 
 Inline code within non-graph kernel bodies must be valid for the target language as to be emitted literally during the codegen process. Therefore the ``image.sample(uv)'' expression must be valid inside the generated function. This is an aspect which is not entirely satisfactory, because it ties some constructs of kernel implementations to the target language used during code generation. In this particular case, it requires that the target language supports method calls or expressions which look like them. If generalization to other shading languages is required, a more sophisticated codegen process may be used, however for the purposes of this thesis, \emph{Cg} is assumed.
 
 In order for expressions using kernels to be valid in \emph{Cg}, \emph{interfaces} are generated. In the above case, the following interface would be defined:
+
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 interface Image {
 	float4 sample(float2 uv);
 };
 \end{lstlisting}
+\end{minipage}
 
 With this in place, the actual work done within functional composition may be hidden behind a concrete implementation of such an interface. For example, an implementation which returns blurred samples of another \emph{Image} might be emitted as:
+
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 struct Image__impl6_g0 : Image {
 	// ...
@@ -561,5 +589,6 @@ struct Image__impl6_g0 : Image {
 	}
 };
 \end{lstlisting}
+\end{minipage}
 
 Again, interfaces only exist during semantic analysis of the code in \emph{Cg} and do not cause any overhead at runtime, which would be present in languages such as Java. Therefore the functional composition mechanism is a robust extension of linear data flow in a graph-based shading system.

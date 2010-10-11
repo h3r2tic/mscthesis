@@ -41,40 +41,6 @@
 
 \pagestyle{fancy}  % Finally, use the "fancy" page style to implement the FancyHdr headers
 
-%% ----------------------------------------------------------------
-% Declaration Page required for the Thesis, your institution may give you a different text to place here
-\Declaration{
-
-\addtocontents{toc}{\vspace{1em}}  % Add a gap in the Contents, for aesthetics
-
-I, AUTHOR NAME, declare that this thesis titled, `THESIS TITLE' and the work presented in it are my own. I confirm that:
-
-\begin{itemize} 
-\item[\tiny{$\blacksquare$}] This work was done wholly or mainly while in candidature for a research degree at this University.
- 
-\item[\tiny{$\blacksquare$}] Where any part of this thesis has previously been submitted for a degree or any other qualification at this University or any other institution, this has been clearly stated.
- 
-\item[\tiny{$\blacksquare$}] Where I have consulted the published work of others, this is always clearly attributed.
- 
-\item[\tiny{$\blacksquare$}] Where I have quoted from the work of others, the source is always given. With the exception of such quotations, this thesis is entirely my own work.
- 
-\item[\tiny{$\blacksquare$}] I have acknowledged all main sources of help.
- 
-\item[\tiny{$\blacksquare$}] Where the thesis is based on work done by myself jointly with others, I have made clear exactly what was done by others and what I have contributed myself.
-\\
-\end{itemize}
- 
- 
-Signed:\\
-\rule[1em]{25em}{0.5pt}  % This prints a line for the signature
- 
-Date:\\
-\rule[1em]{25em}{0.5pt}  % This prints a line to write the date
-}
-\clearpage  % Declaration ended, now start a new page
-
-%% ----------------------------------------------------------------
-
 % The Abstract Page
 \addtotoc{Abstract}  % Add the "Abstract" page entry to the Contents
 \abstract{
@@ -97,7 +63,7 @@ I would like to thank my advisor, Dr. Michał Chlebiej, for his help, patience, 
 
 I'm particularly grateful to Jason Kozak and Dominik Susmel for providing me with invaluable feedback and reviewing the thesis at various points of its existence. It would not be the same without their professional insight and continuous encouragement.
 
-Additionally, I wish to express my gratitude to Vincent Lang, Michał Matuszak, Piotr Modzelewski and Paweł Olzacki for taking the time out of their already busy schedules and reviewing my work.
+Additionally, I wish to express my gratitude to Bernard Helyer, Vincent Lang, Michał Matuszak, Piotr Modzelewski and Paweł Olzacki for taking the time out of their already busy schedules and reviewing my work.
 
 Finally, I am immensely thankful to my family for never ceasing to support me, even when this thesis seemed to only move farther away with each passing day. Completing it would be impossible without their unlimited encouragement, feedback and understanding.
 
@@ -161,13 +127,11 @@ Finally, I am immensely thankful to my family for never ceasing to support me, e
 % Just uncomment the lines as you write the chapters
 
 \input{./Chapters/Chapter1} % Introduction
-%\input{./Chapters/Chapter2} % Background Theory 
 \input{./Chapters/Chapter3} % Previous work
 \input{./Chapters/Chapter4} % Nucleus
 \input{./Chapters/Chapter5} % Nucled
 \input{./Chapters/Chapter6} % Examples
 \input{./Chapters/Chapter7} % Conclusion
-%\input{./Chapters/Chapter8} % Future work
 
 %% ----------------------------------------------------------------
 % Now begin the Appendices, including them as separate files

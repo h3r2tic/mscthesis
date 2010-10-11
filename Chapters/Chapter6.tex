@@ -2,12 +2,12 @@
 
 \chapter{ Examples }
 \label{Chapter6}
-\lhead{Chapter 6. \emph{ Examples }}
+\lhead{Chapter 5. \emph{ Examples }}
 
 \section{Forward rendering}
 \label{sec:ForwardRenderingExample}
 
-Forward rendering is the classical algorithm utilized since the very beginning of rasterization and definitely the most commonly used one thus far. Since the introduction of GeForce 256 in late 1999, it has had special hardware and API support in consumer graphics devices. The special support is only being phased out recently due to programmable shading's ability of supporting the whole forward rendering algorithm efficiently. While modern rendering APIs such as \emph{Direct3D 10} and \emph{OpenGL 3.1's Core profile} no longer have dedicated support for transformation and lighting, the algorithm is still widely used and implemented via shaders. Despite other rendering algorithms being available, the performance characteristics of the forward approach make it favorable in many circumstances, hence it is imperative that Nucleus provides out of the box support for it.
+Forward rendering is the classical algorithm utilized since the very beginning of rasterization and definitely the most commonly used one thus far. Since the introduction of GeForce 256 in late 1999, it has had special hardware and API support in consumer graphics devices. The special support is only being phased out recently due to programmable shading's ability of supporting the whole forward rendering algorithm efficiefntly. While modern rendering APIs such as \emph{Direct3D 10} and \emph{OpenGL 3.1's Core profile} no longer have dedicated support for transformation and lighting, the algorithm is still widely used and implemented via shaders. Despite other rendering algorithms being available, the performance characteristics of the forward approach make it favorable in many circumstances, hence it is imperative that Nucleus provides out of the box support for it.
 
 The basic outline of the forward rendering algorithm is as follows:
 	
@@ -45,7 +45,7 @@ As it turns out, this task is straightforward within the framework of Nucleus:
 
 Where ``$\Rightarrow$'' denotes the operation of graph fusion and \textbf{foldl} is a functional reduction operator similar to the one used by the \emph{Haskell} programming language\footnote{\url{http://www.haskell.org/haskellwiki/Fold}}, defined in terms of kernel graph composition.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.9\linewidth]{ForwardRenderingGraphSample}{
 	"Reflectance1" [
@@ -69,17 +69,17 @@ Where ``$\Rightarrow$'' denotes the operation of graph fusion and \textbf{foldl}
   \label{fig:ForwardRenderingGraphSample}
 \end{figure}
 
-Figure \ref{fig:ForwardRenderingGraphSample} shows an example of the kernel graph composition algorithm for the forward renderer.
+\fref{fig:ForwardRenderingGraphSample} shows an example of the kernel graph composition algorithm for the forward renderer.
 
-After code generation, an \emph{Effect} is compiled (as described in Section \ref{sec:lowLevelInfo}) and memoized using the input kernel set as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of lights, materials and reflectances appears.
+After code generation, an \emph{Effect} is compiled (as described in \sref{sec:lowLevelInfo}) and memoized using the input kernel set as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of lights, materials and reflectances appears.
 
 \clearpage
 \section{Deferred lighting}
 \label{sec:DeferredLightingExample}
 
-A \emph{light pre-pass} renderer was implemented, which may be seamlessly used in place of the \emph{forward} algorithm. Figure \ref{fig:lightPrePassSponza} demonstrates one frame of the example running on the test machine\footnote{The test machine used for all examples is a PC with an NVIDIA GeForce GTX 260 Core 216 GPU, Intel Core2 Quad Q6600 CPU @ 3.05 GHz and 4GB of DDR2 RAM @ 425 MHz}. As described in Section \ref{sec:DeferredLighting}, the pipeline is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
+A \emph{light pre-pass} renderer was implemented, which may be seamlessly used in place of the \emph{forward} algorithm. \fref{fig:lightPrePassSponza} demonstrates one frame of the example running on the test machine\footnote{The test machine used for all examples is a PC with an NVIDIA GeForce GTX 260 Core 216 GPU, Intel Core2 Quad Q6600 CPU @ 3.05 GHz and 4GB of DDR2 RAM @ 425 MHz}. As described in \sref{sec:DeferredLighting}, the pipeline is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/lightPrePass/sponza.jpg}
     \caption[Light pre-pass rendering of Sponza]{The ``Crytek Sponza'' scene under a complex lighting setup consisting of 100 spherical area lights using a custom convolution of the ABC reflectance model rendered via deferred lighting at 15 FPS at the 1680x1050 resolution. Model courtesy of Crytek and Marko Dabrovic.}
@@ -88,9 +88,9 @@ A \emph{light pre-pass} renderer was implemented, which may be seamlessly used i
 
 \subsection{Geometry stage}
 
-Most of the attributes required for the \emph{G-buffer} are computed by the \emph{Structure} kernel. Still, a \emph{Material} kernel may want to alter the normals in order to simulate a bumpy surface. These altered normals must be written into the \emph{G-buffer}. Hence, the first stage composes the two kernels and selectively writes their outputs to the \emph{G-buffer} as shown in Figure \ref{fig:DeferredLightingStage1}. The \emph{Material} kernel possibly writes more outputs than this stage uses, however, graph reduction is performed, so only the relevant parts are actually used at runtime. The \emph{Cg} compiler effectively removes any other extra computations.
+Most of the attributes required for the \emph{G-buffer} are computed by the \emph{Structure} kernel. Still, a \emph{Material} kernel may want to alter the normals in order to simulate a bumpy surface. These altered normals must be written into the \emph{G-buffer}. Hence, the first stage composes the two kernels and selectively writes their outputs to the \emph{G-buffer} as shown in \fref{fig:DeferredLightingStage1}. The \emph{Material} kernel possibly writes more outputs than this stage uses, however, graph reduction is performed, so only the relevant parts are actually used at runtime. The \emph{Cg} compiler effectively removes any other extra computations.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.5\linewidth]{DeferredLightingStage1}{
 	"Structure" -> "Material";
@@ -130,6 +130,7 @@ The G-buffer stores the \emph{surface ID} to be used at a given pixel and a frag
 
 The code template used to compose multiple BRDFs together has the following structure:
 
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 float surfaceId = tex2D(attribTex, uv);
 float reflectanceId = tex2D(surfaceId, float2(surfaceId, 0));
@@ -148,10 +149,11 @@ if (reflectanceId < A) {
     ...
 }
 \end{lstlisting}
+\end{minipage}
 
-The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it \cite{overviewOfGPUArch}, therefore it is not likely to become a real issue. For example, the scene presented in Figure \ref{fig:lppBranching1} renders at 301 FPS with the branching removed, 300 FPS when the BRDF to be used is the first one in the branch chain and 299 FPS when it is the fourth. This is obviously an easy test case due to its perfect spatial coherence which allows the GPU to execute the shader efficiently. However, in configurations with reasonably increased divergence, the performance hit is still hardly noticeable -- the scene shown in Figure \ref{fig:lppBranching2} containing two objects, each with a different reflectance kernel, renders at 168 FPS. With just a single reflectance model applied to both objects, it renders at 169 FPS. Finally, Figure \ref{fig:lppBranching3} shows a scene synthesized to have very poor coherence. With two overlaid quadrilaterals alpha-masked using a texture to create a randomly-looking pattern, the performance is 439 FPS for a single reflectance model and 324 FPS for two.
+The code template includes dependent texture fetches and heavy branching. This is an obvious source of execution and memory fetch latency, however modern GPU architectures are able to hide some of it \cite{overviewOfGPUArch}, therefore it is not likely to become a real issue. For example, the scene presented in \fref{fig:lppBranching1} renders at 301 FPS with the branching removed, 300 FPS when the BRDF to be used is the first one in the branch chain and 299 FPS when it is the fourth. This is obviously an easy test case due to its perfect spatial coherence which allows the GPU to execute the shader efficiently. However, in configurations with reasonably increased divergence, the performance hit is still hardly noticeable -- the scene shown in \fref{fig:lppBranching2} containing two objects, each with a different reflectance kernel, renders at 168 FPS. With just a single reflectance model applied to both objects, it renders at 169 FPS. Finally, \fref{fig:lppBranching3} shows a scene synthesized to have very poor coherence. With two overlaid quadrilaterals alpha-masked using a texture to create a randomly-looking pattern, the performance is 439 FPS for a single reflectance model and 324 FPS for two.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Single reflectance kernel]{\label{fig:lppBranching1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/branching1.jpg}}
   \subfigure[Two reflectance kernels]{\label{fig:lppBranching2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/branching2.jpg}}
@@ -162,7 +164,7 @@ The code template includes dependent texture fetches and heavy branching. This i
 
 If this branching turns out to be prohibitive in real scene configurations, it is possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles, depending on whether they need the branch or not. Depending on the scene, many branches might use just a single BRDF, for which a specialized shader can be compiled.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.9\linewidth]{DeferredLightingStage2}{
 	"G-buffer" -> "Reflectance1";
@@ -180,14 +182,14 @@ If this branching turns out to be prohibitive in real scene configurations, it i
   \label{fig:DeferredLightingStage2}
 \end{figure}
 
-As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in Figure \ref{fig:DeferredLightingStage2}), the only distinction is that it is compiled for the purpose of rendering the bounding volumes of lights.
+As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in \fref{fig:DeferredLightingStage2}), the only distinction is that it is compiled for the purpose of rendering the bounding volumes of lights.
 
 The current implementation uses a geometry shader to instantiate a cube for each light, taking a single point as the input. Only the quads facing away from the camera are drawn and reverse depth testing is performed in order to do approximate light culling. \\
-Such setup will enable rendering of thousands of lights in a single batch, however this is not implemented yet. The downside of doing this for every light type would be large overdraw, since some lights may span a large portion of the screen and would benefit from more exact culling instead. Because of this, lights are actually drawn in separate batches, and approximate culling of their volumes is performed via the EXT\_depth\_bounds\_test OpenGL extension. Whereas the aforementioned reverse depth test allows culling of light volumes which are entirely in front of scene geometry, it does not do anything about the volumes being behind geometry. Depth bounds testing allows a range of depth values to be specified, so that no fragment is rendered if the value \emph{already in the depth buffer} is outside of this range. By conservatively specifying the minimum and maximum depth values of light volumes for this test, this effectively allows coarse culling. Figure \ref{fig:lightingComplexityComparison} demonstrates a case where the lighting complexity is reduced dramatically due to scene occlusion.
+Such setup will enable rendering of thousands of lights in a single batch, however this is not implemented yet. The downside of doing this for every light type would be large overdraw, since some lights may span a large portion of the screen and would benefit from more exact culling instead. Because of this, lights are actually drawn in separate batches, and approximate culling of their volumes is performed via the EXT\_depth\_bounds\_test OpenGL extension. Whereas the aforementioned reverse depth test allows culling of light volumes which are entirely in front of scene geometry, it does not do anything about the volumes being behind geometry. Depth bounds testing allows a range of depth values to be specified, so that no fragment is rendered if the value \emph{already in the depth buffer} is outside of this range. By conservatively specifying the minimum and maximum depth values of light volumes for this test, this effectively allows coarse culling. \fref{fig:lightingComplexityComparison} demonstrates a case where the lighting complexity is reduced dramatically due to scene occlusion.
 
 % TODO: EXT\_depth\_bounds\_test fails at breaking. welna suggests \emergencystretch=21pt
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Reverse-Z]{\label{fig:lightingComplexity2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/lightingComplexity2.png}}
   \subfigure[Reverse-Z and bounds test]{\label{fig:lightingComplexity1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/lightingComplexity1.png}}
@@ -227,7 +229,7 @@ Where $r_m$ is the radius bounding the influence of the light and $s : float \ri
 	\end{cases}
 \]
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[$1 / (1 + r^2)$ falloff]{\label{fig:lppInvSqFalloff1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/invSq-1.png}}
   \subfigure[Modified $1 / (1 + r^2)$ falloff ]{\label{fig:lppModFalloff1}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/mod-1.png}}
@@ -235,7 +237,7 @@ Where $r_m$ is the radius bounding the influence of the light and $s : float \ri
 \label{fig:lppFalloffTrickyCase}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[$1 / (1 + r^2)$ falloff]{\label{fig:lppInvSqFalloff2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/invSq-2.jpg}}
   \subfigure[Modified $1 / (1 + r^2)$ falloff ]{\label{fig:lppModFalloff2}\includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/mod-2.jpg}}
@@ -243,9 +245,9 @@ Where $r_m$ is the radius bounding the influence of the light and $s : float \ri
 \label{fig:lppFalloffBetterCase}
 \end{figure}
 
-Figure \ref{fig:lppInvSqFalloff1} demonstrates the light clipping artifact when using inverse-square light falloff in the light pre-pass renderer -- the specular highlights are trimmed to the bounding cubes drawn around lights. Switching to the modified falloff model, we obtain Figure \ref{fig:lppModFalloff1}. The clipping issue is gone, however the divergence between these models becomes very apparent. This is a particularly tricky case for the falloff, because the scene contains 200 very small, low-intensity lights. Increasing their yield and therefore the range used in the windowed model brings the two closer, as depicted in Figure \ref{fig:lppFalloffBetterCase}. The divergence completely disappears under most normal lighting conditions. The scene configuration in Figure \ref{fig:lppFalloffConverged} renders the same with either model, within the precision limits of the output image.
+\fref{fig:lppInvSqFalloff1} demonstrates the light clipping artifact when using inverse-square light falloff in the light pre-pass renderer -- the specular highlights are trimmed to the bounding cubes drawn around lights. Switching to the modified falloff model, we obtain \fref{fig:lppModFalloff1}. The clipping issue is gone, however the divergence between these models becomes very apparent. This is a particularly tricky case for the falloff, because the scene contains 200 very small, low-intensity lights. Increasing their yield and therefore the range used in the windowed model brings the two closer, as depicted in \fref{fig:lppFalloffBetterCase}. The divergence completely disappears under most normal lighting conditions. The scene configuration in \fref{fig:lppFalloffConverged} renders the same with either model, within the precision limits of the output image.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.45\linewidth]{./Figures/lightPrePass/falloffSame.jpg}
     \caption[Falloffs converged]{Both falloff models produce the same image.}
@@ -256,7 +258,7 @@ Figure \ref{fig:lppInvSqFalloff1} demonstrates the light clipping artifact when 
 
 Once the illumination buffer has been rendered, the final step is to combine it with scene object materials. In the light pre-pass algorithm, this is done by rendering the scene geometry again, in a similar fashion to regular forward rendering. The difference is that instead of computing the lighting, it is sampled from the previously rendered buffer. The diffuse part is multiplied by the material's albedo and the specular component -- by the specular tint of the material. The final radiance at the point is obtained by summing the two values.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.9\linewidth]{DeferredLightingStage3}{
     	"mul1" [
@@ -293,7 +295,7 @@ Shadow mapping was first introduced by \citet{Williams78castingcurved} in 1978 a
 
 The core idea of shadow mapping is that of discretizing geometric information about a scene from the point of view of  light so that it may be quickly looked up when computing illumination during rendering. Assuming a point light, the task of determining whether a fragment is in shadow is equivalent to answering whether there is anything blocking a ray from this point to the position of the light. Standard shadow mapping allows this question to be answered quickly by querying an image containing distances to the nearest objects from the point of view of the light.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[The A $<$ B shadowed fragment case]{\label{fig:ShadowMappingAlgorithmShadowed}\includegraphics[width=0.45\linewidth]{./Figures/shadowMapping/shadowed.png}}
   \subfigure[The A $\cong$ B unshadowed fragment case]{\label{fig:ShadowMappingAlgorithmUnshadowed}\includegraphics[width=0.45\linewidth]{./Figures/shadowMapping/unshadowed.png}}
@@ -309,6 +311,7 @@ During regular rendering, when a light's contribution to a fragment needs to be 
 
 Most shadow mapping algorithms consist of two passes and the standard one is no exception. The first consists of rendering the shadow map, whereas the second pass ties into the evaluation of illumination when shading surfaces. The latter is a natural fit for implementing a custom \emph{light kernel}. The signature is:
 	
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 Light = kernel(
     in position <type float3 + use position + basis world>,
@@ -316,21 +319,22 @@ Light = kernel(
     out toLight <type float3 + basis world + use toLight>
 );
 \end{lstlisting}
+\end{minipage}
 
 The only output which will need to be calculated differently from regular, unshadowed rendering is \emph{intensity}. In order to compute it, the kernel will need information about the light instance in the first place. The \emph{position} parameter in the above kernel is only the position of the point being shaded, so all data for a light instance has to be defined within the implementation of the kernel.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/shadowMapping/manitouSM.png}
     \caption[SM in Nucleus]{Shadow Mapping in Nucleus. ``Manitou'' model courtesy of Marcin Stachowiak (Banak).}
   \label{fig:NucleusSM}
 \end{figure}
 
-In Section \ref{sec:Kernels}, it was mentioned that kernels can receive external data for their calculations. This is accomplished through \textbf{Data} graph nodes. These nodes provide \emph{uniform} parameters into the pipeline and their values need to be explicitly handled by an appropriate CPU-side entity associated with the particular kernel type. In case of \emph{light} kernels, these are \emph{Light} classes and instances of their sub-types. Besides preparing and binding attributes to kernels, these CPU-side entities allow easy manipulation of lights from the logical side of the application.
+In \sref{sec:Kernels}, it was mentioned that kernels can receive external data for their calculations. This is accomplished through \textbf{Data} graph nodes. These nodes provide \emph{uniform} parameters into the pipeline and their values need to be explicitly handled by an appropriate CPU-side entity associated with the particular kernel type. In case of \emph{light} kernels, these are \emph{Light} classes and instances of their sub-types. Besides preparing and binding attributes to kernels, these CPU-side entities allow easy manipulation of lights from the logical side of the application.
 
-As for shadow map generation, the solution was mentioned in Section \ref{sec:Renderers} and boils down to creating a custom \textbf{Renderer}. The implementation is much simpler than that of the \emph{forward} and \emph{light pre-pass} algorithms, because it only uses \emph{structure} kernels associated with \emph{renderables}. Since \emph{structure} kernels must output final positions of the geometry, they need only be connected to a simple kernel which calculates distances from the light.
+As for shadow map generation, the solution was mentioned in \sref{sec:Renderers} and boils down to creating a custom \textbf{Renderer}. The implementation is much simpler than that of the \emph{forward} and \emph{light pre-pass} algorithms, because it only uses \emph{structure} kernels associated with \emph{renderables}. Since \emph{structure} kernels must output final positions of the geometry, they need only be connected to a simple kernel which calculates distances from the light.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \digraph[width=0.7\linewidth]{ShadowMappingUML}{
 		subgraph "cluster_GPU" {
@@ -353,15 +357,15 @@ As for shadow map generation, the solution was mentioned in Section \ref{sec:Ren
   \label{fig:ShadowMappingUML}
 \end{figure}
 
-Finally, this specialized \textbf{DepthRenderer} is used in a custom \textbf{SpotLight\_SM} class on the CPU side, which in turn is a façade for a GPU kernel of the same name. Figure \ref{fig:ShadowMappingUML} demonstrates this relationship.
+Finally, this specialized \textbf{DepthRenderer} is used in a custom \textbf{SpotLight\_SM} class on the CPU side, which in turn is a façade for a GPU kernel of the same name. \fref{fig:ShadowMappingUML} demonstrates this relationship.
 
 Upon rendering a scene, the set of visible lights is determined and each \emph{Light} sub-class instance is given a chance to prepare data for the GPU phase of rendering. This is where instances of the custom class will perform depth map rendering.
 
 \subsection{Variance shadow mapping}
 
-One major drawbacks of standard shadow mapping is that depth maps cannot be filtered in the same way as color textures. This typically leads to severe aliasing. Filtering methods based on sampling the depth map multiple times per a shaded fragment, computing the visibility query and averaging the result provide acceptable results, but at a heavy price \cite{advancedSoftShadowMapping}.
+One major drawback of standard shadow mapping is that depth maps cannot be filtered in the same way as color textures. This typically leads to severe aliasing. Filtering methods based on sampling the depth map multiple times per a shaded fragment, computing the visibility query and averaging the result provide acceptable results, but at a heavy price \cite{advancedSoftShadowMapping}.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/shadowMapping/manitouVSM.png}
     \caption[VSM in Nucleus]{Variance Shadow Mapping in Nucleus.}
@@ -394,9 +398,9 @@ The algorithm has been implemented within Nucleus by creating a new light type a
 \clearpage
 \section{Post-processing effects}
 
-Several post-processing effects were implemented in order to test the pipeline. Figure \ref{fig:postProcOff} shows a test scene. The high-dynamic range output of this rendering is supplied to a \emph{PostProcessor} before gamma-correction. The image is mapped onto a full-screen quadrilateral, which is rendered with shaders generated from a kernel graph.
+Several post-processing effects were implemented in order to test the pipeline. \fref{fig:postProcOff} shows a test scene. The high-dynamic range output of this rendering is supplied to a \emph{PostProcessor} before gamma-correction. The image is mapped onto a full-screen quadrilateral, which is rendered with shaders generated from a kernel graph.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.45\linewidth]{./Figures/postProc/off.jpg}
   \caption[Post-processing test scene]{The scene used to test post-processing filters. Teapot model courtesy of Martin Newell.}
@@ -405,9 +409,9 @@ Several post-processing effects were implemented in order to test the pipeline. 
 
 \subsection{Uniform filters}
 
-The most basic post-processing filters are ones which operate uniformly on individual samples without taking any other parts of the image into consideration. Figure \ref{fig:postProcSimple} demonstrates two such filters. They are implemented as simple \emph{Cg} functions operating on individual colors, then automatically lifted to work on whole images by the functional composition mechanism described in Section \ref{sec:FunctionalComposition}.
+The most basic post-processing filters are ones which operate uniformly on individual samples without taking any other parts of the image into consideration. \fref{fig:postProcSimple} demonstrates two such filters. They are implemented as simple \emph{Cg} functions operating on individual colors, then automatically lifted to work on whole images by the functional composition mechanism described in \sref{sec:FunctionalComposition}.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Negative]{\label{fig:postProcNegative}\includegraphics[width=0.45\linewidth]{./Figures/postProc/negative.jpg}}
   \subfigure[Desaturation]{\label{fig:postProcDesaturate}\includegraphics[width=0.45\linewidth]{./Figures/postProc/desaturation.jpg}}
@@ -417,9 +421,9 @@ The most basic post-processing filters are ones which operate uniformly on indiv
 
 \subsection{Blur}
 
-As mentioned in Section \ref{sec:PostProcessing}, the post-processing system allows multi-pass rendering. One common application of this feature is computation of separable filters, such as the Gaussian blur shown in Figure \ref{fig:postProcBlur}. The first image shows the result of convolving the signal with only a horizontal Gaussian kernel. A \emph{Blit} node is inserted after this step and followed by vertical blurring. This effectively approximates a complete two-dimensional Gaussian blur, however with an order of magnitude less samples taken from the image.
+As mentioned in \sref{sec:PostProcessing}, the post-processing system allows multi-pass rendering. One common application of this feature is computation of separable filters, such as the Gaussian blur shown in \fref{fig:postProcBlur}. The first image shows the result of convolving the signal with only a horizontal Gaussian kernel. A \emph{Blit} node is inserted after this step and followed by vertical blurring. This effectively approximates a complete two-dimensional Gaussian blur, however with an order of magnitude less samples taken from the image.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Horizontal]{\label{fig:postProcBlurHoriz}\includegraphics[width=0.45\linewidth]{./Figures/postProc/blurMoreHoriz.jpg}}
   \subfigure[Horizontal and vertical]{\label{fig:postProcBlurFull}\includegraphics[width=0.45\linewidth]{./Figures/postProc/blurMore.jpg}}
@@ -433,9 +437,9 @@ A glare effect can improve the realism of a computer-generated image by simulati
 
 One of the sources of glare is light scattering within the cornea and the lens of the eye. \citet{Spencer95physicallybasedglare} note that it can be approximated with a sum of Gaussian-filtered images. The particular shape of this scattering effect varies from individual to individual, and while it may be evaluated experimentally and averaged, it is also an important artistic tool.
 
-The example glare filter implemented within Nucleus uses a combination of four hierarchically blurred images, weighted by empirically obtained values and summed with the original image. Figure \ref{fig:postProcGlare} demonstrates an exaggerated version of this post-processing effect.
+The example glare filter implemented within Nucleus uses a combination of four hierarchically blurred images, weighted by empirically obtained values and summed with the original image. \fref{fig:postProcGlare} demonstrates an exaggerated version of this post-processing effect.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/postProc/glare.jpg}
     \caption[Glare]{Multi-scale glare applied to the test scene (exaggerated)}
@@ -446,9 +450,9 @@ The example glare filter implemented within Nucleus uses a combination of four h
 
 Simulations of some form of glare are common in real-time rendering systems -- most commonly known as ``bloom'', they actually aim to simulate camera lens. However, besides glare, which is mostly apparent in high contrast situations, the human visual system exhibits another phenomenon, which unfortunately is rarely tackled by computer graphics. Under low luminance conditions, \emph{cone cells} in the eye are mostly nonfunctional. Because cone cells are the component of the human visual system which allows us to perceive colors, lack of their activation means that in low luminance conditions, human vision is monochromatic, perceived with a slight blue tint. Additionally, experimental subjects often describe this ``scotopic vision'' as blurry and noisy \cite{Thompson_aspatial}.
 
-\citet{Thompson_aspatial} have proposed an empirically-based low-luminance post-processing filter. Since it uses images convolved by Gaussian kernels, it comes at a slight additional cost to glare simulation -- in fact, the two filters have been merged into one within Nucleus. The post-processing kernel first computes an acuity value (Figure \ref{fig:postProcAcuityMap}) for each pixel of the processed image, then uses this value to interpolate between the regular color (photopic vision) and the result of the scotopic filter. The acuity value is calculated by passing samples of the blurred images through a step function, then blending them together using the ``screen'' method ($1 - (1-a)*(1-b)$).
+\citet{Thompson_aspatial} have proposed an empirically-based low-luminance post-processing filter. Since it uses images convolved by Gaussian kernels, it comes at a slight additional cost to glare simulation -- in fact, the two filters have been merged into one within Nucleus. The post-processing kernel first computes an acuity value (\fref{fig:postProcAcuityMap}) for each pixel of the processed image, then uses this value to interpolate between the regular color (photopic vision) and the result of the scotopic filter. The acuity value is calculated by passing samples of the blurred images through a step function, then blending them together using the ``screen'' method ($1 - (1-a)*(1-b)$).
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Post-processing off]{\label{fig:postProcNoAcuity}\includegraphics[width=0.45\linewidth]{./Figures/postProc/noAcuity.jpg}}
   \subfigure[Spatial acuity and color sensitivity reduction (exaggerated)]{\label{fig:postProcAcuity}\includegraphics[width=0.45\linewidth]{./Figures/postProc/acuity.jpg}}
@@ -461,7 +465,7 @@ Simulations of some form of glare are common in real-time rendering systems -- m
 
 Unlike \emph{RenderMan}'s \emph{imager} shaders, the post-processing kernels in Nucleus may freely access any pixels in the image. Another use case of this flexibility, besides blur, is the ability to distort the rendered image, either to simulate lensing phenomena or simply for an artistic purpose. For the purposes of this demonstration, the implemented example is an animated noise-based distortion.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
     \includegraphics[width=0.9\linewidth]{./Figures/postProc/distortion.jpg}
     \caption[Distortion]{Noise-based distortion effect}
@@ -470,24 +474,26 @@ Unlike \emph{RenderMan}'s \emph{imager} shaders, the post-processing kernels in 
 
 An image containing Perlin noise is sampled for each pixel with a time-based offset, then passed through the cosine function and scaled to obtain an offset into the image being filtered. Additionally, smooth decay of the offsets is used near screen edges in order to avoid clamping or tiling artifacts. This is implemented by the following snippet of \emph{Cg} code:
 
+\noindent\begin{minipage}{\textwidth}
 \begin{lstlisting}[frame=single]
 float2 baseOff = tex2D(distortSampler, uv * 3 + time.minute).xy * 27.123;
 float2 off = cos(baseOff + radians(time.second * 360)) * 0.005;
 float2 decay = smoothstep(1, 0.9, saturate(2 * abs(uv - float2(0.5))));
 output = baseColor.sample(saturate(uv + off * decay));
 \end{lstlisting}
+\end{minipage}
 
-The ``magic'' numbers governing offsets have been chosen arbitrarily as to define the particular look of the effect shown in Figure \ref{fig:postProcDistortion}.
+The ``magic'' numbers governing offsets have been chosen arbitrarily as to define the particular look of the effect shown in \fref{fig:postProcDistortion}.
 
 \subsection{Banding reduction}
 
-Due to various limitations of display technology, it is not possible to exactly display the luminance values, even if they fall within the luminous intensity range of the target device. In particular, even if the computed values are of high precision, they need to be quantized to 8 bits per channel for final display. The situation is worsened by inexact implementation of the \textbf{sRGB} standard by monitor manufacturers. As a result, many consumer monitors cannot display even the expected 256 shades of gray. This quantization results in artifact known as ``banding'', and occurs particularly often in case of wide gradients. In three-dimensional rendering, the problem mostly occurs on flat unicolored surfaces lit from a large distance. Figure \ref{fig:postProcBanding} illustrates a part of the test scene where this happens (the lower right corner).
+Due to various limitations of display technology, it is not possible to exactly display the luminance values, even if they fall within the luminous intensity range of the target device. In particular, even if the computed values are of high precision, they need to be quantized to 8 bits per channel for final display. The situation is worsened by inexact implementation of the \textbf{sRGB} standard by monitor manufacturers. As a result, many consumer monitors cannot display even the expected 256 shades of gray. This quantization results in artifact known as ``banding'', and occurs particularly often in case of wide gradients. In three-dimensional rendering, the problem mostly occurs on flat unicolored surfaces lit from a large distance. \fref{fig:postProcBanding} illustrates a part of the test scene where this happens (the lower right corner).
 
 Since the post-processing pipeline works on high-precision values of the images, it may apply a technique known as \emph{dithering}. Dithering utilizes the intrinsic ability of the human visual system of noise removal. By diffusing the limited palette in a random (or semi-random) spatially-varying pattern, it creates the illusion of higher color depth. Historically, it has been widely used with 8- and 16-bit graphics, however it can still be utilized with ``Truecolor'' images.
 
-The example filter adds animated signed uniform noise to the high-precision image before gamma-correction and quantization. This makes the noise most apparent in areas of low-luminosity, where banding is normally most perceivable. A single frame of the temporally-varying result can be seen in Figure \ref{fig:postProcNoBanding}.
+The example filter adds animated signed uniform noise to the high-precision image before gamma-correction and quantization. This makes the noise most apparent in areas of low-luminosity, where banding is normally most perceivable. A single frame of the temporally-varying result can be seen in \fref{fig:postProcNoBanding}.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \subfigure[Post-processing off]{\label{fig:postProcBanding}\includegraphics[width=0.45\linewidth]{./Figures/postProc/banding.png}}
   \subfigure[Banding hidden by noise]{\label{fig:postProcNoBanding}\includegraphics[width=0.45\linewidth]{./Figures/postProc/noBanding.png}}
