@@ -9,7 +9,7 @@ The core of the rendering system developed in this thesis is merely a foundation
 \section{Forward rendering}
 \label{sec:ForwardRenderingExample}
 
-Forward rendering is the classical algorithm utilized since the very beginning of rasterization and definitely the most commonly used one thus far. Since the introduction of GeForce 256 in late 1999, it has had special hardware and API support in consumer graphics devices. The special support is only being phased out recently due to programmable shading's ability of supporting the whole forward rendering algorithm efficiefntly. While modern rendering APIs such as \emph{Direct3D 10} and \emph{OpenGL 3.1's Core profile} no longer have dedicated support for transformation and lighting, the algorithm is still widely used and implemented via shaders. Despite other rendering algorithms being available, the performance characteristics of the forward approach make it favorable in many circumstances, hence it is imperative that Nucleus provides support for it out of the box.
+Forward rendering is the classical algorithm utilized since the very beginning of rasterization and definitely the most commonly used one thus far. Since the introduction of the \emph{NVIDIA GeForce 256} GPU in late 1999, it has had special hardware and API support in consumer graphics devices. The special support is only being phased out recently due to programmable shading's ability of supporting the whole forward rendering algorithm efficiently. While modern rendering APIs such as \emph{Direct3D 10} and \emph{OpenGL 3.1's Core profile} no longer have dedicated support for transformation and lighting, the algorithm is still widely used and implemented via shaders. Despite other rendering algorithms being available, the performance characteristics of the forward approach make it favorable in many circumstances, hence it is imperative that Nucleus provides support for it out of the box.
 
 The basic outline of the forward rendering algorithm is as follows:
 	
@@ -73,13 +73,13 @@ Where ``$\Rightarrow$'' denotes the operation of graph fusion and \textbf{foldl}
 
 \fref{fig:ForwardRenderingGraphSample} shows an example of the kernel graph composition algorithm for the forward renderer.
 
-After code generation, an \emph{Effect} is compiled (as described in \sref{sec:lowLevelInfo}) and memoized using the input kernel set as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of geometric structure, material, reflectance and influencing lights appears.
+After code generation, an \emph{Effect} is compiled (as described in \sref{sec:lowLevelInfo}) and memoized using the \emph{input kernel set} as the key. This allows more objects using the same combination of kernels to re-use the \emph{Effect} via instantiation, which is computationally inexpensive compared to the kernel graph processing algorithm. During run-time, new \emph{Effect}s are compiled only when a previously unencountered combination of geometric structure, material, reflectance and influencing lights appears.
 
 \clearpage
 \section{Deferred lighting}
 \label{sec:DeferredLightingExample}
 
-A \emph{light pre-pass} renderer was implemented, which may be seamlessly used in place of the \emph{forward} algorithm. \fref{fig:lightPrePassSponza} demonstrates one frame of the code running on the test machine\footnote{The test machine used for all examples is a PC with an NVIDIA GeForce GTX 260 Core 216 GPU, Intel Core2 Quad Q6600 CPU @ 3.05 GHz and 4GB of DDR2 RAM @ 425 MHz}. As described in \sref{sec:DeferredLighting}, the pipeline is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer and memoized using the appropriate kernels as keys for each stage.
+A \emph{light pre-pass} renderer was implemented, which may be seamlessly used in place of the \emph{forward} algorithm. \fref{fig:lightPrePassSponza} demonstrates a single frame of the code running on the test machine\footnote{The test machine used for all examples is a PC with an NVIDIA GeForce GTX 260 Core 216 GPU, Intel Core2 Quad Q6600 CPU @ 3.05 GHz and 4GB of DDR2 RAM @ 425 MHz}. As described in \sref{sec:DeferredLighting}, the pipeline is broken down into three stages. Similarly to the \emph{forward} renderer, the \emph{Effect}s used by this renderer are memoized using the appropriate kernels as keys for each stage.
 
 \begin{figure}[ht!]
   \centering
@@ -90,7 +90,7 @@ A \emph{light pre-pass} renderer was implemented, which may be seamlessly used i
 
 \subsection{Geometry stage}
 
-Most of the attributes required for the \emph{G-buffer} are computed by the \emph{Structure} kernel. Still, a \emph{Material} kernel may want to alter the normals in order to simulate a bumpy surface. These altered normals must be written into the \emph{G-buffer}. Hence, the first stage composes the two kernels and selectively writes their outputs to the \emph{G-buffer} as shown in \fref{fig:DeferredLightingStage1}. The \emph{Material} kernel possibly generates more outputs than this stage uses, however, graph reduction is performed, so only the relevant parts are actually used at runtime. The \emph{Cg} compiler effectively removes any other extra computations.
+Most of the attributes required for the \emph{G-buffer} are computed by the \emph{Structure} kernel. Still, a \emph{Material} kernel may want to alter the normals in order to simulate a bumpy surface. These altered normals must be written into the \emph{G-buffer}. Hence, the first stage composes the two kernels and selectively writes their outputs to the \emph{G-buffer} as shown in \fref{fig:DeferredLightingStage1}. The \emph{Material} kernel possibly generates more outputs than this stage uses, however graph reduction is performed, so only the relevant parts are actually used at runtime. The \emph{Cg} compiler effectively removes any other extra computations.
 
 \begin{figure}[ht!]
   \centering
@@ -120,7 +120,7 @@ The normalized view-space normal is encoded in the \emph{G-buffer} using the \em
 
 \subsection{Light stage}
 
-Deferred renderers are notorious for being quite rigid with respect to illumination models achievable with them. This is because once the G-buffer is rendered, the light stage does not have access to per-object shaders, which might perform custom shading. Light volumes must then be rendered with the same shader for each pixel, regardless of which scene object a fragment in the G-buffer comes from.
+Deferred renderers are notorious for being quite rigid with respect to illumination models achievable with them. This is because once the \emph{G-buffer} is rendered, the light stage does not have access to per-object shaders, which might perform custom shading. Light volumes must then be rendered with the same shader for each pixel, regardless of which scene object a fragment in the \emph{G-buffer} comes from.
 
 A common approach is to use just one reflectance model (usually the half-angle version of Phong's) for all pixels and only vary roughness. This may work just fine for games which do not require drastically differing surface styles.
 
@@ -128,7 +128,7 @@ Another solution is to draw the majority of the scene using deferred rendering, 
 
 The approach which Nucleus takes instead is not a novel one, but has not been widely adopted due to being costly on past generations of graphics hardware.
 
-The G-buffer stores the \emph{surface ID} to be used at a given pixel. A fragment shader of the light stage branches on it, choosing the appropriate \emph{Reflectance} kernel implementation. The kernel index and parameters for it are stored in a texture, into which the \emph{G-buffer} contains a coordinate. The current approach allows up to 256 different surfaces, each of which might potentially use a different \emph{Reflectance} kernel.
+The \emph{G-buffer} stores the \emph{surface ID} to be used at a given pixel. A fragment shader of the light stage branches on it, choosing the appropriate \emph{Reflectance} kernel implementation. The kernel index and parameters for it are stored in a texture, into which the \emph{G-buffer} contains a coordinate. The current approach allows up to 256 different surfaces, each of which might potentially use a different \emph{Reflectance} kernel.
 
 The code template used to compose multiple BRDFs together has the following structure:
 
@@ -164,7 +164,7 @@ The template includes dependent texture fetches and heavy branching. This is an 
 \label{fig:lppBranching}
 \end{figure}
 
-If this branching turns out to be prohibitive in real scene configurations, it is possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles, depending on whether they need the branch or not. Depending on the scene, many tiles might use just a single BRDF, for which a specialized shader can be compiled.
+If this branching turns out to be prohibitive in real scene configurations, it is possible to reduce its cost using tile-based deferred rendering similar to the approach proposed by \citet{tiledDeferred}. The framebuffer would be split into rectangular tiles. Depending on the scene, many tiles might use just a single BRDF, for which a specialized shader can be compiled.
 
 \begin{figure}[ht!]
   \centering
@@ -187,7 +187,7 @@ If this branching turns out to be prohibitive in real scene configurations, it i
 As any of the other passes, the \emph{Light stage} generates a kernel graph (an example of which is shown in \fref{fig:DeferredLightingStage2}), the only distinction is that it is compiled for the purpose of rendering the bounding volumes of lights.
 
 The current implementation uses a geometry shader to instantiate a cube for each light, taking a single point as the input. Only the quads facing away from the camera are drawn and reverse depth testing is performed in order to do approximate light culling. \\
-Such setup will enable rendering thousands of lights in a single batch, however this is not implemented yet. The downside of doing this for every light type would be large overdraw, since some lights may span a large portion of the screen and would benefit from more exact culling instead. Because of this, lights are actually drawn in separate batches, and approximate culling of their volumes is performed via the EXT\_depth\_bounds\_test OpenGL extension. Whereas the aforementioned reverse depth test allows culling of light volumes which are entirely in front of scene geometry, it does not do anything about the volumes being behind geometry. Depth bounds testing allows a range of depth values to be specified, so that no fragment is rendered if the value \emph{already in the depth buffer} is outside of this range. By conservatively specifying the minimum and maximum depth values of light volumes for this test, this effectively allows coarse culling. \fref{fig:lightingComplexityComparison} demonstrates a case where the lighting complexity is reduced dramatically due to scene occlusion.
+Such a setup will enable rendering thousands of lights in a single batch, however this is not implemented yet. The downside of doing this for every light type would be large overdraw, since some lights may span a large portion of the screen and would benefit from more exact culling instead. Because of this, lights are actually drawn in separate batches, and approximate culling of their volumes is performed via the EXT\_depth\_bounds\_test OpenGL extension. Whereas the aforementioned reverse depth test allows culling of light volumes which are entirely in front of scene geometry, it does not do anything about the volumes being behind geometry. Depth bounds testing allows a range of depth values to be specified, so that no fragment is rendered if the value \emph{already in the depth buffer} is outside of this range. By conservatively specifying the minimum and maximum depth values of light volumes for this test, this effectively allows coarse culling. \fref{fig:lightingComplexityComparison} demonstrates a case where the lighting complexity is reduced dramatically due to scene occlusion.
 
 % TODO: EXT\_depth\_bounds\_test fails at breaking. welna suggests \emergencystretch=21pt
 
@@ -203,7 +203,7 @@ The illumination is rendered to a framebuffer of the same resolution as the scre
 
 \subsection{Light bounding}
 
-It is not physically correct to constrain light falloff to a finite volume, since real lights do not have a limited range. Still, at a certain distance, the influence becomes negligible and of little use as an artistic tool, while still having the same computational overhead as at meaningful intensities. Therefore, the size of the bounding volume is calculated such that it cuts off at a certain distance, which depends on the intensity of the source. It is impractical to set the fade-out distance as far as to avoid a perceptual difference, therefore the size is calculated aggressively (the current implementation cuts off at 1\% the normalized intensity) and light falloff is modified to smoothly disappear into zero.
+It is not physically correct to constrain light falloff to a finite volume, since real lights do not have a limited range. Still, at a certain distance, the influence becomes negligible and of little use as an artistic tool, while still presenting the same computational overhead as at meaningful intensities. Therefore, the size of the bounding volume is calculated such that it cuts off at a certain distance, which depends on the intensity of the source. It is impractical to set the fade-out distance as far as to avoid a perceptual difference, therefore the size is calculated aggressively (the current implementation cuts off at 1\% the normalized intensity) and light falloff is modified to smoothly disappear into zero.
 
 In physics, the intensity of light is inversely proportional to the squared distance from the source:
 	
@@ -213,7 +213,7 @@ In physics, the intensity of light is inversely proportional to the squared dist
 
 where $L$ is a constant representing the luminous intensity of the light.
 
-Whereas this law may be used in its exact form (as many implementations do), it is important to notice that it is valid only for idealized \emph{point} light sources. The intensity at distance close to zero quickly approaches infinity, resulting in rendering artifacts. Real world lights have a non-zero area which makes the falloff look different, especially close to the source. For this reason, the model
+Whereas this law may be used in its exact form (as many implementations do), it is important to notice that it is valid only for idealized \emph{point} light sources. The intensity at distances close to zero quickly approaches infinity, resulting in rendering artifacts. Real world lights have a non-zero area which makes the falloff look different, especially close to the source. For this reason, the model
 \[
 	I = \frac{L}{1 + r^2}
 \]
@@ -247,7 +247,7 @@ Where $r_m$ is the radius bounding the influence of the light and $s : float \ri
 \label{fig:lppFalloffBetterCase}
 \end{figure}
 
-\fref{fig:lppInvSqFalloff1} demonstrates the light clipping artifact when using inverse-square light falloff in the light pre-pass renderer -- the specular highlights are trimmed to the bounding cubes drawn around lights. Switching to the modified falloff model, we obtain \fref{fig:lppModFalloff1}. The clipping issue is gone, however the divergence between these models becomes very apparent. This is a particularly tricky case for the falloff, because the scene contains 200 very small, low-intensity lights. Increasing their yield and therefore the range used in the windowed model brings the two closer, as depicted in \fref{fig:lppFalloffBetterCase}. The divergence completely disappears under most normal lighting conditions. The scene configuration in \fref{fig:lppFalloffConverged} renders the same with either model, within the precision limits of the output image.
+\fref{fig:lppInvSqFalloff1} demonstrates the light clipping artifact when using inverse-square light falloff in the light pre-pass renderer -- the specular highlights are trimmed to the bounding cubes drawn around lights. Switching to the modified falloff model, we obtain \fref{fig:lppModFalloff1}. The clipping issue is gone, however the divergence between these models becomes very apparent. This is a particularly difficult case for the falloff, because the scene contains 200 very small, low-intensity lights. Increasing their yield and therefore the range used in the windowed model brings the two closer, as depicted in \fref{fig:lppFalloffBetterCase}. The divergence completely disappears under most normal lighting conditions. The scene configuration in \fref{fig:lppFalloffConverged} renders the same with either model, within the precision limits of the output image.
 
 \begin{figure}[ht!]
   \centering
