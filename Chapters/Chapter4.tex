@@ -6,7 +6,7 @@
 \label{Chapter4}
 \lhead{Chapter 3. \emph{ Nucleus }}
 
-This chapter contains a description of the internal structure of a rendering system created for the purposes of this thesis, henceforth called ``\textbf{Nucleus}.'' After a brief overview of the major components in the following section, the building blocks used therein are presented. Finally, the chapter provides an in-depth look at the internal manipulation of the basic elements and how they are optimized and translated into a form which the underlying GPU can understand.
+This chapter contains a description of the internal structure of a rendering system created for the purposes of this thesis, henceforth called ``\textbf{Nucleus}.'' After a brief overview of the major components in the following section, the building blocks used therein are presented. Finally, the chapter provides an in-depth look at the internal manipulation of the basic elements and how they are optimized and translated into a form which the underlying graphics API can understand.
 
 \section{Overall structure}
 
@@ -32,29 +32,29 @@ The high-level machinery of Nucleus may be built directly on top of a rendering 
 
 \begin{enumerate}
 \item The OpenGL API is portable and supported by multiple operating systems, however its implementation in drivers is currently less stable than that of Direct3D. Hence it is vital to be able to support both APIs.
-\item Hardware may support rendering APIs to varying degrees via feature sets and extensions, yet workarounds can be created and exposed as a common set of features. Additionally, functionality required by the standards is implemented to varying degrees, and sometimes contains bugs. The wrapper allows these exceptional details to be caught in a single location.
+\item Hardware may support rendering APIs to varying degrees via feature sets and extensions. The implementations sometimes also contain bugs, yet workarounds can be created and exposed as a common set of features. The wrapper allows these exceptional details to be caught in a single location.
 \item Directly working with the graphics API is error-prone and may be difficult to debug. The wrapper can enforce particular usage patterns, allow straightforward resource management and reduce code duplication, all of which lead to faster and cheaper development.
 \end{enumerate}
 
-The lowest abstraction layer has been built on a level similar to Microsoft's XNA library and currently has a backend utilizing \emph{OpenGL 3.3} and NVIDIA's \emph{Cg Toolkit}. The main building blocks of the framework are:
+The lowest abstraction layer has been built on a level similar to Microsoft's XNA library\footnote{\url{http://msdn.microsoft.com/en-gb/xna/default.aspx}} and currently has a backend utilizing \emph{OpenGL 3.3} and NVIDIA's \emph{Cg Toolkit}. The main building blocks of the framework are:
 
 \begin{description}
 
-\item[Effect] --- wraps vertex, geometry and fragment shaders together, allows shader specialization (e.g. setting the implementations of Cg interfaces, providing sizes for unsized Cg arrays). Once compiled, allows the programmer to provide values for uniform parameters shared by all instances of the effect. Finally, it allows instantiation into EffectInstances.
+\item[Effect] --- wraps vertex, geometry and fragment shaders together, allows shader specialization (e.g. setting the implementations of \emph{Cg} interfaces, providing sizes for unsized \emph{Cg} arrays). Once compiled, allows the programmer to provide values for uniform parameters shared by all instances of the effect. Finally, it allows instantiation into \emph{EffectInstance}s.
 
-\item[EffectInstance] --- provides a name space and storage for uniform and varying parameters associated with a single instance of an Effect. Additionally, uses a VertexArray to cache current varying parameter bindings. Automatically performs reference counting of resources assigned as uniform (Textures) and varying parameters (VertexBuffers). The memory for EffectInstances is allocated from pools in contiguous slabs for both the structure data and the effect-dependent payload. By adding an indirection to parameter storage, multiple Effects and EffectInstances may source their parameters from the same variable in memory, possibly managed entirely by the client. Typically, each object in the scene will own a single EffectInstance for each Effect it may be rendered with.
+\item[EffectInstance] --- provides a name space and storage for uniform and varying parameters associated with a single instance of an \emph{Effect}. Additionally, uses a \emph{VertexArray} to cache current varying parameter bindings. Automatically performs reference counting of resources assigned as uniform (\emph{Textures}) and varying parameters (\emph{VertexBuffers}). The memory for \emph{EffectInstance}s is allocated from pools in contiguous slabs for both the structure data and the effect-dependent payload. By adding an indirection to parameter storage, multiple \emph{Effect}s and \emph{EffectInstance}s may source their parameters from the same variable in memory, possibly managed entirely by the client. Typically, each object in the scene will own a single \emph{EffectInstance} for each \emph{Effect} it may be rendered with.
 
 \item[Buffer] ---allows the specification and modification of graphics API-allocated memory (VRAM, AGP, system).
 
 \begin{description}
-\item[VertexBuffer] --- used for generic untyped vertex attributes. The actual types are specified when binding varying parameters to EffectInstances and specifying the offset, stride and type of the underlying data.
+\item[VertexBuffer] --- used for generic untyped vertex attributes. The actual types are specified when binding varying parameters to \emph{EffectInstance}s and providing the offset, stride and type of the underlying data.
 \item[IndexBuffer] --- specialized for 16 and 32-bit mesh indices.
 \item[UniformBuffer] --- bindable uniform / constant buffers for shader programs.
 \end{description}
 
-\item[VertexArray] --- a special kind of a driver-level object that caches varying parameter bindings, allowing for reduction of API calls.
+\item[VertexArray] --- a special kind of a driver-level object that caches varying parameter bindings, allowing the number of API calls to be reduced.
 
-\item[Framebuffer] --- wrapper over all classes of framebuffers with automatic usage of Multiple Render Targets, rendering to textures, floating point support, etc.
+\item[Framebuffer] --- wrapper over all classes of framebuffers with automatic usage of \emph{Multiple Render Targets}, rendering to textures, floating point support, etc.
 
 \item[Texture] --- provides access to 1D, 2D, 3D, rectangle and cube texture maps, updating and querying their data.
 \end{description}
@@ -63,16 +63,16 @@ The aforementioned resources are accessed via opaque handles created and managed
 
 Additionally, the \textbf{Renderer} provides functionality to create, dispose and render the contents of a \textbf{RenderList} according to the current \textbf{RenderState}.
 
-The \textbf{RenderList} is a collection of indices (ordinals) of EffectInstances and basic associated data required to render them, including:
+The \textbf{RenderList} is a collection of indices (ordinals) of \emph{EffectInstance}s and basic associated data required to render them, including:
 	
 \begin{itemize}
-\item Model $\rightarrow$ world and world $\rightarrow$ model transformation 4×3 matrices
-\item An IndexBuffer along with the count of indices to use, offset, min and max therein
-\item The number of instances of the object to be rendered via \emph{hardware instancing}
-\item Mesh topology
+\item Model $\rightarrow$ world and world $\rightarrow$ model transformation 4×3 matrices.
+\item An \emph{IndexBuffer} along with the count of indices to use, offset, minimum and maximum therein.
+\item The number of instances of the object to be rendered via \emph{hardware instancing}.
+\item Mesh topology.
 \end{itemize}
 
-An important factor to note is that the RenderList does not plainly contain EffectInstances, but rather their \emph{rendering ordinals}. The ordinals are 32-bit numbers assigned to each effect instance and managed internally by the renderer. Their order is determined by a heuristic attempting to minimize the number of state changes required when rendering the instances. This means that once the render list is constructed, the algorithm to minimize the required state changes basically boils down to \emph{sorting the ordinals}, which is a cheap operation. More ordering options will be made available in the future, so that the objects may be sorted by distance or using per-Effect routines built with knowledge of their performance characteristics.
+An important factor to note is that the \emph{RenderList} does not plainly contain \emph{EffectInstance}s, but rather their \emph{rendering ordinals}. The ordinals are 32-bit numbers assigned to each effect instance and managed internally by the renderer. Their order is determined by a heuristic attempting to minimize the number of state changes required when rendering the instances. This means that once the render list is constructed, the algorithm to minimize the required state changes basically boils down to \emph{sorting the ordinals}, which is a cheap operation. More ordering options will be made available in the future, so that the objects may be sorted by distance or using per-\emph{Effect} routines built with knowledge of their performance characteristics.
 
 \begin{figure}[ht!]
   \centering
@@ -81,7 +81,7 @@ An important factor to note is that the RenderList does not plainly contain Effe
   \label{fig:terrainRendering}
 \end{figure}
 
-As mentioned before, the \textbf{Renderer} also gives access to the \textbf{RenderState}, a set of common rendering settings, such as the mode of depth-testing, blending, back-face culling, etc.
+As mentioned before, the \emph{Renderer} also gives access to the \textbf{RenderState}, a set of common rendering settings, such as the mode of depth-testing, blending, back-face culling, etc.
 
 The graphics base layer can therefore be used instead of the underlying graphics API, completely hiding its complexity and error-prone setup. It also makes it possible to change the backend without touching client code. The following is a code fragment of a Chunked LoD \cite{chunkedLoD} terrain rendering example (shown in \fref{fig:terrainRendering}) implemented using the low-level interface only:
 
@@ -106,7 +106,7 @@ vdata.attrib = &va;
 \end{lstlisting}
 \end{minipage}
 
-The above sample instantiates an \emph{Effect} containing a vertex and a fragment shader, then creates a vertex buffer and finally binds a varying parameter in the vertex shader to a portion of that buffer. Such code would be considerably longer if the underlying OpenGL and Cg APIs were used instead.
+The above sample instantiates an \emph{Effect} containing a vertex and a fragment shader, then creates a vertex buffer and finally binds a varying parameter in the vertex shader to a portion of that buffer. Such code would be considerably longer if the underlying OpenGL and \emph{Cg} APIs were used instead.
 	
 \section{Kernels}
 \label{sec:Kernels}
